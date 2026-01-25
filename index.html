@@ -209,11 +209,12 @@
 <img alt="" border="0" src="https://www.paypal.com/en_GB/i/scr/pixel.gif" width="1" height="1" />
 </form>
 
-  </footer
+  </footer>
 <script>
-  const ruleLinks = [
-    ...document.querySelectorAll('.card')
-  ].map(card => card.href);
+document.addEventListener("DOMContentLoaded", function () {
+
+  const ruleLinks = Array.from(document.querySelectorAll('.card'))
+    .map(card => card.href);
 
   let currentRandom = null;
 
@@ -227,16 +228,19 @@
     return newRule;
   }
 
-  document.getElementById('randomBtn').addEventListener('click', () => {
+  document.getElementById('randomBtn').addEventListener('click', function () {
     if (!currentRandom) {
       currentRandom = generateRandomRule();
     }
     window.open(currentRandom, '_blank', 'noopener,noreferrer');
   });
 
-  document.getElementById('shuffleBtn').addEventListener('click', () => {
+  document.getElementById('shuffleBtn').addEventListener('click', function () {
     currentRandom = generateRandomRule();
   });
+
+});
 </script>
+
 </body>
 </html>
