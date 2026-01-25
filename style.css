@@ -1,0 +1,24 @@
+.random-container {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.random-container button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.random-container button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59,130,246,0.4);
+}
