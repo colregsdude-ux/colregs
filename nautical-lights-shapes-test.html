@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nautical Lights & Shapes Test | TheRulesGuide.com</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --panel: #121a2f;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #3b82f6;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --light-bg: #000000;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(180deg, #0b1220, #020617);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 3rem;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      margin-bottom: 0.6rem;
+      text-align: center;
+    }
+
+    .subtext {
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 0.35rem;
+    }
+
+    .meta {
+      color: #cbd5e1;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 0.93rem;
+    }
+
+    .question-card {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .question-title {
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+    }
+
+    .lights-panel {
+      background: var(--light-bg);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      min-height: 120px;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .day-shape-panel {
+      background: #ffffff;
+      border: 2px solid #111827;
+      border-radius: 12px;
+      min-height: 120px;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .lights-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .stack-vertical {
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .pdv-head-on {
+      display: grid;
+      grid-template-columns: repeat(2, 48px);
+      grid-template-areas:
+        'white white'
+        'red green';
+      gap: 0.7rem 1.1rem;
+      justify-items: center;
+      align-items: center;
+    }
+
+    .pdv-head-on .white { grid-area: white; }
+    .pdv-head-on .red { grid-area: red; }
+    .pdv-head-on .green { grid-area: green; }
+
+    .light {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.35);
+      box-shadow: 0 0 14px currentColor;
+    }
+
+    .red { background: #ef4444; color: #ef4444; }
+    .green { background: #22c55e; color: #22c55e; }
+    .white { background: #ffffff; color: #ffffff; }
+    .yellow { background: #eab308; color: #eab308; }
+
+    .shape-ball {
+      width: 34px;
+      height: 34px;
+      background: #000;
+      border-radius: 999px;
+      border: 1px solid #000;
+    }
+
+    .shape-diamond {
+      width: 30px;
+      height: 30px;
+      background: #000;
+      transform: rotate(45deg);
+      border: 1px solid #000;
+    }
+
+    .answers {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    label.option {
+      display: flex;
+      gap: 0.55rem;
+      align-items: flex-start;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 0.55rem 0.7rem;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    button, a {
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.7rem 1rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button { background: var(--accent); color: #fff; }
+    a { background: #1f2937; color: #fff; }
+
+    button[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 1rem;
+      font-weight: 600;
+      min-height: 1.3rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Nautical Lights & Shapes Test</h1>
+    <p class="subtext">One random question appears at a time. Check your answer before moving on.</p>
+    <p class="meta" id="metaText">Question 1 of 6</p>
+
+    <form id="quizForm">
+      <section class="question-card">
+        <p class="question-title" id="questionTitle"></p>
+        <div id="visualPanel"></div>
+        <div class="answers" id="answersContainer"></div>
+      </section>
+
+      <div class="controls">
+        <button id="checkBtn" type="submit">Check Answer</button>
+        <button id="nextBtn" type="button" disabled>Next Question</button>
+        <a href="index.html">← Back to Home</a>
+      </div>
+      <p class="result" id="quizResult" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <script>
+    const questionBank = [
+      {
+        prompt: 'Which vessel does this likely represent?',
+        type: 'lights',
+        layout: 'vertical',
+        lights: ['red', 'white'],
+        aria: 'Red over white lights shown vertically',
+        options: [
+          'Fishing vessel (other than trawling)',
+          'Pilot vessel underway',
+          'Vessel not under command'
+        ],
+        answer: 0
+      },
+      {
+        prompt: 'What does this display indicate?',
+        type: 'lights',
+        layout: 'pdvHeadOn',
+        lights: ['white', 'red', 'green'],
+        aria: 'White masthead with red and green sidelights',
+        options: [
+          'Vessel at anchor',
+          'Vessel aground',
+          'Power-driven vessel underway (seen near head-on)'
+        ],
+        answer: 2
+      },
+      {
+        prompt: 'Which special operation lighting is shown?',
+        type: 'lights',
+        layout: 'vertical',
+        lights: ['yellow', 'white'],
+        aria: 'Yellow over white stern towing light arrangement',
+        options: [
+          'Vessel constrained by draught',
+          'Towing vessel towing astern',
+          'Vessel restricted in ability to manoeuvre'
+        ],
+        answer: 1
+      },
+      {
+        prompt: 'Which day-shape pair is represented?',
+        type: 'shapes',
+        layout: 'vertical',
+        shapes: ['ball', 'ball'],
+        aria: 'Two black balls day shape',
+        options: [
+          'Vessel not under command',
+          'Vessel at anchor',
+          'Vessel engaged in trawling'
+        ],
+        answer: 0
+      },
+      {
+        prompt: 'Which day shape is shown?',
+        type: 'shapes',
+        layout: 'vertical',
+        shapes: ['diamond'],
+        aria: 'Single black diamond day shape',
+        options: [
+          'Vessel at anchor',
+          'Vessel engaged in towing where tow exceeds 200 metres',
+          'Vessel constrained by draught'
+        ],
+        answer: 1
+      },
+      {
+        prompt: 'Which vessel is indicated by this all-round light arrangement?',
+        type: 'lights',
+        layout: 'vertical',
+        lights: ['red', 'red'],
+        aria: 'Two red all-round lights vertically',
+        options: [
+          'Vessel not under command',
+          'Pilot vessel underway',
+          'Vessel making way under sail alone'
+        ],
+        answer: 0
+      }
+    ];
+
+    const quizForm = document.getElementById('quizForm');
+    const questionTitle = document.getElementById('questionTitle');
+    const visualPanel = document.getElementById('visualPanel');
+    const answersContainer = document.getElementById('answersContainer');
+    const checkBtn = document.getElementById('checkBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const resultText = document.getElementById('quizResult');
+    const metaText = document.getElementById('metaText');
+
+    function shuffleArray(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    const quizQuestions = shuffleArray(questionBank);
+    let currentIndex = 0;
+    let score = 0;
+    let locked = false;
+
+    function buildVisual(question) {
+      const panelClass = question.type === 'lights' ? 'lights-panel' : 'day-shape-panel';
+      let rowClass = 'lights-row';
+      if (question.layout === 'vertical') rowClass = 'lights-row stack-vertical';
+      if (question.layout === 'pdvHeadOn') rowClass = 'pdv-head-on';
+
+      let itemsMarkup = '';
+      if (question.type === 'lights') {
+        itemsMarkup = question.lights.map((colour) => `<span class=\"light ${colour}\" title=\"${colour}\"></span>`).join('');
+      } else {
+        itemsMarkup = question.shapes.map((shape) => {
+          if (shape === 'diamond') return '<span class="shape-diamond" title="Black diamond"></span>';
+          return '<span class="shape-ball" title="Black ball"></span>';
+        }).join('');
+      }
+
+      visualPanel.innerHTML = `
+        <div class="${panelClass}" aria-label="${question.aria}">
+          <div class="${rowClass}">${itemsMarkup}</div>
+        </div>
+      `;
+    }
+
+    function renderQuestion() {
+      const current = quizQuestions[currentIndex];
+      questionTitle.textContent = `${currentIndex + 1}) ${current.prompt}`;
+      metaText.textContent = `Question ${currentIndex + 1} of ${quizQuestions.length}`;
+      buildVisual(current);
+
+      answersContainer.innerHTML = current.options.map((option, index) => (
+        `<label class="option"><input type="radio" name="currentQuestion" value="${index}" required> ${option}</label>`
+      )).join('');
+
+      resultText.textContent = '';
+      resultText.style.color = '';
+      checkBtn.disabled = false;
+      nextBtn.disabled = true;
+      locked = false;
+    }
+
+    function finishQuiz() {
+      questionTitle.textContent = 'Quiz complete';
+      visualPanel.innerHTML = '';
+      answersContainer.innerHTML = '';
+      checkBtn.disabled = true;
+      nextBtn.disabled = true;
+      const pass = score >= Math.ceil(quizQuestions.length * 0.75);
+      resultText.style.color = pass ? 'var(--good)' : 'var(--bad)';
+      resultText.textContent = `Final score: ${score}/${quizQuestions.length}. ${pass ? 'Great work.' : 'Have another go to improve your score.'}`;
+      metaText.textContent = 'Finished';
+    }
+
+    quizForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      if (locked) return;
+
+      const current = quizQuestions[currentIndex];
+      const chosen = Number(quizForm.querySelector('input[name="currentQuestion"]:checked')?.value);
+      if (Number.isNaN(chosen)) {
+        resultText.style.color = 'var(--bad)';
+        resultText.textContent = 'Please choose an answer first.';
+        return;
+      }
+
+      const correct = chosen === current.answer;
+      if (correct) score += 1;
+
+      resultText.style.color = correct ? 'var(--good)' : 'var(--bad)';
+      resultText.textContent = correct
+        ? 'Correct. You can move to the next question.'
+        : `Not quite. Correct answer: ${current.options[current.answer]}. Click Next Question to continue.`;
+
+      checkBtn.disabled = true;
+      nextBtn.disabled = false;
+      locked = true;
+    });
+
+    nextBtn.addEventListener('click', function () {
+      currentIndex += 1;
+      if (currentIndex >= quizQuestions.length) {
+        finishQuiz();
+      } else {
+        renderQuestion();
+      }
+    });
+
+    renderQuestion();
+  </script>
+</body>
+</html>
