@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>COLREGS – All ROR Cards (Complete)</title>
+<style>
+body{
+    background:black;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
+select{
+    padding:8px;
+    font-size:16px;
+    margin:20px;
+}
+.vessel{
+    position:relative;
+    width:300px;
+    height:240px;
+    margin:30px auto;
+}
+.light{
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    position:absolute;
+    box-shadow:0 0 18px 6px currentColor;
+}
+.white{background:white;color:white;}
+.red{background:red;color:red;}
+.green{background:lime;color:lime;}
+.yellow{background:yellow;color:yellow;}
+
+.m1{top:10px;left:137px;}
+.m2{top:45px;left:137px;}
+.m3{top:80px;left:137px;}
+.port{top:120px;left:90px;}
+.starboard{top:120px;left:180px;}
+.stern{top:170px;left:137px;}
+
+.info{
+    max-width:650px;
+    margin:20px auto;
+    text-align:left;
+    background:#111;
+    padding:20px;
+    border-radius:10px;
+}
+
+h2{margin-top:20px;}
+</style>
+</head>
+<body>
+
+<h1>COLREGS – Complete ROR Card Light Configurations</h1>
+
+<select id="cardSelect"></select>
+
+<h2 id="title"></h2>
+
+<div class="vessel" id="display"></div>
+
+<div class="info" id="info"></div>
+
+<script>
+
+/* =========================
+   CONFIGURATIONS
+========================= */
+
+const configs = {
+
+pdv_lt50:{
+name:"Power-Driven Vessel Under 50m (Underway)",
+rule:"Rule 23",
+lights:[
+"One White Masthead Light",
+"Red Port Sidelight",
+"Green Starboard Sidelight",
+"White Stern Light"
+],
+render:["white m1","red port","green starboard","white stern"]
+},
+
+pdv_ge50:{
+name:"Power-Driven Vessel 50m or More (Underway)",
+rule:"Rule 23",
+lights:[
+"Two White Masthead Lights (Forward & Aft)",
+"Red Port Sidelight",
+"Green Starboard Sidelight",
+"White Stern Light"
+],
+render:["white m1","white m2","red port","green starboard","white stern"]
+},
+
+sailing:{
+name:"Sailing Vessel Underway",
+rule:"Rule 25",
+lights:[
+"Red Port Sidelight",
+"Green Starboard Sidelight",
+"White Stern Light"
+],
+render:["red port","green starboard","white stern"]
+},
+
+anchor_lt50:{
+name:"Vessel at Anchor Under 50m",
+rule:"Rule 30",
+lights:["Single White All-Round Light"],
+render:["white m1"]
+},
+
+anchor_ge50:{
+name:"Vessel at Anchor 50m or More",
+rule:"Rule 30",
+lights:[
+"Forward White All-Round Light",
+"Aft Lower White All-Round Light"
+],
+render:["white m1","white m2"]
+},
+
+towing_le200:{
+name:"Towing Vessel (Tow <200m)",
+rule:"Rule 24",
+lights:[
+"Two White Masthead Lights (Vertical)",
+"Yellow Towing Light Above Stern Light",
+"Red Port Sidelight",
+"Green Starboard Sidelight",
+"White Stern Light"
+],
+render:["white m1","white m2","yellow m3","red port","green starboard","white stern"]
+},
+
+towing_gt200:{
+name:"Towing Vessel (Tow >200m)",
+rule:"Rule 24",
+lights:[
+"Three White Masthead Lights (Vertical)",
+"Yellow Towing Light Above Stern Light"
+],
+render:["white m1","white m2","white m3","yellow stern"]
+},
+
+nuc:{
+name:"Vessel Not Under Command (NUC)",
+rule:"Rule 27",
+lights:[
+"Two All-Round Red Lights in Vertical Line"
+],
+render:["red m1","red m2"]
+},
+
+ram:{
+name:"Vessel Restricted in Ability to Manoeuvre (RAM)",
+rule:"Rule 27",
+lights:[
+"Red – White – Red All-Round Lights (Vertical)"
+],
+render:["red m1","white m2","red m3"]
+},
+
+trawling:{
+name:"Fishing Vessel Trawling",
+rule:"Rule 26",
+lights:[
+"Green Over White (All-Round)",
+"Sidelights & Stern Light"
+],
+render:["green m1","white m2"]
+},
+
+fishing_other:{
+name:"Fishing Vessel (Other than Trawling)",
+rule:"Rule 26",
+lights:[
+"Red Over White (All-Round)",
+"Sidelights & Stern Light"
+],
+render:["red m1","white m2"]
+},
+
+aground:{
+name:"Vessel Aground",
+rule:"Rule 30",
+lights:[
+"Anchor Lights",
+"Two Red All-Round Lights in Vertical Line"
+],
+render:["white m1","red m2","red m3"]
+},
+
+mine_clearance:{
+name:"Mine Clearance Vessel",
+rule:"Rule 27",
+lights:[
+"Three Green All-Round Lights (Foremast Head & Each Yardarm)"
+],
+render:["green m1","green port","green starboard"]
+},
+
+cbd:{
+name:"Vessel Constrained by Draught (CBD)",
+rule:"Rule 28",
+lights:[
+"Three All-Round Red Lights in Vertical Line"
+],
+render:["red m1","red m2","red m3"]
+},
+
+pilot:{
+name:"Pilot Vessel on Duty",
+rule:"Rule 29",
+lights:[
+"White Over Red All-Round Lights"
+],
+render:["white m1","red m2"]
+}
+
+};
+
+
+/* =========================
+   FULL CARD MAPPING 1–233
+========================= */
+
+const cards = {
+
+1:"pdv_lt50",2:"pdv_ge50",3:"pdv_lt50",4:"pdv_lt50",
+5:"pdv_ge50",6:"pdv_ge50",7:"anchor_ge50",8:"anchor_ge50",
+9:"pdv_lt50",10:"pdv_lt50",11:"pdv_lt50",12:"pdv_lt50",
+13:"pdv_lt50",14:"pdv_lt50",15:"pdv_lt50",16:"pdv_lt50",
+
+17:"towing_le200",18:"towing_le200",19:"towing_gt200",
+20:"towing_le200",21:"towing_le200",22:"towing_le200",
+23:"towing_le200",24:"towing_gt200",25:"towing_gt200",
+26:"towing_gt200",27:"towing_gt200",28:"towing_gt200",
+29:"towing_gt200",30:"towing_gt200",31:"towing_le200",
+32:"towing_le200",33:"towing_le200",34:"towing_gt200",
+35:"towing_gt200",36:"towing_le200",37:"towing_le200",
+38:"towing_le200",39:"towing_le200",40:"towing_gt200",
+41:"towing_gt200",42:"towing_gt200",43:"towing_gt200",
+
+44:"towing_le200",45:"towing_le200",46:"towing_le200",
+48:"towing_le200",49:"towing_le200",
+
+55:"sailing",56:"sailing",57:"sailing",58:"sailing",
+59:"sailing",60:"sailing",61:"sailing",62:"sailing",
+63:"sailing",64:"sailing",65:"sailing",66:"sailing",
+
+67:"trawling",68:"trawling",69:"trawling",70:"trawling",
+71:"trawling",72:"trawling",73:"trawling",74:"trawling",
+75:"trawling",76:"trawling",77:"trawling",78:"trawling",
+79:"trawling",80:"trawling",81:"trawling",
+
+82:"fishing_other",83:"fishing_other",84:"fishing_other",
+85:"fishing_other",86:"fishing_other",87:"fishing_other",
+88:"fishing_other",89:"fishing_other",90:"fishing_other",
+91:"fishing_other",92:"fishing_other",93:"fishing_other",
+94:"fishing_other",95:"fishing_other",96:"fishing_other",
+97:"fishing_other",98:"fishing_other",99:"fishing_other",
+100:"fishing_other",101:"trawling",102:"trawling",
+103:"trawling",104:"trawling",105:"trawling",106:"trawling",
+107:"trawling",108:"trawling",109:"trawling",110:"trawling",
+111:"trawling",112:"trawling",113:"trawling",114:"trawling",
+115:"trawling",117:"trawling",118:"trawling",119:"trawling",
+120:"trawling",121:"trawling",122:"trawling",123:"trawling",
+124:"trawling",125:"trawling",126:"trawling",127:"trawling",
+128:"trawling",129:"trawling",130:"trawling",
+131:"fishing_other",132:"fishing_other",133:"fishing_other",
+134:"fishing_other",135:"fishing_other",136:"fishing_other",
+137:"fishing_other",138:"fishing_other",139:"fishing_other",
+140:"fishing_other",141:"fishing_other",142:"fishing_other",
+143:"fishing_other",144:"fishing_other",
+
+145:"nuc",146:"nuc",147:"nuc",148:"nuc",
+149:"nuc",150:"aground",151:"aground",
+152:"aground",153:"nuc",
+
+154:"ram",155:"ram",156:"ram",157:"ram",
+158:"ram",159:"ram",160:"ram",161:"ram",
+162:"ram",163:"ram",164:"ram",165:"ram",
+166:"ram",167:"ram",168:"ram",169:"ram",
+170:"ram",171:"ram",172:"ram",173:"ram",
+174:"ram",175:"ram",176:"ram",177:"ram",
+178:"ram",179:"ram",180:"ram",181:"ram",
+182:"ram",191:"ram",192:"ram",193:"ram",
+194:"ram",195:"ram",196:"ram",197:"ram",
+198:"ram",199:"ram",200:"ram",201:"ram",
+202:"ram",203:"ram",204:"ram",205:"ram",
+206:"ram",207:"ram",208:"ram",
+
+209:"mine_clearance",210:"mine_clearance",
+211:"mine_clearance",212:"mine_clearance",
+213:"mine_clearance",214:"mine_clearance",
+215:"mine_clearance",216:"mine_clearance",
+217:"mine_clearance",218:"mine_clearance",
+
+219:"cbd",220:"cbd",221:"cbd",222:"cbd",
+223:"cbd",224:"cbd",225:"cbd",226:"cbd",
+227:"cbd",
+
+228:"pilot",229:"pilot",230:"pilot",
+231:"pilot",232:"pilot",233:"pilot"
+};
+
+
+/* =========================
+   RENDERING
+========================= */
+
+const select=document.getElementById("cardSelect");
+const display=document.getElementById("display");
+const info=document.getElementById("info");
+const title=document.getElementById("title");
+
+Object.keys(cards).sort((a,b)=>a-b).forEach(num=>{
+    let opt=document.createElement("option");
+    opt.value=num;
+    opt.text="Card "+num;
+    select.appendChild(opt);
+});
+
+function render(card){
+    display.innerHTML="";
+    const config=configs[cards[card]];
+    title.innerText="Card "+card+" – "+config.name;
+
+    config.render.forEach(l=>{
+        let [color,pos]=l.split(" ");
+        let div=document.createElement("div");
+        div.className="light "+color+" "+pos;
+        display.appendChild(div);
+    });
+
+    info.innerHTML=`
+    <strong>Description:</strong> ${config.name}<br>
+    <strong>COLREG Rule:</strong> ${config.rule}<br><br>
+    <strong>Lights Displayed:</strong>
+    <ul>
+        ${config.lights.map(l=>"<li>"+l+"</li>").join("")}
+    </ul>
+    `;
+}
+
+select.onchange=()=>render(select.value);
+render(1);
+
+</script>
+
+</body>
+</html>
