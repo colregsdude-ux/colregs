@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Random Rule Test | TheRulesGuide.com</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2f;
+      --accent: #3b82f6;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(180deg, #0b1220, #020617);
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+    }
+
+    .panel {
+      width: min(620px, 100%);
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    }
+
+    h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 0.65rem; }
+    p { color: var(--muted); margin-bottom: 1.25rem; }
+
+    button, a.back-link {
+      display: inline-block;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.8rem 1.2rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover, a.back-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+    }
+
+    .result {
+      min-height: 1.6rem;
+      margin: 1rem 0 1.25rem;
+      font-size: 0.95rem;
+      color: #c7d2fe;
+      word-break: break-all;
+    }
+
+    .button-row { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <h1>Random Rule Button Test</h1>
+    <p>Pick a random COLREGS rule quiz and open it in a new tab.</p>
+
+    <div class="button-row">
+      <button id="randomRuleBtn" type="button">🎲 Open Random Rule</button>
+      <a class="back-link" href="index.html">← Back to rules list</a>
+    </div>
+
+    <p class="result" id="resultText" aria-live="polite"></p>
+  </main>
+
+  <script>
+    const ruleLinks = [
+      "https://www.sporcle.com/games/rorymcmillan/rule-1a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-1b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-1c",
+      "https://www.sporcle.com/games/rorymcmillan/1d",
+      "https://www.sporcle.com/games/rorymcmillan/rule-1e",
+      "https://www.sporcle.com/games/rorymcmillan/rule-2a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-2b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3c",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3d",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3e",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3f",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3g",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3h",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3i",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3j",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3k",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3l",
+      "https://www.sporcle.com/games/rorymcmillan/rule-3m",
+      "https://www.sporcle.com/games/rorymcmillan/rule-4",
+      "https://www.sporcle.com/games/rorymcmillan/rule-5",
+      "https://www.sporcle.com/games/rorymcmillan/rule-6",
+      "https://www.sporcle.com/games/rorymcmillan/rule-6a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-6b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-7a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-7b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-7c",
+      "https://www.sporcle.com/games/rorymcmillan/rule-7d",
+      "https://www.sporcle.com/games/rorymcmillan/rule-8a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-8b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-8c",
+      "https://www.sporcle.com/games/rorymcmillan/rule-8d",
+      "https://www.sporcle.com/games/colregsdude/rule-8e",
+      "https://www.sporcle.com/games/rorymcmillan/rule-8f",
+      "https://www.sporcle.com/games/rorymcmillan/rule-9a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-9b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-9c",
+      "https://www.sporcle.com/games/rorymcmillan/rule-9d",
+      "https://www.sporcle.com/games/rorymcmillan/rule-9e",
+      "https://www.sporcle.com/games/rorymcmillan/rule-9f",
+      "https://www.sporcle.com/games/rorymcmillan/rule-9g",
+      "https://www.sporcle.com/games/rorymcmillan/rule-10a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-9b-1",
+      "https://www.sporcle.com/games/rorymcmillan/rule-10c",
+      "https://www.sporcle.com/games/rorymcmillan/rule-10d",
+      "https://www.sporcle.com/games/rorymcmillan/rule-10e",
+      "https://www.sporcle.com/games/rorymcmillan/rule-10f-j",
+      "https://www.sporcle.com/games/rorymcmillan/rule-10k-l",
+      "https://www.sporcle.com/games/rorymcmillan/rule-11",
+      "https://www.sporcle.com/games/rorymcmillan/rule-12a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-12b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-13a-b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-13c-d",
+      "https://www.sporcle.com/games/rorymcmillan/rule-14",
+      "https://www.sporcle.com/games/rorymcmillan/rule-15",
+      "https://www.sporcle.com/games/rorymcmillan/rule-16",
+      "https://www.sporcle.com/games/rorymcmillan/rule-17a",
+      "https://www.sporcle.com/games/rorymcmillan/rule-17b",
+      "https://www.sporcle.com/games/rorymcmillan/rule-17c-d",
+      "https://www.sporcle.com/games/rorymcmillan/rule-18a-c",
+      "https://www.sporcle.com/games/rorymcmillan/rule-18d",
+      "https://www.sporcle.com/games/rorymcmillan/rule-18e",
+      "https://www.sporcle.com/games/rorymcmillan/rule-18f",
+      "https://www.sporcle.com/games/rorymcmillan/rule-19a-c",
+      "https://www.sporcle.com/games/rorymcmillan/rule-19d",
+      "https://www.sporcle.com/games/rorymcmillan/rule-19e",
+    ];
+
+    document.getElementById('randomRuleBtn').addEventListener('click', () => {
+      const randomRule = ruleLinks[Math.floor(Math.random() * ruleLinks.length)];
+      document.getElementById('resultText').textContent = `Opening: ${randomRule}`;
+      window.open(randomRule, '_blank', 'noopener,noreferrer');
+    });
+  </script>
+</body>
+</html>

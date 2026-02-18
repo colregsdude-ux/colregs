@@ -48,6 +48,23 @@
       font-size: 1.05rem;
     }
 
+    .test-link {
+      display: inline-block;
+      margin-top: 1rem;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .test-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+    }
+
     main {
       padding: 2rem 1.5rem 4rem;
       max-width: 1100px;
@@ -99,6 +116,7 @@
   <header>
     <h1>TheRulesGuide.com</h1>
     <p>COLREGS - Rules 1 to 19</p>
+    <a class="test-link" href="random-rule-test.html">Test random rule button</a>
     <!--<div class="random-container">
   <button id="randomBtn">🎲 Mystery Rule</button>
   <button id="shuffleBtn">🔄 New Rule</button>-->
