@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TheRulesGuide.com</title>
+   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2f;
+      --accent: #3b82f6;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(180deg, #0b1220, #020617);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 3rem 1.5rem 2rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--muted);
+      max-width: 700px;
+      margin: 0 auto;
+      font-size: 1.05rem;
+    }
+
+    main {
+      padding: 2rem 1.5rem 4rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    a.card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 1.25rem 1.4rem;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    a.card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(59,130,246,0.6);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+
+    .card h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .card span {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TheRulesGuide.com</h1>
+    <p>COLREGS - Rules 1 to 19</p>
+    <!--<div class="random-container">
+  <button id="randomBtn">🎲 Mystery Rule</button>
+  <button id="shuffleBtn">🔄 New Rule</button>-->
+</div>
+
+  </header>
+
+  <main>
+    <section class="grid">
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-1a" target="_blank"><h3>Rule 1A</h3><span>General – Application</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-1b" target="_blank"><h3>Rule 1B</h3><span>General – Application</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-1c" target="_blank"><h3>Rule 1C</h3><span>General – Application</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/1d" target="_blank"><h3>Rule 1D</h3><span>General – Application</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-1e" target="_blank"><h3>Rule 1E</h3><span>General – Application</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-2a" target="_blank"><h3>Rule 2A</h3><span>Responsibility</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-2b" target="_blank"><h3>Rule 2B</h3><span>Responsibility</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3a" target="_blank"><h3>Rule 3A</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3b" target="_blank"><h3>Rule 3B</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3c" target="_blank"><h3>Rule 3C</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3d" target="_blank"><h3>Rule 3D</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3e" target="_blank"><h3>Rule 3E</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3f" target="_blank"><h3>Rule 3F</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3g" target="_blank"><h3>Rule 3G</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3h" target="_blank"><h3>Rule 3H</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3i" target="_blank"><h3>Rule 3I</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3j" target="_blank"><h3>Rule 3J</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3k" target="_blank"><h3>Rule 3K</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3l" target="_blank"><h3>Rule 3L</h3><span>Definitions</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-3m" target="_blank"><h3>Rule 3M</h3><span>Definitions</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-4" target="_blank"><h3>Rule 4</h3><span>Application</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-5" target="_blank"><h3>Rule 5</h3><span>Look Out</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-6" target="_blank"><h3>Rule 6</h3><span>Safe Speed</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-6a" target="_blank"><h3>Rule 6A</h3><span>Safe Speed</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-6b" target="_blank"><h3>Rule 6B</h3><span>Safe Speed</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-7a" target="_blank"><h3>Rule 7A</h3><span>Risk of Collision</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-7b" target="_blank"><h3>Rule 7B</h3><span>Risk of Collision</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-7c" target="_blank"><h3>Rule 7C</h3><span>Risk of Collision</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-7d" target="_blank"><h3>Rule 7D</h3><span>Risk of Collision</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-8a" target="_blank"><h3>Rule 8A</h3><span>Action to Avoid Collision</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-8b" target="_blank"><h3>Rule 8B</h3><span>Action to Avoid Collision</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-8c" target="_blank"><h3>Rule 8C</h3><span>Action to Avoid Collision</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-8d" target="_blank"><h3>Rule 8D</h3><span>Action to Avoid Collision</span></a>
+      <a class="card" href="https://www.sporcle.com/games/colregsdude/rule-8e" target="_blank"><h3>Rule 8E</h3><span>Action to Avoid Collision</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-8f" target="_blank"><h3>Rule 8F</h3><span>Action to Avoid Collision</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-9a" target="_blank"><h3>Rule 9A</h3><span>Narrow Channels</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-9b" target="_blank"><h3>Rule 9B</h3><span>Narrow Channels</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-9c" target="_blank"><h3>Rule 9C</h3><span>Narrow Channels</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-9d" target="_blank"><h3>Rule 9D</h3><span>Narrow Channels</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-9e" target="_blank"><h3>Rule 9E</h3><span>Narrow Channels</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-9f" target="_blank"><h3>Rule 9F</h3><span>Narrow Channels</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-9g" target="_blank"><h3>Rule 9G</h3><span>Narrow Channels</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-10a" target="_blank"><h3>Rule 10A</h3><span>Traffic Separation</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-9b-1" target="_blank"><h3>Rule 10B</h3><span>Traffic Separation</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-10c" target="_blank"><h3>Rule 10C</h3><span>Traffic Separation</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-10d" target="_blank"><h3>Rule 10D</h3><span>Traffic Separation</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-10e" target="_blank"><h3>Rule 10E</h3><span>Traffic Separation</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-10f-j" target="_blank"><h3>Rule 10F–J</h3><span>Traffic Separation</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-10k-l" target="_blank"><h3>Rule 10K–L</h3><span>Traffic Separation</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-11" target="_blank"><h3>Rule 11</h3><span>Application</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-12a" target="_blank"><h3>Rule 12A</h3><span>Sailing Vessels</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-12b" target="_blank"><h3>Rule 12B</h3><span>Sailing Vessels</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-13a-b" target="_blank"><h3>Rule 13A–B</h3><span>Overtaking</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-13c-d" target="_blank"><h3>Rule 13C–D</h3><span>Overtaking</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-14" target="_blank"><h3>Rule 14</h3><span>Head-on Situation</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-15" target="_blank"><h3>Rule 15</h3><span>Crossing Situation</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-16" target="_blank"><h3>Rule 16</h3><span>Give-way Vessel</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-17a" target="_blank"><h3>Rule 17A</h3><span>Stand-on Vessel</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-17b" target="_blank"><h3>Rule 17B</h3><span>Stand-on Vessel</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-17c-d" target="_blank"><h3>Rule 17C–D</h3><span>Stand-on Vessel</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-18a-c" target="_blank"><h3>Rule 18A–C</h3><span>Responsibilities</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-18d" target="_blank"><h3>Rule 18D</h3><span>Responsibilities</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-18e" target="_blank"><h3>Rule 18E</h3><span>Responsibilities</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-18f" target="_blank"><h3>Rule 18F</h3><span>Responsibilities</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-19a-c" target="_blank"><h3>Rule 19A–C</h3><span>Restricted Visibility</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-19d" target="_blank"><h3>Rule 19D</h3><span>Restricted Visibility</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/rule-19e" target="_blank"><h3>Rule 19E</h3><span>Restricted Visibility</span></a>
+
+      <a class="card" href="https://www.sporcle.com/games/colregsdude/rules-of-the-road-titles" target="_blank"><h3>Rules Titles</h3><span>Can you name them?</span></a>
+      
+      <a class="card" href="https://www.sporcle.com/games/Briismars/maritime-signal-flags-and-their-meanings" target="_blank"><h3>Signal Flags</h3><span>Maritime Flag Meanings</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/light-ranges" target="_blank"><h3>Light Ranges</h3><span>Navigation Lights</span></a>
+      <a class="card" href="https://www.sporcle.com/games/rorymcmillan/sound-signals" target="_blank"><h3>Sound Signals</h3><span>COLREGS Signals</span></a>
+      <a class="card" href="https://www.sporcle.com/games/jr637/picture-click-nautical-flag-meanings" target="_blank"><h3>Nautical Flags</h3><span>Picture Click Quiz</span></a>
+    </section>
+  </main>
+
+  <footer>
+    © TheRulesGuide.com - Helping you learn since 2026
+    <br>
+    <p>Feel free to donate if you enjoyed using this site, it goes straight to keeping the site online!</p>
+    <form action="https://www.paypal.com/donate" method="post" target="_top">
+<input type="hidden" name="hosted_button_id" value="UB7ZREHQKE932" />
+<input type="image" src="https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+<img alt="" border="0" src="https://www.paypal.com/en_GB/i/scr/pixel.gif" width="1" height="1" />
+</form>
+
+  </footer>
+<!--<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const ruleLinks = Array.from(document.querySelectorAll('.card'))
+    .map(card => card.href);
+
+  let currentRandom = null;
+
+  function generateRandomRule() {
+    let newRule;
+    do {
+      newRule = ruleLinks[Math.floor(Math.random() * ruleLinks.length)];
+    } while (newRule === currentRandom);
+
+    currentRandom = newRule;
+    return newRule;
+  }
+
+  document.getElementById('randomBtn').addEventListener('click', function () {
+    if (!currentRandom) {
+      currentRandom = generateRandomRule();
+    }
+    window.open(currentRandom, '_blank', 'noopener,noreferrer');
+  });
+
+  document.getElementById('shuffleBtn').addEventListener('click', function () {
+    currentRandom = generateRandomRule();
+  });
+
+});
+</script>-->
+
+</body>
+</html>
