@@ -146,17 +146,19 @@
     .word {
       display: inline-block;
       margin-right: 0.3rem;
-      color: transparent;
+      color: rgba(148, 163, 184, 0.25);
+      border-bottom: 1px dashed rgba(156, 163, 175, 0.3);
       min-width: 0.6ch;
-      user-select: none;
     }
 
     .word.correct {
       color: var(--good);
+      border-bottom-color: rgba(34, 197, 94, 0.5);
     }
 
     .word.missed {
       color: var(--bad);
+      border-bottom-color: rgba(239, 68, 68, 0.6);
     }
 
     .controls {
@@ -207,7 +209,7 @@
       <div id="timer" class="timer">10:00</div>
     </div>
 
-    <label class="input-label" for="wordInput">Type the next word (auto-advances when correct)</label>
+    <label class="input-label" for="wordInput">Type the next word (space/enter to submit)</label>
     <input id="wordInput" type="text" autocomplete="off" spellcheck="false" placeholder="Start typing Rule 1..." />
     <p id="status" class="status">Timer starts on first keystroke.</p>
     <p id="progress" class="progress">Progress: 0 / 0 words</p>
@@ -313,7 +315,7 @@
 
     function submitWord(word) {
       if (!word || currentIndex >= cleanedWords.length || timeLeft <= 0) {
-        return false;
+        return;
       }
 
       const expected = cleanedWords[currentIndex];
@@ -334,49 +336,32 @@
           statusEl.textContent = `Complete! You finished with ${formatTime(timeLeft)} left.`;
           statusEl.className = 'status good';
         }
-        return true;
-      }
-
-      return false;
-    }
-
-    wordInput.addEventListener('input', () => {
-      const typed = wordInput.value.trim();
-      if (!started && typed) {
-        startTimer();
-      }
-
-      if (!typed || currentIndex >= cleanedWords.length || timeLeft <= 0) {
-        wordInput.classList.remove('incorrect');
-        if (!typed) {
-          wordInput.classList.remove('correct');
-          statusEl.textContent = 'Timer starts on first keystroke.';
-          statusEl.className = 'status';
-        }
-        return;
-      }
-
-      const expected = cleanedWords[currentIndex];
-      const normalizedTyped = cleanWord(typed);
-
-      if (normalizedTyped === expected) {
-        const advanced = submitWord(typed);
-        if (advanced) {
-          wordInput.value = '';
-        }
-        return;
-      }
-
-      if (expected.startsWith(normalizedTyped)) {
-        wordInput.classList.remove('incorrect');
-        wordInput.classList.remove('correct');
-        statusEl.textContent = 'Keep typing...';
-        statusEl.className = 'status';
       } else {
         wordInput.classList.add('incorrect');
         wordInput.classList.remove('correct');
         statusEl.textContent = `Incorrect. Expected next word around: "${allWords[currentIndex]}"`;
         statusEl.className = 'status bad';
+      }
+    }
+
+    wordInput.addEventListener('input', () => {
+      if (!started && wordInput.value.trim()) {
+        startTimer();
+      }
+
+      const tokens = wordInput.value.split(/\s+/);
+      if (tokens.length > 1) {
+        tokens.slice(0, -1).forEach(submitWord);
+        wordInput.value = tokens[tokens.length - 1];
+      }
+    });
+
+    wordInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        const typed = wordInput.value.trim();
+        submitWord(typed);
+        wordInput.value = '';
       }
     });
 
