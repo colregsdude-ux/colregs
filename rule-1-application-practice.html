@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rule 1 Application Practice | TheRulesGuide.com</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2f;
+      --accent: #3b82f6;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(180deg, #0b1220, #020617);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 3rem;
+    }
+
+    .container {
+      width: min(980px, 100%);
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: clamp(1.2rem, 3vw, 2rem);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.2rem;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      margin-bottom: 0.3rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .timer {
+      background: rgba(59, 130, 246, 0.16);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      border-radius: 999px;
+      padding: 0.45rem 0.8rem;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .timer.warning {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.45);
+      color: #fde68a;
+    }
+
+    .timer.danger {
+      background: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #fca5a5;
+    }
+
+    .input-label {
+      display: block;
+      margin-bottom: 0.45rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    #wordInput {
+      width: 100%;
+      background: rgba(2, 6, 23, 0.65);
+      color: var(--text);
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 0.95rem 1rem;
+      font-size: 1.05rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    #wordInput:focus {
+      border-color: rgba(59, 130, 246, 0.85);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    }
+
+    #wordInput.correct {
+      border-color: var(--good);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+    }
+
+    #wordInput.incorrect {
+      border-color: var(--bad);
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+    }
+
+    .status {
+      min-height: 1.4rem;
+      margin-top: 0.55rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .status.good { color: #86efac; }
+    .status.bad { color: #fca5a5; }
+
+    .progress {
+      margin: 1rem 0 0.8rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    #ruleText {
+      margin-top: 1rem;
+      line-height: 2;
+      font-size: 1.03rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 1rem;
+      color: var(--card);
+    }
+
+    .word {
+      display: inline-block;
+      margin-right: 0.3rem;
+      user-select: none;
+    }
+
+    .word.correct {
+      color: var(--good);
+    }
+
+    .word.missed {
+      color: var(--bad);
+    }
+
+    .controls {
+      margin-top: 1.4rem;
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      padding: 0.62rem 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(59,130,246,0.35);
+    }
+
+    .btn.secondary {
+      background: rgba(255,255,255,0.09);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="top-row">
+      <div>
+        <h1>Rule 1 — Application Practice</h1>
+        <p class="subtitle">Type each word in order to practice the full rule verbatim.</p>
+      </div>
+      <div id="timer" class="timer">10:00</div>
+    </div>
+
+    <label class="input-label" for="wordInput">Type the next word (auto-advances when correct)</label>
+    <input id="wordInput" type="text" autocomplete="off" spellcheck="false" placeholder="Start typing Rule 1..." />
+    <p id="status" class="status">Timer starts on first keystroke.</p>
+    <p id="progress" class="progress">Progress: 0 / 0 words</p>
+
+    <section id="ruleText" aria-live="polite"></section>
+
+    <div class="controls">
+      <a class="btn secondary" href="index.html">← Back to Main Page</a>
+      <button id="resetBtn" class="btn primary" type="button">Restart Practice</button>
+    </div>
+  </main>
+
+  <script>
+    const ruleTextRaw = `(a) These Rules shall apply to all vessels upon the high seas and in all waters connected therewith navigable by seagoing vessels.
+
+(b) Nothing in these Rules shall interfere with the operation of special rules made by an appropriate authority for roadsteads, harbours, rivers, lakes or inland waterways connected with the high seas and navigable by seagoing vessels. Such special rules shall conform as closely as possible to these Rules.
+
+(c) Nothing in these Rules shall interfere with the operation of any special rules made by the Government of any State with respect to additional station or signal lights, shapes or whistle signals for ships of war and vessels proceeding under convoy, or with respect to additional station or signal lights or shapes for fishing vessels engaged in fishing as a fleet. These additional station or signal lights, shapes or whistle signals shall, so far as possible, be such that they cannot be mistaken for any light, shape or signal authorized elsewhere under these Rules.
+
+(d) Traffic separation schemes may be adopted by the Organization for the purpose of these Rules.
+
+(e) Whenever the Government concerned has determined that a vessel of special construction or purpose cannot comply fully with the provisions of any of these Rules with respect to the number, position, range or arc of visibility of lights or shapes, as well as to the disposition and characteristics of sound-signalling appliances, such vessel shall comply with such other provisions in regard to the number, position, range or arc of visibility of lights or shapes, as well as to the disposition and characteristics of sound-signalling appliances, as her Government shall have determined to be the closest possible compliance with these Rules in respect of that vessel.`;
+
+    const wordInput = document.getElementById('wordInput');
+    const statusEl = document.getElementById('status');
+    const progressEl = document.getElementById('progress');
+    const ruleTextEl = document.getElementById('ruleText');
+    const timerEl = document.getElementById('timer');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const allWords = ruleTextRaw.split(/\s+/).filter(Boolean);
+    const cleanedWords = allWords.map(cleanWord);
+
+    let currentIndex = 0;
+    let started = false;
+    let timeLeft = 600;
+    let timerId = null;
+    let timedOut = false;
+
+    function cleanWord(value) {
+      return value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function formatTime(totalSeconds) {
+      const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+      const seconds = String(totalSeconds % 60).padStart(2, '0');
+      return `${minutes}:${seconds}`;
+    }
+
+    function renderWords() {
+      ruleTextEl.innerHTML = '';
+
+      allWords.forEach((word, index) => {
+        const span = document.createElement('span');
+        span.className = 'word';
+        span.textContent = word;
+
+        if (index < currentIndex) {
+          span.classList.add('correct');
+        } else if (timedOut) {
+          span.classList.add('missed');
+        }
+
+        ruleTextEl.appendChild(span);
+      });
+
+      progressEl.textContent = `Progress: ${currentIndex} / ${allWords.length} words`;
+    }
+
+    function updateTimerVisual() {
+      timerEl.textContent = formatTime(timeLeft);
+      timerEl.classList.remove('warning', 'danger');
+      if (timeLeft <= 60) {
+        timerEl.classList.add('danger');
+      } else if (timeLeft <= 180) {
+        timerEl.classList.add('warning');
+      }
+    }
+
+    function startTimer() {
+      if (started) return;
+      started = true;
+      timerId = setInterval(() => {
+        timeLeft -= 1;
+        updateTimerVisual();
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          timerId = null;
+          timeLeft = 0;
+          timedOut = true;
+          renderWords();
+          wordInput.disabled = true;
+          wordInput.classList.remove('correct', 'incorrect');
+          statusEl.textContent = 'Time is up. Remaining text has been shown in red.';
+          statusEl.className = 'status bad';
+        }
+      }, 1000);
+    }
+
+    function submitWord(word) {
+      if (!word || currentIndex >= cleanedWords.length || timeLeft <= 0) {
+        return false;
+      }
+
+      const expected = cleanedWords[currentIndex];
+      if (cleanWord(word) === expected) {
+        currentIndex += 1;
+        renderWords();
+        wordInput.classList.add('correct');
+        wordInput.classList.remove('incorrect');
+        statusEl.textContent = 'Correct — keep going.';
+        statusEl.className = 'status good';
+
+        if (currentIndex === cleanedWords.length) {
+          if (timerId) {
+            clearInterval(timerId);
+            timerId = null;
+          }
+          wordInput.disabled = true;
+          statusEl.textContent = `Complete! You finished with ${formatTime(timeLeft)} left.`;
+          statusEl.className = 'status good';
+        }
+        return true;
+      }
+
+      return false;
+    }
+
+    wordInput.addEventListener('input', () => {
+      const typed = wordInput.value.trim();
+      if (!started && typed) {
+        startTimer();
+      }
+
+      if (!typed || currentIndex >= cleanedWords.length || timeLeft <= 0) {
+        wordInput.classList.remove('incorrect');
+        if (!typed) {
+          wordInput.classList.remove('correct');
+          statusEl.textContent = 'Timer starts on first keystroke.';
+          statusEl.className = 'status';
+        }
+        return;
+      }
+
+      const expected = cleanedWords[currentIndex];
+      const normalizedTyped = cleanWord(typed);
+
+      if (normalizedTyped === expected) {
+        const advanced = submitWord(typed);
+        if (advanced) {
+          wordInput.value = '';
+        }
+        return;
+      }
+
+      if (expected.startsWith(normalizedTyped)) {
+        wordInput.classList.remove('incorrect');
+        wordInput.classList.remove('correct');
+        statusEl.textContent = 'Keep typing...';
+        statusEl.className = 'status';
+      } else {
+        wordInput.classList.add('incorrect');
+        wordInput.classList.remove('correct');
+        statusEl.textContent = `Incorrect. Expected next word around: "${allWords[currentIndex]}"`;
+        statusEl.className = 'status bad';
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      if (timerId) {
+        clearInterval(timerId);
+      }
+      currentIndex = 0;
+      started = false;
+      timeLeft = 600;
+      timerId = null;
+      timedOut = false;
+      wordInput.value = '';
+      wordInput.disabled = false;
+      wordInput.classList.remove('correct', 'incorrect');
+      statusEl.textContent = 'Timer starts on first keystroke.';
+      statusEl.className = 'status';
+      updateTimerVisual();
+      renderWords();
+      wordInput.focus();
+    });
+
+    updateTimerVisual();
+    renderWords();
+  </script>
+</body>
+</html>
