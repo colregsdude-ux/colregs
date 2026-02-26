@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rule Spin Wheel | TheRulesGuide.com</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2f;
+      --accent: #3b82f6;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --good: #22c55e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: radial-gradient(circle at top, #182747 0%, #070d19 55%, #040711 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.2rem;
+      display: grid;
+      place-items: center;
+    }
+
+    .panel {
+      width: min(980px, 100%);
+      background: rgba(18, 26, 47, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 1.5rem;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 0.4rem;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+    }
+
+    .subtext {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 1.1rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 900px) {
+      .layout { grid-template-columns: 520px 1fr; align-items: start; }
+    }
+
+    .wheel-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 0.8rem;
+      position: relative;
+    }
+
+    .pointer {
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 18px solid transparent;
+      border-top: 32px solid #f8fafc;
+      filter: drop-shadow(0 5px 6px rgba(0,0,0,0.35));
+      z-index: 2;
+      margin-bottom: -12px;
+    }
+
+    canvas {
+      width: min(82vw, 480px);
+      height: min(82vw, 480px);
+      max-width: 480px;
+      max-height: 480px;
+      border-radius: 50%;
+      background: #0b1327;
+      box-shadow: inset 0 0 0 5px rgba(255,255,255,0.14), 0 20px 30px rgba(0,0,0,0.35);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button, a.back-link {
+      border: none;
+      border-radius: 11px;
+      padding: 0.78rem 1.2rem;
+      font-weight: 700;
+      font-size: 0.96rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+
+    #spinBtn {
+      background: var(--good);
+      color: #07230e;
+    }
+
+    #spinBtn:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    #shuffleBtn {
+      background: #f59e0b;
+      color: #271302;
+    }
+
+    .back-link {
+      background: var(--accent);
+      color: white;
+    }
+
+    button:hover:not(:disabled), .back-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .result {
+      background: rgba(7, 13, 27, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      border-radius: 14px;
+      padding: 1rem;
+      display: none;
+    }
+
+    .result.show { display: block; }
+
+    .result h2 {
+      font-size: 1.2rem;
+      margin-bottom: 0.65rem;
+      color: #bfdbfe;
+    }
+
+    .links {
+      display: grid;
+      gap: 0.6rem;
+      margin-top: 0.5rem;
+    }
+
+    .links a {
+      display: block;
+      background: rgba(30, 41, 59, 0.95);
+      color: #dbeafe;
+      text-decoration: none;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      border-radius: 10px;
+      padding: 0.6rem 0.75rem;
+    }
+
+    .links a:hover { border-color: rgba(147, 197, 253, 0.9); }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <h1>COLREGS Rule Spin Wheel</h1>
+    <p class="subtext">Spin for a random rule from Rule 1 to Rule 19, then pick one of the Sporcle links for that rule.</p>
+
+    <section class="layout">
+      <div class="wheel-wrap">
+        <div class="pointer" aria-hidden="true"></div>
+        <canvas id="wheelCanvas" width="520" height="520" aria-label="Rule spin wheel"></canvas>
+
+        <div class="button-row">
+          <button id="spinBtn" type="button">🎯 Spin Wheel</button>
+          <button id="shuffleBtn" type="button">🔀 Shuffle Wheel</button>
+          <a class="back-link" href="index.html">← Back to home</a>
+        </div>
+      </div>
+
+      <aside class="result" id="resultBox" aria-live="polite">
+        <h2 id="winnerTitle"></h2>
+        <p class="subtext" style="text-align:left; margin-bottom:0.4rem;">Sporcle links for this rule:</p>
+        <div class="links" id="winnerLinks"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const ruleData = {
+      1: [
+        { label: 'Rule 1A', url: 'https://www.sporcle.com/games/rorymcmillan/rule-1a' },
+        { label: 'Rule 1B', url: 'https://www.sporcle.com/games/rorymcmillan/rule-1b' },
+        { label: 'Rule 1C', url: 'https://www.sporcle.com/games/rorymcmillan/rule-1c' },
+        { label: 'Rule 1D', url: 'https://www.sporcle.com/games/rorymcmillan/1d' },
+        { label: 'Rule 1E', url: 'https://www.sporcle.com/games/rorymcmillan/rule-1e' }
+      ],
+      2: [
+        { label: 'Rule 2A', url: 'https://www.sporcle.com/games/rorymcmillan/rule-2a' },
+        { label: 'Rule 2B', url: 'https://www.sporcle.com/games/rorymcmillan/rule-2b' }
+      ],
+      3: 'abcdefghijklm'.split('').map((letter) => ({
+        label: `Rule 3${letter.toUpperCase()}`,
+        url: `https://www.sporcle.com/games/rorymcmillan/rule-3${letter}`
+      })),
+      4: [{ label: 'Rule 4', url: 'https://www.sporcle.com/games/rorymcmillan/rule-4' }],
+      5: [{ label: 'Rule 5', url: 'https://www.sporcle.com/games/rorymcmillan/rule-5' }],
+      6: [
+        { label: 'Rule 6', url: 'https://www.sporcle.com/games/rorymcmillan/rule-6' },
+        { label: 'Rule 6A', url: 'https://www.sporcle.com/games/rorymcmillan/rule-6a' },
+        { label: 'Rule 6B', url: 'https://www.sporcle.com/games/rorymcmillan/rule-6b' }
+      ],
+      7: ['a', 'b', 'c', 'd'].map((letter) => ({
+        label: `Rule 7${letter.toUpperCase()}`,
+        url: `https://www.sporcle.com/games/rorymcmillan/rule-7${letter}`
+      })),
+      8: [
+        { label: 'Rule 8A', url: 'https://www.sporcle.com/games/rorymcmillan/rule-8a' },
+        { label: 'Rule 8B', url: 'https://www.sporcle.com/games/rorymcmillan/rule-8b' },
+        { label: 'Rule 8C', url: 'https://www.sporcle.com/games/rorymcmillan/rule-8c' },
+        { label: 'Rule 8D', url: 'https://www.sporcle.com/games/rorymcmillan/rule-8d' },
+        { label: 'Rule 8E', url: 'https://www.sporcle.com/games/colregsdude/rule-8e' },
+        { label: 'Rule 8F', url: 'https://www.sporcle.com/games/rorymcmillan/rule-8f' }
+      ],
+      9: ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((letter) => ({
+        label: `Rule 9${letter.toUpperCase()}`,
+        url: `https://www.sporcle.com/games/rorymcmillan/rule-9${letter}`
+      })),
+      10: [
+        { label: 'Rule 10A', url: 'https://www.sporcle.com/games/rorymcmillan/rule-10a' },
+        { label: 'Rule 10B', url: 'https://www.sporcle.com/games/rorymcmillan/rule-9b-1' },
+        { label: 'Rule 10C', url: 'https://www.sporcle.com/games/rorymcmillan/rule-10c' },
+        { label: 'Rule 10D', url: 'https://www.sporcle.com/games/rorymcmillan/rule-10d' },
+        { label: 'Rule 10E', url: 'https://www.sporcle.com/games/rorymcmillan/rule-10e' },
+        { label: 'Rule 10F–J', url: 'https://www.sporcle.com/games/rorymcmillan/rule-10f-j' },
+        { label: 'Rule 10K–L', url: 'https://www.sporcle.com/games/rorymcmillan/rule-10k-l' }
+      ],
+      11: [{ label: 'Rule 11', url: 'https://www.sporcle.com/games/rorymcmillan/rule-11' }],
+      12: [
+        { label: 'Rule 12A', url: 'https://www.sporcle.com/games/rorymcmillan/rule-12a' },
+        { label: 'Rule 12B', url: 'https://www.sporcle.com/games/rorymcmillan/rule-12b' }
+      ],
+      13: [
+        { label: 'Rule 13A–B', url: 'https://www.sporcle.com/games/rorymcmillan/rule-13a-b' },
+        { label: 'Rule 13C–D', url: 'https://www.sporcle.com/games/rorymcmillan/rule-13c-d' }
+      ],
+      14: [{ label: 'Rule 14', url: 'https://www.sporcle.com/games/rorymcmillan/rule-14' }],
+      15: [{ label: 'Rule 15', url: 'https://www.sporcle.com/games/rorymcmillan/rule-15' }],
+      16: [{ label: 'Rule 16', url: 'https://www.sporcle.com/games/rorymcmillan/rule-16' }],
+      17: [
+        { label: 'Rule 17A', url: 'https://www.sporcle.com/games/rorymcmillan/rule-17a' },
+        { label: 'Rule 17B', url: 'https://www.sporcle.com/games/rorymcmillan/rule-17b' },
+        { label: 'Rule 17C–D', url: 'https://www.sporcle.com/games/rorymcmillan/rule-17c-d' }
+      ],
+      18: [
+        { label: 'Rule 18A–C', url: 'https://www.sporcle.com/games/rorymcmillan/rule-18a-c' },
+        { label: 'Rule 18D', url: 'https://www.sporcle.com/games/rorymcmillan/rule-18d' },
+        { label: 'Rule 18E', url: 'https://www.sporcle.com/games/rorymcmillan/rule-18e' },
+        { label: 'Rule 18F', url: 'https://www.sporcle.com/games/rorymcmillan/rule-18f' }
+      ],
+      19: [
+        { label: 'Rule 19A–C', url: 'https://www.sporcle.com/games/rorymcmillan/rule-19a-c' },
+        { label: 'Rule 19D', url: 'https://www.sporcle.com/games/rorymcmillan/rule-19d' },
+        { label: 'Rule 19E', url: 'https://www.sporcle.com/games/rorymcmillan/rule-19e' }
+      ]
+    };
+
+    const ruleNumbers = Array.from({ length: 19 }, (_, index) => index + 1);
+    const colors = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#334155', '#64748b'];
+
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const spinBtn = document.getElementById('spinBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const resultBox = document.getElementById('resultBox');
+    const winnerTitle = document.getElementById('winnerTitle');
+    const winnerLinks = document.getElementById('winnerLinks');
+
+    let wheelRules = [];
+    let rotation = 0;
+    const sectorCount = ruleNumbers.length;
+    const arc = (Math.PI * 2) / sectorCount;
+
+    function shuffleRules() {
+      wheelRules = [...ruleNumbers];
+      for (let i = wheelRules.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [wheelRules[i], wheelRules[j]] = [wheelRules[j], wheelRules[i]];
+      }
+      drawWheel();
+    }
+
+    function drawWheel() {
+      const radius = canvas.width / 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(radius, radius);
+      ctx.rotate(rotation);
+
+      for (let i = 0; i < sectorCount; i += 1) {
+        const start = i * arc;
+        const end = start + arc;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, radius - 8, start, end);
+        ctx.closePath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+
+        ctx.save();
+        ctx.rotate(start + arc / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '700 21px Inter';
+        ctx.fillText(`Rule ${wheelRules[i]}`, radius - 26, 6);
+        ctx.restore();
+      }
+
+      ctx.beginPath();
+      ctx.arc(0, 0, 44, 0, Math.PI * 2);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function showWinner(ruleNumber) {
+      const links = ruleData[ruleNumber] || [];
+      winnerTitle.textContent = `Selected: Rule ${ruleNumber}`;
+      winnerLinks.innerHTML = '';
+
+      links.forEach((link) => {
+        const item = document.createElement('a');
+        item.href = link.url;
+        item.target = '_blank';
+        item.rel = 'noopener noreferrer';
+        item.textContent = `${link.label} — ${link.url}`;
+        winnerLinks.appendChild(item);
+      });
+
+      resultBox.classList.add('show');
+    }
+
+    function spin() {
+      spinBtn.disabled = true;
+      resultBox.classList.remove('show');
+      shuffleRules();
+      const winnerIndex = Math.floor(Math.random() * sectorCount);
+      const fullSpins = 5 + Math.floor(Math.random() * 4);
+
+      const winningCenterOnTop = (Math.PI * 1.5) - ((winnerIndex + 0.5) * arc);
+      const targetRotation = (fullSpins * Math.PI * 2) + winningCenterOnTop;
+      const startRotation = rotation;
+      const duration = 4300;
+      const startTime = performance.now();
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 4);
+
+        rotation = startRotation + (targetRotation - startRotation) * eased;
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          rotation %= Math.PI * 2;
+          drawWheel();
+          spinBtn.disabled = false;
+          showWinner(wheelRules[winnerIndex]);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    spinBtn.addEventListener('click', spin);
+    shuffleBtn.addEventListener('click', () => {
+      resultBox.classList.remove('show');
+      shuffleRules();
+    });
+
+    shuffleRules();
+  </script>
+</body>
+</html>
