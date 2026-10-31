@@ -490,8 +490,8 @@ function drawBridge(now){
  const fa=clamp((10-vis)/9,0,1);
  if(fa>0){g=bx.createLinearGradient(0,HZ-H*.35,0,HZ+H*.3);const fc=C.fog.join(',');g.addColorStop(0,`rgba(${fc},0)`);g.addColorStop(.5,`rgba(${fc},${(.75*fa).toFixed(2)})`);g.addColorStop(1,`rgba(${fc},${(.3*fa).toFixed(2)})`);bx.fillStyle=g;bx.fillRect(0,HZ-H*.35,W,H*.65)}
  // foredeck
- const fx=W/2+n180(own.hdg-vc)/view.fov*W,sc=70/view.fov*deckScale;
- if(Math.abs(fx-W/2)<W/2+200){bx.fillStyle=night?'#05070b':'#2b3440';bx.beginPath();bx.moveTo(fx-220*sc,H);bx.lineTo(fx-40*sc,H-55*sc);bx.lineTo(fx+40*sc,H-55*sc);bx.lineTo(fx+220*sc,H);bx.fill();bx.fillStyle=night?'#0c1018':'#4b5563';bx.fillRect(fx-2,H-70*sc,4,16*sc)}
+ const fx=W/2+n180(own.hdg-vc)/view.fov*W,sc=deckScale,bowA=clamp((view.fov-20)/25,0,1);
+ if(bowA>0&&Math.abs(fx-W/2)<W/2+200){bx.globalAlpha=bowA;bx.fillStyle=night?'#05070b':'#2b3440';bx.beginPath();bx.moveTo(fx-220*sc,H);bx.lineTo(fx-40*sc,H-55*sc);bx.lineTo(fx+40*sc,H-55*sc);bx.lineTo(fx+220*sc,H);bx.fill();bx.fillStyle=night?'#0c1018':'#4b5563';bx.fillRect(fx-2,H-70*sc,4,16*sc);bx.globalAlpha=1}
  // frame, compass
  bx.fillStyle='#0b0f17';bx.fillRect(0,0,6,H);bx.fillRect(W-6,0,6,H);bx.fillRect(0,H-26,W,26);
  compass(vc);
