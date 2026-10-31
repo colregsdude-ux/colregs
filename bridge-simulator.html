@@ -92,7 +92,7 @@ td.role{text-align:left;font-size:.7rem}
 </head>
 <body>
 <canvas id="bridge" aria-label="Bridge view"></canvas>
-<div class="hint">Press F11 for full screen · Drag to look around · Wheel to zoom (binoculars) · Click a vessel to select</div>
+<div class="hint">Drag to look around · wheel to zoom (binoculars) · click a vessel to select</div>
 <div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem;display:block">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
 
 <div class="dock" id="dockL">
@@ -115,6 +115,7 @@ td.role{text-align:left;font-size:.7rem}
       <label>Look <span id="lookv">0°</span><input type="range" id="look" min="-180" max="180" step="1" value="0"></label>
       <label>Your ship's bow size <span id="deckv">1.0×</span><input type="range" id="deck" min="0.5" max="3" step="0.1" value="1"></label>
       <label>Panel transparency <span id="transv">14%</span><input type="range" id="trans" min="0" max="100" step="1" value="14"></label>
+      <label class="chk" title="Off = every light in its arc is shown out to the visibility setting"><input type="checkbox" id="rng" checked> Realistic light ranges (Rule 22)</label>
       <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
       <label class="chk"><input type="checkbox" id="train" checked> Show rule assessment</label>
     </div>
@@ -144,7 +145,7 @@ td.role{text-align:left;font-size:.7rem}
 </div>
 
 <section class="box help" id="pHelp"><h2>Controls</h2>
-  <p><kbd>←</kbd><kbd>→</kbd> helm 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · drag a panel's title bar to move it, drag any corner to resize (contents scale) · <kbd>B</kbd> minimise / show the menu bar</p>
+  <p><kbd>←</kbd><kbd>→</kbd> helm 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · drag a panel's title bar to move it, drag any corner to resize (contents scale) · <kbd>B</kbd> minimise / show the menu bar · <kbd>F</kbd> full screen</p>
   <p>Panels: <kbd>R</kbd> radar · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
   <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
   <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
@@ -163,6 +164,7 @@ td.role{text-align:left;font-size:.7rem}
   <button class="b" data-p="list">Targets <kbd>G</kbd></button>
   <button class="b" data-p="log">Log <kbd>L</kbd></button>
   <button class="b" data-p="help">Help <kbd>?</kbd></button>
+  <button class="b" id="barFs" title="Full screen (F)">⛶ Full screen <kbd>F</kbd></button>
   <span class="sep"></span>
   <button class="b" id="barMin" title="Minimise this bar (B)">▾ <kbd>B</kbd></button>
 </nav>
@@ -594,7 +596,7 @@ function drawVessel(t,C,vis,day,dusk,night){
  if(hasLights){
   const rel=n180(n360(t.brg+180)-t.hdg),big=L>=50;
   const R={mast:L>=50?6:L>=20?5:L>=12?3:2,sbd:L>=50?3:L>=20?2:1,prt:L>=50?3:L>=20?2:1,stern:2,all:L>=50?3:2};
-  const eff=k=>Math.min(R[k],vis);
+  const eff=k=>cfg.allLights?vis:Math.min(R[k],vis);
   bx.globalCompositeOperation='lighter';
   const lit=night?1:.55;
   for(const l of lightsFor(t)){
@@ -839,8 +841,16 @@ const endAct=()=>{act=null};document.addEventListener('pointerup',endAct);docume
 addEventListener('resize',()=>{for(const n in WIN){const el=WIN[n].el;if(!el.classList.contains('hid'))clampWin(el)}});
 $('barPause').onclick=()=>$('pause').click();
 function toggleBar(show){const on=show===undefined?$('bar').classList.contains('hid'):show;$('bar').classList.toggle('hid',!on);$('barShow').classList.toggle('hid',on)}
+function toggleFs(){
+ const d=document,el=d.documentElement;
+ if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}
+ else{const f=el.requestFullscreen||el.webkitRequestFullscreen;if(f)try{const r=f.call(el);if(r&&r.catch)r.catch(()=>{})}catch(_){}}
+}
+function fsLabel(){const on=document.fullscreenElement||document.webkitFullscreenElement;$('barFs').innerHTML=(on?'⛶ Exit full screen':'⛶ Full screen')+' <kbd>F</kbd>';resize()}
+$('barFs').onclick=toggleFs;document.addEventListener('fullscreenchange',fsLabel);document.addEventListener('webkitfullscreenchange',fsLabel);
 $('barMin').onclick=()=>toggleBar(false);$('barShow').onclick=()=>toggleBar(true);
 $('trans').oninput=e=>{const t=+e.target.value;document.documentElement.style.setProperty('--pa',(1-t/100).toFixed(2));$('transv').textContent=t+'%'};
+$('rng').onchange=e=>{cfg.allLights=!e.target.checked};
 $('deck').oninput=e=>{deckScale=+e.target.value;$('deckv').textContent=deckScale.toFixed(1)+'×'};
 // start with the bridge full-screen plus radar and helm
 ['sim','tgt','list','log','help'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
@@ -848,6 +858,7 @@ window.onkeydown=e=>{
  if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&e.target.type!=='checkbox'&&e.target.type!=='range')return;
  if(e.ctrlKey||e.metaKey||e.altKey)return;
  const pk=PKEYS[e.key.toLowerCase()];if(pk){togglePanel(pk);e.preventDefault();return}
+ if(e.key.toLowerCase()==='f'){toggleFs();e.preventDefault();return}
  if(e.key.toLowerCase()==='b'){toggleBar();e.preventDefault();return}
  if(e.key==='Escape'){hideAll();return}
  const k=e.key;
