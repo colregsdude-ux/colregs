@@ -30,8 +30,7 @@ body{padding:0;min-height:0}
 .x:hover{color:#fff}
 #pRadar{width:clamp(250px,min(44vh,34vw),470px)}
 #pTgt{width:min(340px,46vw)}
-#pList{width:min(500px,60vw);max-height:32vh;overflow:auto}
-#pHelp{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(580px,92vw);z-index:40;background:rgba(14,21,40,.96)}
+#pHelp{background:rgba(14,21,40,.96)}
 #radar{max-height:none;max-width:none;box-shadow:none;width:100%;height:auto;aspect-ratio:1;display:block;border-radius:50%;background:#020b06;cursor:crosshair}
 .ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:.4rem .5rem;margin-top:.5rem;font-size:.74rem;color:var(--muted)}
 .ctl label{display:grid;gap:.15rem}
@@ -63,23 +62,36 @@ td.role{text-align:left;font-size:.7rem}
 #log{font-size:.72rem;height:9rem;overflow:auto;line-height:1.4;color:#cbd5e1}
 #log div{border-bottom:1px solid rgba(255,255,255,.04);padding:.1rem 0}
 #log .w{color:#fca5a5}#log .s{color:#fde68a}
-#overlay{position:fixed;inset:0;display:none;place-items:center;background:#000a;color:#fff;text-align:center;line-height:1.4;z-index:50}
+#overlay{position:fixed;inset:0;display:none;place-items:center;background:#000a;color:#fff;text-align:center;line-height:1.4;z-index:9000}
 #overlay.show{display:grid}
 #overlay div{background:#7f1d1d;border:2px solid #fca5a5;border-radius:14px;padding:1rem 1.5rem}
-#bar{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;max-width:96vw;padding:.3rem;background:rgba(8,12,20,.82);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:12px;z-index:20}
+#bar{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;max-width:96vw;padding:.3rem;background:rgba(8,12,20,.82);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:12px;z-index:5000}
 #bar .b{display:inline-flex;align-items:center;gap:.35rem}
 #bar .sep{width:1px;background:rgba(255,255,255,.15);margin:0 .15rem}
 #bar #centre{background:#166534;border-color:#22c55e}
 .help{font-size:.78rem;color:var(--muted);line-height:1.65}
 .help p{color:var(--muted);margin:.35rem 0}
-#barShow{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:20}
+#barShow{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:5000}
 #rinfo{margin-top:.5rem;display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem;font:600 .74rem Inter,sans-serif;font-variant-numeric:tabular-nums;color:#6ee7b7}
 #rinfo .h{color:#f8fafc}#rinfo .lk{color:#38bdf8}
+/* floating windows */
+.win{position:fixed;display:flex;flex-direction:column;padding:0;overflow:hidden;max-height:none;transform:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.win>h2{padding:.5rem 1.4rem .4rem .6rem;margin:0;cursor:move;user-select:none;-webkit-user-select:none;touch-action:none;flex:none;border-bottom:1px solid rgba(255,255,255,.06)}
+.win>h2:hover{color:#e5e7eb}
+.wrap{position:relative;flex:1;min-height:0;margin:.5rem 10px 10px;overflow:hidden}
+.wc{position:absolute;left:0;top:0;transform-origin:0 0}
+.wc.fl{display:flex;flex-direction:column;overflow:auto}
+.wc.fl #log{height:auto;flex:1;min-height:0}
+.sc{flex:1;min-height:0;overflow:auto}
+.rz{position:absolute;width:12px;height:12px;z-index:5;touch-action:none}
+.rz[data-c=nw]{left:0;top:0;cursor:nwse-resize}.rz[data-c=se]{right:0;bottom:0;cursor:nwse-resize;width:16px;height:16px}
+.rz[data-c=ne]{right:0;top:0;cursor:nesw-resize}.rz[data-c=sw]{left:0;bottom:0;cursor:nesw-resize}
+.rz[data-c=se]::after{content:'';position:absolute;right:3px;bottom:3px;width:7px;height:7px;border-right:2px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(255,255,255,.4)}
 </style>
 </head>
 <body>
 <canvas id="bridge" aria-label="Bridge view"></canvas>
-<div class="hint">Press F11 to full screen · Drag to look around · wheel to zoom (binoculars) · click a vessel to select</div>
+<div class="hint">Drag to look around · wheel to zoom (binoculars) · click a vessel to select</div>
 <div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem;display:block">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
 
 <div class="dock" id="dockL">
@@ -130,7 +142,7 @@ td.role{text-align:left;font-size:.7rem}
 </div>
 
 <section class="box help" id="pHelp"><h2>Controls</h2>
-  <p><kbd>←</kbd><kbd>→</kbd> helm 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · <kbd>B</kbd> minimise / show the menu bar</p>
+  <p><kbd>←</kbd><kbd>→</kbd> helm 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · drag a panel's title bar to move it, drag any corner to resize (contents scale) · <kbd>B</kbd> minimise / show the menu bar</p>
   <p>Panels: <kbd>R</kbd> radar · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
   <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
   <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
@@ -429,11 +441,11 @@ function showOverlay(msg){paused=true;$('pause').textContent='Resume';$('ovText'
 
 /* ================= canvases ================= */
 const bc=$('bridge'),bx=bc.getContext('2d'),rc=$('radar'),rx=rc.getContext('2d');
-let BW=0,BH=0,RS=0;
+let BW=0,BH=0,RS=0,rk=1;
 function resize(){
  const d=Math.min(window.devicePixelRatio||1,2);
  BW=bc.clientWidth;BH=bc.clientHeight;bc.width=BW*d;bc.height=BH*d;bx.setTransform(d,0,0,d,0,0);
- RS=rc.clientWidth;rc.width=RS*d;rc.height=RS*d;rx.setTransform(d,0,0,d,0,0);
+ RS=rc.clientWidth;const rr=rc.getBoundingClientRect();rk=(RS&&rr.width)?rr.width/RS:1;const q=d*rk;rc.width=Math.round(RS*q);rc.height=Math.round(RS*q);rx.setTransform(q,0,0,q,0,0);
 }
 new ResizeObserver(resize).observe(bc);new ResizeObserver(resize).observe(rc);
 
@@ -739,7 +751,7 @@ $('trails').onchange=e=>ropt.trails=e.target.checked;
 function setLook(v){view.off=n180(v);$('look').value=Math.round(view.off);$('lookv').textContent=Math.round(view.off)+'°'}
 function setFov(v){view.fov=clamp(v,8,110);$('fov').value=view.fov;$('fovv').textContent=Math.round(view.fov)+'°'}
 $('tbody').onclick=e=>{const tr=e.target.closest('tr');if(tr)sel=targets.find(t=>t.id==tr.dataset.id)||null};
-rc.onclick=e=>{const r=rc.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let b=null,bd=18;for(const t of targets){if(t.rx==null)continue;const d=Math.hypot(t.rx-x,t.ry-y);if(d<bd){bd=d;b=t}}sel=b};
+rc.onclick=e=>{const r=rc.getBoundingClientRect(),x=(e.clientX-r.left)/rk,y=(e.clientY-r.top)/rk;let b=null,bd=18;for(const t of targets){if(t.rx==null)continue;const d=Math.hypot(t.rx-x,t.ry-y);if(d<bd){bd=d;b=t}}sel=b};
 // bridge drag / click / wheel
 let drag=null;
 bc.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,off:view.off,moved:false};bc.setPointerCapture(e.pointerId)};
@@ -752,7 +764,7 @@ const PKEYS={r:'radar',h:'helm',s:'sim',t:'tgt',g:'list',l:'log','?':'help','/':
 const PLAB={radar:'R',helm:'H',sim:'S',tgt:'T',list:'G',log:'L',help:'?'};
 function togglePanel(n,show){
  const el=$(PANELS[n]);const on=show===undefined?el.classList.contains('hid'):show;
- el.classList.toggle('hid',!on);
+ el.classList.toggle('hid',!on);if(on)showWin(n);
  const bt=document.querySelector(`#bar [data-p="${n}"]`);if(bt)bt.classList.toggle('on',on);
  resize();
 }
@@ -764,6 +776,65 @@ document.addEventListener('click',e=>{
  if(e.target.closest('button'))e.target.closest('button').blur();
 });
 document.addEventListener('change',e=>{if(e.target.tagName==='SELECT')e.target.blur()});
+
+/* ---- floating, movable, resizable windows ---- */
+const WIN={radar:{w:340,m:'both'},helm:{w:290,m:'both'},sim:{w:300,m:'both'},tgt:{w:300,m:'width'},list:{w:470,m:'width'},log:{w:300,m:'width'},help:{w:540,m:'width'}};
+let zTop=100;
+for(const n in PANELS){
+ const el=$(PANELS[n]),c=WIN[n],h=el.querySelector('h2');
+ document.body.appendChild(el);el.classList.add('win');el.dataset.n=n;
+ const wrap=document.createElement('div'),wc=document.createElement('div');wrap.className='wrap';wc.className='wc'+(c.m==='width'?' fl':'');wc.style.width=c.w+'px';
+ [...el.childNodes].forEach(x=>{if(x!==h)wc.appendChild(x)});
+ if(n==='list'){const t=wc.querySelector('table'),sc=document.createElement('div');sc.className='sc';t.replaceWith(sc);sc.appendChild(t)}
+ wrap.appendChild(wc);el.appendChild(wrap);c.el=el;c.wc=wc;c.h=h;
+ for(const k of['nw','ne','sw','se'])el.insertAdjacentHTML('beforeend',`<i class="rz" data-c="${k}"></i>`);
+}
+$('dockL').remove();$('dockR').remove();
+function fit(n){
+ const c=WIN[n],el=c.el,wc=c.wc;if(el.classList.contains('hid'))return;
+ const wrap=wc.parentNode,iw=el.clientWidth-20,k=clamp(iw/c.w,.35,3.5);c.k=k;
+ if(c.m==='both')el.style.height=Math.round(c.h.offsetHeight+8+12+c.nh*k)+'px';
+ wc.style.transform=`scale(${k})`;
+ if(c.m==='width')wc.style.height=(wrap.clientHeight/k)+'px';
+ resize();
+}
+function showWin(n){
+ const c=WIN[n],el=c.el,W=innerWidth,H=innerHeight;
+ if(!c.nh){c.nh=c.wc.offsetHeight}
+ if(!el.dataset.placed){
+  el.dataset.placed=1;
+  const bw=Math.min(c.w+20,W-20);el.style.width=bw+'px';
+  const hh=c.h.offsetHeight+18,nat=Math.min(hh+c.nh*(bw-20)/c.w,H*.6);
+  if(c.m==='width')el.style.height=nat+'px';
+  const pos={radar:[W-bw-10,98],tgt:[W-370-bw-10,98],list:[W-bw-10,H-72-nat],helm:[10,98],sim:[bw>0?330:10,98],log:[10,H-72-nat],help:[(W-bw)/2,(H-nat)/2]}[n];
+  el.style.left=Math.max(0,pos[0])+'px';el.style.top=Math.max(0,pos[1])+'px';
+ }
+ front(el);fit(n);
+}
+function front(el){el.style.zIndex=++zTop}
+function clampWin(el){const r=el.getBoundingClientRect();el.style.left=clamp(r.left,80-r.width,innerWidth-80)+'px';el.style.top=clamp(r.top,0,innerHeight-34)+'px'}
+let act=null;
+document.addEventListener('pointerdown',e=>{
+ const el=e.target.closest('.win');if(!el)return;front(el);
+ const rz=e.target.closest('.rz'),hd=e.target.closest('.win>h2'),r=el.getBoundingClientRect();
+ if(rz)act={t:'rz',el,c:rz.dataset.c,sx:e.clientX,sy:e.clientY,r};
+ else if(hd&&!e.target.closest('button'))act={t:'mv',el,sx:e.clientX,sy:e.clientY,r};
+ else return;
+ e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!act)return;const {el,r}=act,dx=e.clientX-act.sx,dy=e.clientY-act.sy;
+ if(act.t==='mv'){el.style.left=clamp(r.left+dx,80-r.width,innerWidth-80)+'px';el.style.top=clamp(r.top+dy,0,innerHeight-34)+'px';return}
+ const n=el.dataset.n,c=WIN[n],west=act.c.includes('w'),north=act.c.includes('n');
+ const w=clamp(west?r.width-dx:r.width+dx,170,Math.min(1000,innerWidth));
+ el.style.width=w+'px';
+ if(c.m==='width'){el.style.height=clamp(north?r.height-dy:r.height+dy,110,innerHeight)+'px'}
+ fit(n);
+ el.style.left=(west?r.right-w:r.left)+'px';
+ el.style.top=(north?r.bottom-el.offsetHeight:r.top)+'px';
+});
+const endAct=()=>{act=null};document.addEventListener('pointerup',endAct);document.addEventListener('pointercancel',endAct);
+addEventListener('resize',()=>{for(const n in WIN){const el=WIN[n].el;if(!el.classList.contains('hid'))clampWin(el)}});
 $('barPause').onclick=()=>$('pause').click();
 function toggleBar(show){const on=show===undefined?$('bar').classList.contains('hid'):show;$('bar').classList.toggle('hid',!on);$('barShow').classList.toggle('hid',on)}
 $('barMin').onclick=()=>toggleBar(false);$('barShow').onclick=()=>toggleBar(true);
