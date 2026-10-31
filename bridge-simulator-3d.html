@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bridge &amp; Radar Simulator | TheRulesGuide.com</title>
+<link rel="icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+html,body{height:100%;overflow:hidden}
+body{padding:0;min-height:0}
+#bridge{z-index:1;position:fixed;inset:0;width:100vw;height:100dvh;border-radius:0;box-shadow:none;max-width:none;max-height:none;background:#000;display:block;cursor:grab;touch-action:none}
+#bridge:active{cursor:grabbing}
+.hint{position:fixed;left:.6rem;bottom:2.2rem;font-size:.68rem;color:#cbd5e1;background:#0008;padding:.15rem .4rem;border-radius:6px;line-height:1.3;pointer-events:none;z-index:5}
+@media(max-width:700px){.hint{display:none}}
+.hid{display:none!important}
+.dock{position:fixed;top:96px;bottom:68px;display:flex;flex-direction:column;gap:.55rem;overflow-y:auto;overflow-x:hidden;pointer-events:none;scrollbar-width:none;z-index:10}
+.dock::-webkit-scrollbar{display:none}
+.dock>*{pointer-events:auto;flex:none}
+#dockL{left:.6rem;width:min(310px,46vw)}
+#dockR{right:.6rem;align-items:flex-end}
+:root{--pa:.86}
+.box{background:rgba(14,21,40,var(--pa));backdrop-filter:blur(calc(var(--pa) * 6px));-webkit-backdrop-filter:blur(calc(var(--pa) * 6px));border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem;width:100%}
+.box h2{display:flex;align-items:center;gap:.4rem;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem;font-weight:600}
+.box h2 .sp{flex:1}
+.box h2 kbd,#bar kbd,.help kbd{background:#1e293b;border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:0 .3rem;font:600 .68rem Inter,sans-serif;color:var(--text)}
+.x{background:none;border:0;color:var(--muted);font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .2rem}
+.x:hover{color:#fff}
+#pRadar{width:clamp(250px,min(44vh,34vw),470px)}
+#pTgt{width:min(340px,46vw)}
+#pHelp{background:rgba(14,21,40,min(1,calc(var(--pa) + .1)))}
+#radar{max-height:none;max-width:none;box-shadow:none;width:100%;height:auto;aspect-ratio:1;display:block;border-radius:50%;background:#020b06;cursor:crosshair}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:.4rem .5rem;margin-top:.5rem;font-size:.74rem;color:var(--muted)}
+.ctl label{display:grid;gap:.15rem}
+select,input[type=number],input[type=range]{width:100%;background:#0b1327;color:var(--text);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:.25rem .35rem;font:inherit;font-size:.8rem}
+input[type=range]{padding:0}
+.chk{display:flex!important;align-items:center;gap:.4rem;grid-template-columns:none}
+.chk input{width:auto}
+.hud{display:flex;gap:1rem;flex-wrap:wrap;font-variant-numeric:tabular-nums;margin-bottom:.4rem}
+.hud b{display:block;font-size:1.2rem;color:#e2f3ff}
+.hud span{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.btns{display:flex;flex-wrap:wrap;gap:.3rem;margin:.25rem 0}
+.b{display:inline-block;text-decoration:none;background:#1e293b;color:var(--text);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:.3rem .55rem;font:600 .78rem Inter,sans-serif;cursor:pointer;white-space:nowrap}
+.b:hover{border-color:var(--accent)}
+.b.on{background:var(--accent);border-color:var(--accent)}
+.b.red{background:#7f1d1d}
+.row2{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;font-size:.76rem;color:var(--muted)}
+.row2 input[type=number]{width:70px}
+table{width:100%;border-collapse:collapse;font-size:.74rem;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:600;text-align:right;padding:.2rem .3rem;border-bottom:1px solid rgba(255,255,255,.1)}
+td{text-align:right;padding:.22rem .3rem;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
+th:first-child,td:first-child{text-align:left}
+tr.sel td{background:rgba(59,130,246,.22)}
+tr.danger td{color:#fca5a5}
+td.role{text-align:left;font-size:.7rem}
+.pt{color:#f87171;font-weight:600}.sb{color:#4ade80;font-weight:600}
+#tinfo{font-size:.8rem;line-height:1.45}
+#tinfo .k{color:var(--muted)}
+#tinfo .rule{margin-top:.4rem;padding:.4rem .5rem;border-radius:8px;background:#0b1327;border-left:3px solid var(--accent);font-size:.76rem}
+#log{font-size:.72rem;height:9rem;overflow:auto;line-height:1.4;color:#cbd5e1}
+#log div{border-bottom:1px solid rgba(255,255,255,.04);padding:.1rem 0}
+#log .w{color:#fca5a5}#log .s{color:#fde68a}
+#overlay{position:fixed;inset:0;display:none;place-items:center;background:#000a;color:#fff;text-align:center;line-height:1.4;z-index:9000}
+#overlay.show{display:grid}
+#overlay div{background:#7f1d1d;border:2px solid #fca5a5;border-radius:14px;padding:1rem 1.5rem}
+#bar{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;max-width:96vw;padding:.3rem;background:rgba(8,12,20,.82);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:12px;z-index:5000}
+#bar .b{display:inline-flex;align-items:center;gap:.35rem}
+#bar .sep{width:1px;background:rgba(255,255,255,.15);margin:0 .15rem}
+#bar #centre{background:#166534;border-color:#22c55e}
+.help{font-size:.78rem;color:var(--muted);line-height:1.65}
+.help p{color:var(--muted);margin:.35rem 0}
+#barShow{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:5000}
+#rinfo{margin-top:.5rem;display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem;font:600 .74rem Inter,sans-serif;font-variant-numeric:tabular-nums;color:#6ee7b7}
+#rinfo .h{color:#f8fafc}#rinfo .lk{color:#38bdf8}
+/* floating windows */
+.win{position:fixed;display:flex;flex-direction:column;padding:0;overflow:hidden;max-height:none;transform:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.win>h2{padding:.5rem 1.4rem .4rem .6rem;margin:0;cursor:move;user-select:none;-webkit-user-select:none;touch-action:none;flex:none;border-bottom:1px solid rgba(255,255,255,.06)}
+.win>h2:hover{color:#e5e7eb}
+.wrap{position:relative;flex:1;min-height:0;margin:.5rem 10px 10px;overflow:hidden}
+.wc{position:absolute;left:0;top:0;transform-origin:0 0}
+.wc.fl{display:flex;flex-direction:column;overflow:auto}
+.wc.fl #log{height:auto;flex:1;min-height:0}
+.sc{flex:1;min-height:0;overflow:auto}
+.rz{position:absolute;width:12px;height:12px;z-index:5;touch-action:none}
+.rz[data-c=nw]{left:0;top:0;cursor:nwse-resize}.rz[data-c=se]{right:0;bottom:0;cursor:nwse-resize;width:16px;height:16px}
+.rz[data-c=ne]{right:0;top:0;cursor:nesw-resize}.rz[data-c=sw]{left:0;bottom:0;cursor:nesw-resize}
+.rz[data-c=se]::after{content:'';position:absolute;right:3px;bottom:3px;width:7px;height:7px;border-right:2px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(255,255,255,.4)}
+</style>
+</head>
+<body>
+<canvas id="gl" style="position:fixed;inset:0;width:100vw;height:100dvh;display:block;z-index:0;pointer-events:none"></canvas>
+<canvas id="bridge" aria-label="Bridge view"></canvas>
+<div class="hint">Drag to look around · wheel to zoom (binoculars) · click a vessel to select</div>
+<div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem;display:block">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
+
+<div class="dock" id="dockL">
+  <section class="box" id="pHelm"><h2>Own ship</h2>
+    <div class="hud"><div><b id="hHdg">000°</b><span>Heading</span></div><div><b id="hSpd">12.0</b><span>Speed kn</span></div><div><b id="hRot">0</b><span>ROT °/min</span></div></div>
+    <div class="row2">Course <input type="number" id="course" min="0" max="359" value="0"> <button class="b" id="setCourse">Set</button></div>
+    <div class="btns" id="helm"><button class="b" data-dc="-10">◀ 10</button><button class="b" data-dc="-5">◀ 5</button><button class="b" data-dc="-1">◀ 1</button><button class="b" data-dc="1">1 ▶</button><button class="b" data-dc="5">5 ▶</button><button class="b" data-dc="10">10 ▶</button></div>
+    <div class="row2">Speed <span id="cmdSpd">12</span> kn</div>
+    <div class="btns" id="eng"><button class="b" data-ds="-5">−5</button><button class="b" data-ds="-1">−1</button><button class="b" data-ds="1">+1</button><button class="b" data-ds="5">+5</button><button class="b" data-ds="-99">Stop</button></div>
+    <div class="row2" style="margin-top:.3rem">Sound signals</div>
+    <div class="btns" id="horn"><button class="b" data-h="1">1 short</button><button class="b" data-h="2">2 short</button><button class="b" data-h="3">3 short</button><button class="b red" data-h="5">5 short</button><button class="b" data-h="p">1 prolonged</button></div>
+  </section>
+  <section class="box" id="pSim"><h2>Simulation</h2>
+    <div class="ctl" style="margin-top:0">
+      <label>Scenario<select id="scen"></select></label>
+      <label>Time speed<select id="ts"><option>1</option><option>2</option><option>5</option><option selected>10</option><option>20</option><option>30</option><option>60</option></select></label>
+      <label>Lighting<select id="light"><option value="night">Night</option><option value="dusk">Dusk</option><option value="day">Day</option></select></label>
+      <label>Visibility <span id="visv">10 nm</span><input type="range" id="vis" min="0.5" max="10" step="0.5" value="10"></label>
+      <label>View zoom <span id="fovv">70°</span><input type="range" id="fov" min="8" max="110" step="1" value="70"></label>
+      <label>Look <span id="lookv">0°</span><input type="range" id="look" min="-180" max="180" step="1" value="0"></label>
+      <label>Your ship's bow size <span id="deckv">1.0×</span><input type="range" id="deck" min="0.5" max="3" step="0.1" value="1"></label>
+      <label>Panel transparency <span id="transv">14%</span><input type="range" id="trans" min="0" max="100" step="1" value="14"></label>
+      <label class="chk" title="Off = every light in its arc is shown out to the visibility setting"><input type="checkbox" id="rng" checked> Realistic light ranges (Rule 22)</label>
+      <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
+      <label class="chk"><input type="checkbox" id="train" checked> Show rule assessment</label>
+      <label class="chk"><input type="checkbox" id="gl3d" checked> 3D renderer (WebGL)</label>
+    </div>
+    <div class="btns" style="margin-top:.5rem"><button class="b" id="pause">Pause</button><button class="b" id="restart">Restart</button><button class="b" id="mute">Sound: on</button></div>
+    <div class="row2" style="margin-top:.3rem">Close-quarters: <b id="cq">0</b> · Collisions: <b id="col">0</b> · Time <b id="clock">00:00:00</b></div>
+  </section>
+  <section class="box" id="pLog"><h2>Event log</h2><div id="log"></div></section>
+</div>
+
+<div class="dock" id="dockR">
+  <section class="box" id="pRadar"><h2>Radar</h2>
+    <canvas id="radar" aria-label="Radar display"></canvas>
+    <div class="ctl">
+      <label>Range<select id="rrange"><option>3</option><option selected>6</option><option>12</option></select></label>
+      <label>Orientation<select id="orient"><option value="head">Head-up</option><option value="north">North-up</option></select></label>
+      <label>Vectors<select id="vec"><option value="true">True</option><option value="rel">Relative</option><option value="off">Off</option></select></label>
+      <label>Vector length<select id="vecT"><option value="3">3 min</option><option value="6" selected>6 min</option><option value="12">12 min</option></select></label>
+      <label>CPA limit<select id="cpaLim"><option>0.5</option><option selected>1</option><option>2</option></select></label>
+      <label class="chk"><input type="checkbox" id="trails" checked> Trails</label>
+    </div>
+    <div id="rinfo"></div>
+  </section>
+  <section class="box" id="pTgt"><h2>Selected target</h2><div id="tinfo">Click a vessel on the radar, bridge or in the list.</div></section>
+  <section class="box" id="pList"><h2>Tracked targets</h2>
+    <table><thead><tr><th>ID</th><th>Brg °T</th><th>Rel</th><th>Rng nm</th><th>Crs °</th><th>Spd kn</th><th>CPA nm</th><th>TCPA min</th><th id="roleH" style="text-align:left">Your role</th></tr></thead><tbody id="tbody"></tbody></table>
+  </section>
+</div>
+
+<section class="box help" id="pHelp"><h2>Controls</h2>
+  <p><kbd>←</kbd><kbd>→</kbd> helm 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · drag a panel's title bar to move it, drag any corner to resize (contents scale) · <kbd>B</kbd> minimise / show the menu bar · <kbd>F</kbd> full screen</p>
+  <p>Panels: <kbd>R</kbd> radar · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
+  <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
+  <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
+  <p>Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and the visibility setting; the radar always sees out to its range.</p>
+</section>
+
+<nav id="bar" aria-label="Panels">
+  <a class="b" href="index.html" title="Back to home">⌂ Home</a>
+  <button class="b" id="centre" title="Look straight ahead along the ship's heading (C)">⌖ Look ahead <kbd>C</kbd></button>
+  <button class="b" id="barPause" title="Pause / resume (Space)">⏯ <kbd>Space</kbd></button>
+  <span class="sep"></span>
+  <button class="b" data-p="radar">Radar <kbd>R</kbd></button>
+  <button class="b" data-p="helm">Helm <kbd>H</kbd></button>
+  <button class="b" data-p="sim">Sim <kbd>S</kbd></button>
+  <button class="b" data-p="tgt">Target <kbd>T</kbd></button>
+  <button class="b" data-p="list">Targets <kbd>G</kbd></button>
+  <button class="b" data-p="log">Log <kbd>L</kbd></button>
+  <button class="b" data-p="help">Help <kbd>?</kbd></button>
+  <button class="b" id="barFs" title="Full screen (F)">⛶ Full screen <kbd>F</kbd></button>
+  <span class="sep"></span>
+  <button class="b" id="barMin" title="Minimise this bar (B)">▾ <kbd>B</kbd></button>
+</nav>
+<button class="b hid" id="barShow" title="Show the menu bar (B)">▴ Menu <kbd>B</kbd></button>
+
+<script>
+'use strict';
+/* ================= helpers ================= */
+const D2R=Math.PI/180,R2D=180/Math.PI,$=id=>document.getElementById(id);
+const n360=a=>((a%360)+360)%360,n180=a=>{a=n360(a);return a>180?a-360:a};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
+const vec=(h,s)=>({x:Math.sin(h*D2R)*s/60,y:Math.cos(h*D2R)*s/60}); // nm per minute
+const turnTo=(c,t,m)=>{const d=n180(t-c);return Math.abs(d)<=m?n360(t):n360(c+Math.sign(d)*m)};
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const pad=n=>String(n).padStart(2,'0'),hms=s=>pad(Math.floor(s/3600))+':'+pad(Math.floor(s/60)%60)+':'+pad(Math.floor(s%60));
+const f1=v=>v.toFixed(1),f2=v=>v.toFixed(2),b3=v=>pad(Math.round(n360(v))%360).padStart(3,'0');
+
+/* ================= vessel types ================= */
+// s = metres forward of centre, x = metres to starboard, z = height above waterline
+const TYPES={
+ pdS:{name:'Power-driven vessel (under 50 m)',cat:'power',kind:'pd',L:38,B:9,fb:2.5,hull:'#33485e',rot:.6,
+  boxes:[{a0:.1,a1:.5,w:.7,h:4.5,c:'#e5e7eb'},{a0:.2,a1:.38,w:.4,h:3,b:4.5,c:'#cbd5e1'}],masts:[{a:.3,top:12}],zm:11,zs:6,zt:4},
+ pdL:{name:'Power-driven vessel (50 m or more)',cat:'power',kind:'pd',L:150,B:24,fb:8,hull:'#8b2e2e',rot:.25,
+  boxes:[{a0:.03,a1:.2,w:.85,h:20,c:'#f1f5f9'},{a0:.32,a1:.55,w:.95,h:7,c:'#2b6cb0'},{a0:.57,a1:.82,w:.95,h:7,c:'#c2410c'}],masts:[{a:.8,top:19},{a:.1,top:31}],zm:19,za:30,zs:14,zt:10},
+ tow:{name:'Vessel towing',cat:'power',kind:'tow',L:32,B:9,fb:2.2,hull:'#7c2d12',rot:.5,
+  boxes:[{a0:.15,a1:.55,w:.7,h:5,c:'#fde68a'}],masts:[{a:.4,top:14}],zm:11,zs:5,zt:4.5},
+ sail:{name:'Sailing vessel',cat:'sail',kind:'sail',L:15,B:4.2,fb:1,hull:'#f1f5f9',rot:1,
+  boxes:[{a0:.35,a1:.62,w:.6,h:1,c:'#cbd5e1'}],masts:[{a:.45,top:20}],zm:2,zs:2,zt:2},
+ trawl:{name:'Fishing vessel – trawling',cat:'fish',kind:'trawl',L:42,B:9,fb:3,hull:'#0f766e',rot:.5,
+  boxes:[{a0:.62,a1:.84,w:.7,h:5,c:'#f8fafc'},{a0:.04,a1:.14,w:.9,h:7,c:'#e2e8f0'}],masts:[{a:.7,top:17}],zm:17,zs:6,zt:5},
+ fish:{name:'Fishing vessel – other than trawling',cat:'fish',kind:'fish',L:30,B:7.5,fb:2.5,hull:'#b45309',rot:.55,
+  boxes:[{a0:.6,a1:.85,w:.7,h:4.5,c:'#f8fafc'}],masts:[{a:.7,top:15}],zm:14,zs:5,zt:4},
+ ram:{name:'Vessel restricted in her ability to manoeuvre',cat:'ram',kind:'ram',L:90,B:18,fb:5,hull:'#374151',rot:.25,
+  boxes:[{a0:.35,a1:.5,w:.8,h:10,c:'#e2e8f0'},{a0:.6,a1:.9,w:.3,h:14,c:'#ca8a04'}],masts:[{a:.43,top:28}],zm:17,za:22,zs:9,zt:7},
+ nuc:{name:'Vessel not under command',cat:'nuc',kind:'nuc',L:70,B:12,fb:4,hull:'#6b7280',rot:.3,
+  boxes:[{a0:.1,a1:.3,w:.8,h:8,c:'#e5e7eb'}],masts:[{a:.5,top:20}],zm:14,zs:7,zt:6},
+ cbd:{name:'Vessel constrained by her draught',cat:'cbd',kind:'cbd',L:190,B:32,fb:6,hull:'#1f2937',rot:.18,
+  boxes:[{a0:.03,a1:.16,w:.8,h:19,c:'#e5e7eb'},{a0:.3,a1:.78,w:.5,h:1.5,c:'#475569'}],masts:[{a:.8,top:30}],zm:17,za:26,zs:12,zt:9},
+ pilot:{name:'Pilot vessel on duty',cat:'power',kind:'pilot',L:18,B:5,fb:1.6,hull:'#f97316',rot:.9,
+  boxes:[{a0:.25,a1:.6,w:.7,h:2.6,c:'#fff7ed'}],masts:[{a:.45,top:10}],zm:7,zs:3.5,zt:3}
+};
+const RANK={nuc:1,ram:2,cbd:2.5,fish:3,sail:4,power:5,anch:0};
+
+function lightsFor(t){
+ const sp=TYPES[t.type],L=sp.L,B=sp.B,big=L>=50,o=[];
+ const add=(c,k,s,z,x=0,way=false)=>o.push({c,k,s,z,x,way});
+ if(t.anch){add('white','all',.38*L,sp.zm,0);if(big)add('white','all',-.38*L,sp.zm-5,0);return o}
+ const sides=(s,z,way)=>{add('green','sbd',s,z,B*.42,way);add('red','prt',s,z,-B*.42,way)};
+ const stern=(z,way,s=-L/2+1)=>add('white','stern',s,z,0,way);
+ const pd=(way)=>{
+  if(big){add('white','mast',.3*L,sp.zm,0,way);add('white','mast',-.4*L,sp.za||sp.zm+9,0,way)}
+  else add('white','mast',-.2*L,sp.zm,0,way);
+  sides(big?-.3*L:.2*L,sp.zs,way);stern(sp.zt,way);
+ };
+ switch(sp.kind){
+  case 'pd':pd(false);break;
+  case 'pilot':add('white','all',-.05*L,sp.zm+2);add('red','all',-.05*L,sp.zm);pd(false);break;
+  case 'sail':sides(.3*L,sp.zs);stern(sp.zt);break;
+  case 'tow':{
+   const n=t.longTow?3:2;for(let i=0;i<n;i++)add('white','mast',-.1*L,sp.zm+i*2.2);
+   sides(.2*L,sp.zs);stern(sp.zt);add('yellow','stern',-L/2+1,sp.zt+2.5);
+   const e=t.towLen,s1=-L/2-25,s2=s1-e;           // towed vessel lights
+   add('green','sbd',s1,2.5,3);add('red','prt',s1,2.5,-3);add('green','sbd',s2+3,2.5,3);add('red','prt',s2+3,2.5,-3);add('white','stern',s2+1,2.2);
+   break}
+  case 'trawl':add('green','all',.2*L,sp.zm-3);add('white','all',.2*L,sp.zm-5);add('white','mast',-.2*L,sp.zm,0,true);sides(.35*L,sp.zs,true);stern(sp.zt,true);break;
+  case 'fish':add('red','all',.2*L,sp.zm-3);add('white','all',.2*L,sp.zm-5);sides(.35*L,sp.zs,true);stern(sp.zt,true);break;
+  case 'ram':add('red','all',-.07*L,sp.za+5);add('white','all',-.07*L,sp.za+2);add('red','all',-.07*L,sp.za-1);
+   add('white','mast',.3*L,sp.zm-6,0,true);add('white','mast',-.3*L,sp.zm,0,true);sides(.1*L,sp.zs,true);stern(sp.zt,true);break;
+  case 'nuc':add('red','all',0,sp.zm+3);add('red','all',0,sp.zm);sides(.3*L,sp.zs,true);stern(sp.zt,true);break;
+  case 'cbd':add('red','all',.3*L,sp.za+6);add('red','all',.3*L,sp.za+3);add('red','all',.3*L,sp.za);pd(false);break;
+ }
+ return o;
+}
+function shapesFor(t){
+ const sp=TYPES[t.type],L=sp.L;
+ if(t.anch)return[{sh:'ball',s:.38*L,z:sp.zm,d:1}];
+ switch(sp.kind){
+  case 'nuc':return[{sh:'ball',s:0,z:sp.zm+3,d:1},{sh:'ball',s:0,z:sp.zm,d:1}];
+  case 'ram':return[{sh:'ball',s:-.07*L,z:sp.za+5,d:1},{sh:'diamond',s:-.07*L,z:sp.za+2,d:1},{sh:'ball',s:-.07*L,z:sp.za-1,d:1}];
+  case 'cbd':return[{sh:'cyl',s:.3*L,z:sp.za+3,d:1}];
+  case 'trawl':case 'fish':return[{sh:'basket',s:.2*L,z:sp.zm-2,d:1}];
+  case 'tow':return t.longTow?[{sh:'diamond',s:-.1*L,z:sp.zm+4,d:1}]:[];
+ }
+ return[];
+}
+const catOf=t=>t.anch?'anch':TYPES[t.type].cat;
+const nameOf=t=>t.anch?TYPES[t.type].name+' – at anchor':TYPES[t.type].name+(t.type==='tow'&&t.longTow?' (tow over 200 m)':'');
+
+/* ================= state ================= */
+const own={x:0,y:0,hdg:0,spd:12,cmdHdg:0,cmdSpd:12,rot:0,L:120};
+let targets=[],nextId=1,simT=0,paused=false,collisions=0,closeQ=0,sel=null,lastSpawn=0,logLines=[];
+const view={off:0,fov:70};
+const cfg={light:'night',vis:10,training:true};
+const RISK_CPA=1.0;
+
+const SCEN={
+ mixed:{label:'Mixed traffic (continuous)',start:['cross_stbd','cross_port','overtaking_us','sail','trawl'],cont:true},
+ xgive:{label:'Crossing – you are give-way (target on your starboard)',start:['cross_stbd'],cont:false},
+ xstand:{label:'Crossing – you are stand-on (target on your port)',start:['cross_port'],cont:false},
+ xfail:{label:'Crossing – give-way vessel fails to act',start:['cross_port_fail'],cont:false},
+ head:{label:'Head-on situation (Rule 14)',start:['head_on'],cont:false},
+ overtaken:{label:'Being overtaken (you stand on)',start:['overtaking_us'],cont:false},
+ overtake:{label:'You overtake a slower vessel (you give way)',start:['overtake_them'],cont:false},
+ sail:{label:'Sailing vessels & fishing vessels (Rule 18)',start:['sail','sail','trawl','fish'],cont:false},
+ restricted:{label:'Restricted vessels: RAM, NUC, CBD, anchored',start:['ram','nuc','cbd','anch','anch'],cont:false},
+ towing:{label:'Towing vessels & pilot vessel',start:['tow','tow_long','pilot'],cont:false},
+ busy:{label:'Busy waters (everything)',start:['cross_stbd','cross_port','head_on','overtaking_us','sail','trawl','cbd','anch','tow'],cont:true}
+};
+const KINDS=[['cross_stbd',3],['cross_port',3],['head_on',1.2],['overtaking_us',1],['overtake_them',1],['sail',1.6],['trawl',1],['fish',.6],['ram',.6],['nuc',.3],['cbd',.7],['anch',.6],['tow',1],['pilot',.7]];
+
+/* ================= spawning ================= */
+function mk(type,o){
+ const sp=TYPES[type];
+ const t=Object.assign({id:nextId++,type,x:0,y:0,hdg:0,cmd:0,base:0,spd:0,cmdSpd:0,L:sp.L,complies:true,acting:false,emerg:false,dir:1,
+  trail:[],lastTrail:-999,anch:false,minR:99,passed:false,actRange:rnd(3.4,5.2),lastSig:-999,echo:null,range:99,brg:0,cpa:99,tcpa:Infinity,rrate:0,risk:false,towLen:90,longTow:false},o);
+ t.base=t.cmd=t.hdg;t.cmdSpd=t.spd;return t;
+}
+function intercept(hdg,spd,D,lat){
+ const ov=vec(own.hdg,Math.max(own.spd,4)),tv=vec(hdg,spd),rx=Math.cos(own.hdg*D2R),ry=-Math.sin(own.hdg*D2R);
+ let best=null,bd=1e9;
+ for(let T=4;T<=110;T+=.5){
+  const mx=own.x+ov.x*T+rx*lat,my=own.y+ov.y*T+ry*lat,x=mx-tv.x*T,y=my-tv.y*T,d=Math.hypot(x-own.x,y-own.y);
+  if(Math.abs(d-D)<bd){bd=Math.abs(d-D);best={x,y}}
+ }
+ return best;
+}
+function ahead(D,lat){const fx=Math.sin(own.hdg*D2R),fy=Math.cos(own.hdg*D2R);return{x:own.x+fx*D+Math.cos(own.hdg*D2R)*lat,y:own.y+fy*D-Math.sin(own.hdg*D2R)*lat}}
+function build(kind){
+ const oc=own.hdg,os=Math.max(own.spd,6),pd=()=>pick(['pdS','pdL']);let t,p,h,s;
+ switch(kind){
+  case 'cross_stbd':case 'cross_port':case 'cross_port_fail':{
+   const sgn=kind==='cross_stbd'?-1:1;h=n360(oc+sgn*rnd(55,115));s=rnd(9,17);p=intercept(h,s,rnd(7,9.5),rnd(-.15,.15));
+   t=mk(pd(),{x:p.x,y:p.y,hdg:h,spd:s,complies:kind!=='cross_port_fail'});break}
+  case 'head_on':h=n360(oc+180+rnd(-4,4));s=rnd(9,16);p=intercept(h,s,rnd(8,10),rnd(-.1,.1));t=mk(pd(),{x:p.x,y:p.y,hdg:h,spd:s});break;
+  case 'overtaking_us':{h=n360(oc+rnd(-4,4));s=Math.max(own.spd+rnd(4,8),12);const d=rnd(5,6.5),lat=rnd(-.12,.12);
+   t=mk(pd(),{x:own.x-Math.sin(oc*D2R)*d+Math.cos(oc*D2R)*lat,y:own.y-Math.cos(oc*D2R)*d-Math.sin(oc*D2R)*lat,hdg:h,spd:s});break}
+  case 'overtake_them':{h=n360(oc+rnd(-3,3));s=Math.max(3,os-rnd(4,6));p=ahead(rnd(5,6.5),rnd(-.1,.1));t=mk(pick(['tow','pdS']),{x:p.x,y:p.y,hdg:h,spd:s,towLen:rnd(70,140)});break}
+  case 'sail':{h=n360(oc+pick([-1,1])*rnd(55,125));s=rnd(4,7);p=intercept(h,s,rnd(6,8),rnd(-.3,.3));
+   t=mk('sail',{x:p.x,y:p.y,hdg:h,spd:s});if(Math.random()<.5)t.tack={d:pick([-1,1])*rnd(70,90),n:rnd(500,900)};break}
+  case 'trawl':case 'fish':{h=rnd(0,360);p=ahead(rnd(5,8),rnd(-3,3));t=mk(kind,{x:p.x,y:p.y,hdg:h,spd:kind==='trawl'?rnd(2,4):rnd(.5,3)});t.wander=true;t.b0=h;t.nextW=simT+rnd(60,200);break}
+  case 'ram':{h=rnd(0,360);p=ahead(rnd(6,8),rnd(-.6,.6));t=mk('ram',{x:p.x,y:p.y,hdg:h,spd:pick([0,2.5,3])});break}
+  case 'nuc':{h=rnd(0,360);p=ahead(rnd(5,7.5),rnd(-.6,.6));t=mk('nuc',{x:p.x,y:p.y,hdg:h,spd:pick([0,0,1.3])});break}
+  case 'cbd':{h=n360(oc+pick([-1,1])*rnd(60,130));s=rnd(8,11);p=intercept(h,s,rnd(8,10),rnd(-.2,.2));t=mk('cbd',{x:p.x,y:p.y,hdg:h,spd:s});break}
+  case 'anch':{p=ahead(rnd(5,8),rnd(-.9,.9));t=mk(pd(),{x:p.x,y:p.y,hdg:rnd(0,360),spd:0,anch:true});break}
+  case 'tow':case 'tow_long':{h=n360(oc+pick([-1,1])*rnd(50,120));s=rnd(4,6.5);p=intercept(h,s,rnd(6,8),rnd(-.2,.2));
+   t=mk('tow',{x:p.x,y:p.y,hdg:h,spd:s});if(kind==='tow_long'){t.longTow=true;t.towLen=250}else t.towLen=rnd(70,150);break}
+  case 'pilot':{h=n360(oc+pick([-1,1])*rnd(40,110));s=rnd(12,18);p=intercept(h,s,rnd(7,9),rnd(-.2,.2));t=mk('pilot',{x:p.x,y:p.y,hdg:h,spd:s});break}
+ }
+ return t;
+}
+function spawn(kind){
+ for(let i=0;i<8;i++){
+  const t=build(kind);nextId--; // id assigned only if accepted
+  if(targets.every(o=>Math.hypot(o.x-t.x,o.y-t.y)>2.5)||i===7){t.id=nextId++;targets.push(t);return t}
+ }
+}
+
+/* ================= COLREGS assessment ================= */
+function derive(t){
+ const rx=t.x-own.x,ry=t.y-own.y,tv=vec(t.hdg,t.spd),ov=vec(own.hdg,own.spd),vx=tv.x-ov.x,vy=tv.y-ov.y,vv=vx*vx+vy*vy;
+ t.range=Math.hypot(rx,ry);t.brg=n360(Math.atan2(rx,ry)*R2D);
+ t.rrate=vv>1e-9?(rx*vx+ry*vy)/Math.max(t.range,1e-6):0;
+ if(vv<1e-9){t.tcpa=Infinity;t.cpa=t.range}
+ else{const tc=-(rx*vx+ry*vy)/vv;t.tcpa=tc;t.cpa=tc>0?Math.hypot(rx+vx*tc,ry+vy*tc):t.range}
+ t.risk=t.tcpa>0&&t.cpa<RISK_CPA&&t.range<8;
+}
+function cpaFor(t,hdg){
+ const rx=t.x-own.x,ry=t.y-own.y,tv=vec(hdg,t.spd),ov=vec(own.hdg,own.spd),vx=tv.x-ov.x,vy=tv.y-ov.y,vv=vx*vx+vy*vy;
+ if(vv<1e-9)return t.range;const tc=-(rx*vx+ry*vy)/vv;return tc<=0?t.range:Math.hypot(rx+vx*tc,ry+vy*tc);
+}
+// role of OWN ship with respect to target t
+function assess(t){
+ const c=catOf(t),aT=n180(t.brg-own.hdg),aO=n180(n360(t.brg+180)-t.hdg),closing=t.rrate<0,N='T'+t.id;
+ if(c==='anch')return{rule:'18',role:'keep-clear',text:'Vessel at anchor (white all-round light(s) / one ball). Keep well clear.'};
+ if(Math.abs(aT)>=112.5&&closing)return{rule:'13',role:'stand-on',text:`Rule 13: ${N} is coming up from abaft your beam (you show her only your stern light). She is the overtaking vessel and must keep clear. You stand on (Rule 17).`};
+ if(Math.abs(aO)>=112.5&&closing)return{rule:'13',role:'give-way',text:`Rule 13: you are overtaking ${N} (you are in her stern-light sector). You must keep clear until well past and clear.`};
+ const rk=RANK[c];
+ if(rk<RANK.power){
+  const why={nuc:'a vessel not under command (Rule 18(a)(i))',ram:'a vessel restricted in her ability to manoeuvre (18(a)(ii))',cbd:'a vessel constrained by her draught – avoid impeding her (18(d))',fish:'a vessel engaged in fishing (18(a)(iii))',sail:'a sailing vessel (18(a)(iv))'}[c];
+  return{rule:'18',role:'give-way',text:`Rule 18: ${N} is ${why}. A power-driven vessel gives way, whichever side she is on.`};
+ }
+ if(Math.abs(aT)<=12&&Math.abs(aO)<=12)return{rule:'14',role:'both',text:`Rule 14: head-on. Both vessels alter course to starboard and pass port-to-port.`};
+ if(aT>0)return{rule:'15',role:'give-way',text:`Rule 15/16: crossing – ${N} is on your starboard side. You give way: act early, make a large alteration (to starboard) and avoid crossing ahead of her.`};
+ return{rule:'15',role:'stand-on',text:`Rule 15/17: crossing – ${N} is on your port side. She gives way. You hold course and speed; act alone only if she fails to give way (17(a)(ii)), and avoid turning to port.`};
+}
+
+/* ================= signals ================= */
+let audio=null,muted=false;
+function horn(seq,freq){
+ if(muted)return;
+ try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();let t0=audio.currentTime+.05;
+  for(const d of seq){
+   const g=audio.createGain(),lp=audio.createBiquadFilter();lp.type='lowpass';lp.frequency.value=700;
+   [0,3].forEach(df=>{const o=audio.createOscillator();o.type='sawtooth';o.frequency.value=freq+df;o.connect(lp);o.start(t0);o.stop(t0+d)});
+   lp.connect(g);g.connect(audio.destination);g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.18,t0+.05);g.gain.setValueAtTime(.18,t0+d-.06);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+   t0+=d+1;}
+ }catch(e){}
+}
+const SIG={1:['1 short blast – "I am altering my course to starboard"',[1]],2:['2 short blasts – "I am altering my course to port"',[1,1]],3:['3 short blasts – "I am operating astern propulsion"',[1,1,1]],5:['5 short blasts – danger / doubt: "I do not understand your intentions"',[1,1,1,1,1]],p:['1 prolonged blast – restricted-visibility signal (power-driven, making way)',[5]]};
+function ownSignal(k){const s=SIG[k];addLog('You: '+s[0],'s');horn(s[1].map(x=>x===1?.9:5),130)}
+function targetSignal(t,k){
+ const s=SIG[k];t.sigN=(t.sigN||0)+(k==5?1:0);if(k==5&&t.sigN>3)return;if(t.range<4.5){addLog(`T${t.id}: ${s[0]}`,k==5?'w':'s');horn(s[1].map(x=>.9),170)}
+}
+function addLog(msg,cls){logLines.push({t:simT,msg,cls});if(logLines.length>60)logLines.shift();renderLog()}
+function renderLog(){const el=$('log');el.innerHTML=logLines.slice(-30).reverse().map(l=>`<div class="${l.cls||''}">[${hms(l.t)}] ${l.msg}</div>`).join('')}
+
+/* ================= simulation step (1 s) ================= */
+function stepSim(dt){
+ simT+=dt;
+ const oh=own.hdg;
+ own.hdg=turnTo(own.hdg,own.cmdHdg,.3*dt);own.rot=n180(own.hdg-oh)/dt*60;
+ own.spd+=clamp(own.cmdSpd-own.spd,-.05*dt,.05*dt);
+ const ov=vec(own.hdg,own.spd);own.x+=ov.x*dt/60;own.y+=ov.y*dt/60;
+ for(const t of targets)derive(t);
+ for(const t of targets){ai(t);
+  const sp=TYPES[t.type];
+  t.hdg=turnTo(t.hdg,t.cmd,sp.rot*dt);t.spd=t.cmdSpd;
+  const v=vec(t.hdg,t.spd);t.x+=v.x*dt/60;t.y+=v.y*dt/60;
+  if(simT-t.lastTrail>=60){t.lastTrail=simT;t.trail.push({x:t.x,y:t.y});if(t.trail.length>14)t.trail.shift()}
+ }
+ for(const t of targets)derive(t);
+ // passes, collisions, housekeeping
+ for(const t of [...targets]){
+  t.minR=Math.min(t.minR,t.range);
+  const cr=(t.L+own.L)/2/1852*.8+.01;
+  if(t.range<cr){collisions++;addLog(`COLLISION with T${t.id}!`,'w');showOverlay(`Collision with T${t.id} (${nameOf(t)}).`);remove(t);continue}
+  if(!t.passed&&t.tcpa<0&&t.minR<3&&t.range>t.minR+.05){
+   t.passed=true;const q=t.minR<.25;if(q)closeQ++;
+   addLog(`T${t.id} passed at ${f2(t.minR)} nm${t.minR<.25?' – CLOSE QUARTERS':t.minR<.5?' – close':''}`,q?'w':'');
+  }
+  if((t.range>14.5&&t.rrate>0)||(t.spd<.3&&t.range>16))remove(t);
+ }
+ if($('cont').checked&&simT-lastSpawn>45){
+  lastSpawn=simT;
+  if(targets.length<7&&Math.random()<.4){let r=Math.random()*KINDS.reduce((a,k)=>a+k[1],0);for(const [k,w] of KINDS){r-=w;if(r<=0){spawn(k);break}}}
+ }
+}
+function remove(t){targets=targets.filter(o=>o!==t);if(sel===t)sel=null}
+
+function ai(t){
+ const c=catOf(t),sp=TYPES[t.type],A=assess(t);t.A=A;
+ if(t.anch){t.cmdSpd=0;return}
+ const mans=c==='power'||c==='cbd';
+ if(t.wander&&simT>=t.nextW){t.base=n360(t.b0+rnd(-40,40));t.cmd=t.base;t.nextW=simT+rnd(180,420)}
+ if(t.tack&&simT>=(t.nextT||0)){t.ts=!t.ts;t.base=n360((t.b0=t.b0??t.hdg)+(t.ts?t.tack.d:0));t.cmd=t.base;t.nextT=simT+t.tack.n+rnd(0,300)}
+ if(!mans)return;
+ const tRole=A.role==='give-way'?'stand-on':A.role==='stand-on'?'give-way':A.role==='both'?'give-way':'none';
+ if(tRole==='give-way'&&t.risk){
+  if(!t.acting&&t.complies&&t.range<=t.actRange){
+   let dir=1;
+   if(A.rule==='13'){const rx=own.x-t.x,ry=own.y-t.y,lat=rx*Math.cos(t.hdg*D2R)-ry*Math.sin(t.hdg*D2R);dir=lat>.05?-1:1}
+   t.acting=true;t.dir=dir;t.cmd=n360(t.base+dir*30);
+   targetSignal(t,dir>0?1:2);
+  }else if(!t.acting&&!t.complies&&t.range<.38&&cpaFor(t,t.hdg)<.15){
+   t.acting=true;t.dir=1;t.cmd=n360(t.base+60);targetSignal(t,5);
+  }
+ }
+ if(tRole==='stand-on'&&t.risk){
+  if(t.cpa<.25&&t.range<1&&simT-t.lastSig>90){t.lastSig=simT;targetSignal(t,5)}
+  if(!t.emerg&&t.cpa<.2&&t.range<.45){t.emerg=true;t.cmd=n360(t.base+55);addLog(`T${t.id} (stand-on) takes avoiding action – Rule 17(a)(ii)`,'w')}
+ }
+ if(t.acting){
+  if(cpaFor(t,t.hdg)<1.0&&Math.abs(n180(t.hdg-t.cmd))<3&&Math.abs(n180(t.cmd-t.base))<80)t.cmd=n360(t.cmd+t.dir*8);
+ }
+ if((t.acting||t.emerg)&&((t.tcpa<0&&t.range>.5)||cpaFor(t,t.base)>=1.1)){t.acting=false;t.emerg=false;t.cmd=t.base}
+}
+
+/* ================= scenario control ================= */
+function restart(){
+ targets=[];nextId=1;simT=0;lastSpawn=0;collisions=0;closeQ=0;sel=null;logLines=[];
+ own.x=own.y=0;own.hdg=own.cmdHdg=0;own.spd=own.cmdSpd=12;own.rot=0;
+ const S=SCEN[$('scen').value];$('cont').checked=S.cont;
+ S.start.forEach(k=>spawn(k));
+ for(const t of targets)derive(t);
+ addLog('Scenario started: '+S.label);renderLog();paused=false;$('pause').textContent='Pause';$('overlay').classList.remove('show');
+}
+function showOverlay(msg){paused=true;$('pause').textContent='Resume';$('ovText').textContent=msg;$('overlay').classList.add('show')}
+
+/* ================= canvases ================= */
+const bc=$('bridge'),bx=bc.getContext('2d'),rc=$('radar'),rx=rc.getContext('2d');
+let BW=0,BH=0,RS=0,rk=1;
+function resize(){
+ const d=Math.min(window.devicePixelRatio||1,2);
+ BW=bc.clientWidth;BH=bc.clientHeight;bc.width=BW*d;bc.height=BH*d;bx.setTransform(d,0,0,d,0,0);
+ RS=rc.clientWidth;const rr=rc.getBoundingClientRect();rk=(RS&&rr.width)?rr.width/RS:1;const q=d*rk;rc.width=Math.round(RS*q);rc.height=Math.round(RS*q);rx.setTransform(q,0,0,q,0,0);
+}
+new ResizeObserver(resize).observe(bc);new ResizeObserver(resize).observe(rc);
+
+/* ---------- bridge ---------- */
+const EYE=18,VEX=3;
+const stars=Array.from({length:140},()=>({b:rnd(0,360),e:Math.random(),s:Math.random()*1.4+.4}));
+const clouds=Array.from({length:9},()=>({b:rnd(0,360),e:rnd(.15,.7),w:rnd(4,9)}));
+const waves=Array.from({length:110},()=>({u:Math.random(),v:Math.random()}));
+let HZ=0,PXR=0;
+function P(dx,dy,z){
+ const d=Math.max(Math.hypot(dx,dy),1e-4),brg=Math.atan2(dx,dy)*R2D,dl=n180(brg-(own.hdg+view.off));
+ return{x:BW/2+dl/view.fov*BW,y:HZ+((EYE-z)/(d*1852))*PXR*VEX,d};
+}
+function skyCols(){
+ if(cfg.light==='day')return{sky:['#3f86d0','#bcdcf3'],sea:['#8db3cc','#1d4a6c'],fog:[205,220,232]};
+ if(cfg.light==='dusk')return{sky:['#1a2240','#e29a63'],sea:['#4a4a5e','#141a2c'],fog:[120,100,110]};
+ return{sky:['#010309','#0b1428'],sea:['#070d1b','#02050b'],fog:[8,12,22]};
+}
+function mixc(rgb,fog,a){return`rgb(${Math.round(rgb[0]+(fog[0]-rgb[0])*a)},${Math.round(rgb[1]+(fog[1]-rgb[1])*a)},${Math.round(rgb[2]+(fog[2]-rgb[2])*a)})`}
+const LCOL={white:'255,246,224',red:'255,59,48',green:'39,227,106',yellow:'255,214,10'};
+
+function drawBridge2D(now){
+ const W=BW,H=BH;if(!W)return;
+ HZ=H*.56;PXR=W/(view.fov*D2R);
+ const C=skyCols(),vis=cfg.vis,day=cfg.light==='day',dusk=cfg.light==='dusk',night=cfg.light==='night';
+ if(GL)bx.clearRect(0,0,W,H);const vc=own.hdg+view.off;let g;if(!GL){g=bx.createLinearGradient(0,0,0,HZ);g.addColorStop(0,C.sky[0]);g.addColorStop(1,C.sky[1]);bx.fillStyle=g;bx.fillRect(0,0,W,HZ);
+ g=bx.createLinearGradient(0,HZ,0,H);g.addColorStop(0,C.sea[0]);g.addColorStop(1,C.sea[1]);bx.fillStyle=g;bx.fillRect(0,HZ,W,H-HZ);
+ if(night||dusk){bx.fillStyle=dusk?'rgba(255,255,255,.35)':'#fff';for(const s of stars){if(dusk&&s.e<.5)continue;const x=W/2+n180(s.b-vc)/view.fov*W;if(x<0||x>W)continue;bx.globalAlpha=night?.35+.5*s.e:.4;bx.fillRect(x,HZ*(1-s.e)*.95,s.s,s.s)}bx.globalAlpha=1}
+ if(day||dusk){bx.fillStyle=day?'rgba(255,255,255,.55)':'rgba(255,200,170,.25)';for(const c of clouds){const x=W/2+n180(c.b-vc)/view.fov*W,w=c.w/view.fov*W;if(x<-w||x>W+w)continue;bx.beginPath();bx.ellipse(x,HZ*(1-c.e),w,w*.1,0,0,7);bx.fill()}}
+ // waves
+ bx.strokeStyle=day?'rgba(255,255,255,.18)':dusk?'rgba(255,200,170,.1)':'rgba(120,150,200,.07)';bx.lineWidth=1;bx.beginPath();
+ for(const w of waves){const v=(w.v+now*.00003)%1,y=HZ+v*v*(H-HZ),x=w.u*W,l=3+v*v*40;bx.moveTo(x,y);bx.lineTo(x+l,y)}bx.stroke();
+ // vessels
+ const vis_=[...targets].sort((a,b)=>b.range-a.range);
+ for(const t of vis_){t.sx=null;drawVessel(t,C,vis,day,dusk,night)}}
+ // fog
+ const fa=clamp((10-vis)/9,0,1);
+ if(fa>0&&!GL){g=bx.createLinearGradient(0,HZ-H*.35,0,HZ+H*.3);const fc=C.fog.join(',');g.addColorStop(0,`rgba(${fc},0)`);g.addColorStop(.5,`rgba(${fc},${(.75*fa).toFixed(2)})`);g.addColorStop(1,`rgba(${fc},${(.3*fa).toFixed(2)})`);bx.fillStyle=g;bx.fillRect(0,HZ-H*.35,W,H*.65)}
+ // foredeck
+ const fx=W/2+n180(own.hdg-vc)/view.fov*W,sc=deckScale,bowA=clamp((view.fov-20)/25,0,1);
+ if(bowA>0&&Math.abs(fx-W/2)<W/2+200){bx.globalAlpha=bowA;bx.fillStyle=night?'#05070b':'#2b3440';bx.beginPath();bx.moveTo(fx-220*sc,H);bx.lineTo(fx-40*sc,H-55*sc);bx.lineTo(fx+40*sc,H-55*sc);bx.lineTo(fx+220*sc,H);bx.fill();bx.fillStyle=night?'#0c1018':'#4b5563';bx.fillRect(fx-2,H-70*sc,4,16*sc);bx.globalAlpha=1}
+ // frame, compass
+ bx.fillStyle='#0b0f17';bx.fillRect(0,0,6,H);bx.fillRect(W-6,0,6,H);bx.fillRect(0,H-26,W,26);
+ compass(vc);
+ bx.fillStyle='#9fb3c8';bx.font='11px Inter,system-ui,sans-serif';bx.textAlign='left';
+ bx.fillText(`VIEW ${b3(vc)}°T (${view.off>=0?'+':''}${Math.round(view.off)}° rel)   HDG ${b3(own.hdg)}°   SPD ${f1(own.spd)} kn   FOV ${Math.round(view.fov)}°   VIS ${cfg.vis} nm`,12,H-9);
+ if(GL&&sel&&sel.sx!=null){const y=Math.min(sel.sy,HZ)-24;bx.fillStyle='#fff';bx.beginPath();bx.moveTo(sel.sx-6,y-8);bx.lineTo(sel.sx+6,y-8);bx.lineTo(sel.sx,y);bx.fill();bx.font='600 11px Inter,system-ui,sans-serif';bx.textAlign='center';bx.fillText('T'+sel.id,sel.sx,y-12)}
+}
+const CH=90;let deckScale=1;
+function relTxt(r){return(r<0?'P':r>0?'S':'')+b3(Math.abs(r))}
+function compass(vc){
+ const W=BW,fov=view.fov;bx.fillStyle='rgba(8,12,20,.82)';bx.fillRect(0,0,W,CH);
+ const step=fov>60?5:fov>25?2:1,lab=fov>25?10:5;
+ // true bearing strip
+ bx.strokeStyle='#cbd5e1';bx.fillStyle='#e5e7eb';bx.font='10px Inter,system-ui,sans-serif';bx.textAlign='center';bx.lineWidth=1;
+ const s0=Math.floor((vc-fov/2)/step)*step;bx.beginPath();
+ for(let b=s0;b<=vc+fov/2+step;b+=step){const x=W/2+n180(b-vc)/fov*W,big=n360(b)%lab===0;bx.moveTo(x,0);bx.lineTo(x,big?10:5);if(big)bx.fillText(b3(b),x,22)}
+ bx.stroke();
+ bx.fillStyle='rgba(148,163,184,.25)';bx.fillRect(0,29,W,1);
+ // relative bearing strip: 0-180 each side of the bow, port red / starboard green
+ const r0=Math.floor((view.off-fov/2)/step)*step;bx.lineWidth=1.2;
+ for(let r=r0;r<=view.off+fov/2+step;r+=step){
+  const w=n180(r),x=W/2+(r-view.off)/fov*W,big=Math.abs(w)%lab===0;
+  const col=(w===0||Math.abs(w)===180)?'#f8fafc':w<0?'#f87171':'#4ade80';
+  bx.strokeStyle=col;bx.beginPath();bx.moveTo(x,32);bx.lineTo(x,big?43:37);bx.stroke();
+  if(big){bx.fillStyle=col;bx.font='600 10px Inter,system-ui,sans-serif';bx.fillText(String(Math.abs(w)),x,55)}
+ }
+ const bowx=W/2+(0-view.off)/fov*W;
+ bx.fillStyle='#22c55e';bx.beginPath();bx.moveTo(bowx-5,0);bx.lineTo(bowx+5,0);bx.lineTo(bowx,8);bx.fill();
+ bx.fillStyle='rgba(248,113,113,.9)';bx.font='600 9px Inter,system-ui,sans-serif';bx.textAlign='left';bx.fillText('◀ PORT',6,44);
+ bx.fillStyle='rgba(74,222,128,.9)';bx.textAlign='right';bx.fillText('STBD ▶',W-6,44);bx.textAlign='center';
+ bx.fillStyle='rgba(148,163,184,.25)';bx.fillRect(0,60,W,1);
+ // target tags: name + relative bearing
+ for(const t of targets){
+  if(cfg.light==='day'&&t.range>cfg.vis)continue;
+  const x=W/2+n180(t.brg-vc)/fov*W;if(x<0||x>W)continue;
+  const rel=n180(t.brg-own.hdg);
+  bx.fillStyle=t===sel?'#fff':'#7dd3fc';bx.font='600 10px Inter,system-ui,sans-serif';bx.fillRect(x-.5,62,1,4);bx.fillText('T'+t.id,x,76);
+  bx.fillStyle=rel<0?'#f87171':'#4ade80';bx.font='600 9px Inter,system-ui,sans-serif';bx.fillText(relTxt(rel)+'°',x,87);
+ }
+}
+function shade(rgb,f){return[rgb[0]*f,rgb[1]*f,rgb[2]*f].map(v=>clamp(Math.round(v),0,255))}
+function drawVessel(t,C,vis,day,dusk,night){
+ const sp=TYPES[t.type],range=t.range;
+ const hasHull=day||dusk,hasLights=dusk||night;
+ const vlimit=day?vis:Math.max(vis,.3);
+ if(day&&range>vis)return;
+ const dl=n180(t.brg-(own.hdg+view.off)),half=Math.atan2(Math.max(sp.L,t.longTow?300:t.towLen+30)/2/1852,Math.max(range,.01))*R2D+4;
+ if(Math.abs(dl)>view.fov/2+half)return;
+ const alpha=day?clamp((vis-range)/(vis*.25),0,1):1;
+ // screen box for selection
+ const c0=P(t.x-own.x,t.y-own.y,sp.fb);
+ t.sx=c0.x;t.sy=c0.y;t.sw=Math.max(14,sp.L/2/1852/Math.max(range,.01)*PXR);
+ bx.save();bx.globalAlpha=alpha;
+ const fogA=clamp(Math.pow(range/Math.max(vis,.5),1.3)*.85,0,.9);
+ const fog=C.fog;
+ const W=(s,c,z)=>{const h=t.hdg*D2R,fx=Math.sin(h),fy=Math.cos(h);return P(t.x-own.x+(s*fx+c*fy)/1852,t.y-own.y+(s*fy-c*fx)/1852,z)};
+ const hexa=(s0,s1,wsb,wbb,wst,wbt,z0,z1,rgb)=>{
+  const v=[W(s0,-wsb,z0),W(s0,wsb,z0),W(s1,wbb,z0),W(s1,-wbb,z0),W(s0,-wst,z1),W(s0,wst,z1),W(s1,wbt,z1),W(s1,-wbt,z1)];
+  const faces=[[4,5,6,7,1.18],[0,3,7,4,1],[1,2,6,5,1],[0,1,5,4,.8],[3,2,6,7,.9]].map(f=>({f,d:(v[f[0]].d+v[f[1]].d+v[f[2]].d+v[f[3]].d)/4}));
+  faces.sort((a,b)=>b.d-a.d);
+  for(const {f} of faces){
+   if(f[4]>1.1&&z1>EYE)continue;
+   bx.fillStyle=night?'rgb(7,10,16)':mixc(shade(rgb,f[4]),fog,fogA);
+   if(dusk)bx.fillStyle=mixc(shade(rgb,f[4]*.45),fog,fogA);
+   bx.beginPath();bx.moveTo(v[f[0]].x,v[f[0]].y);for(let i=1;i<4;i++)bx.lineTo(v[f[i]].x,v[f[i]].y);bx.closePath();bx.fill();
+  }
+ };
+ const L=sp.L,B=sp.B;
+ if(hasHull){
+  if(t.type==='tow'){ // towed barge
+   const e=t.towLen,s1=-L/2-25;hexa(s1-e,s1,3.5,3.5,4,4,0,1.8,hex('#44403c'));
+  }
+  hexa(-L/2,L/2,B/2*.85,B*.05,B/2,B*.2,0,sp.fb,hex(sp.hull));
+  const bxs=sp.boxes;
+  for(const b of bxs)hexa((b.a0-.5)*L,(b.a1-.5)*L,B/2*b.w,B/2*b.w,B/2*b.w,B/2*b.w,sp.fb+(b.b||0),sp.fb+(b.b||0)+b.h,hex(b.c));
+  // masts
+  bx.strokeStyle=night?'#000':mixc([40,44,52],fog,fogA);bx.lineWidth=Math.max(1,PXR/(range*1852)*.5);
+  for(const m of sp.masts){const a=W((m.a-.5)*L,0,sp.fb),b=W((m.a-.5)*L,0,m.top);bx.beginPath();bx.moveTo(a.x,a.y);bx.lineTo(b.x,b.y);bx.stroke()}
+  if(sp.kind==='sail'){
+   const m=(sp.masts[0].a-.5)*L,top=sp.masts[0].top;
+   const poly=(pts,col)=>{bx.fillStyle=col;bx.beginPath();pts.forEach((p,i)=>{const q=W(p[0],0,p[1]);i?bx.lineTo(q.x,q.y):bx.moveTo(q.x,q.y)});bx.closePath();bx.fill()};
+   const sc=dusk?mixc([120,100,110],fog,fogA):mixc([245,247,250],fog,fogA);
+   poly([[m,sp.fb+1.2],[m,top-1],[-L/2,sp.fb+1.3]],sc);poly([[m+.4,top-2],[L/2*.95,sp.fb+.8],[m+.4,sp.fb+1.2]],sc);
+  }
+  // day shapes
+  if(!night){
+   for(const s of shapesFor(t)){
+    const p=W(s.s,0,s.z),px=Math.max(3,s.d/(range*1852)*PXR*2.2);
+    bx.fillStyle=dusk?'#0a0a0e':'#050505';
+    const x=p.x,y=p.y;bx.beginPath();
+    if(s.sh==='ball')bx.arc(x,y,px/2,0,7);
+    else if(s.sh==='diamond'){bx.moveTo(x,y-px*.7);bx.lineTo(x+px*.55,y);bx.lineTo(x,y+px*.7);bx.lineTo(x-px*.55,y)}
+    else if(s.sh==='cyl')bx.rect(x-px*.4,y-px*.6,px*.8,px*1.2);
+    else if(s.sh==='basket'){bx.moveTo(x,y);bx.lineTo(x-px*.5,y-px*.8);bx.lineTo(x+px*.5,y-px*.8);bx.closePath();bx.moveTo(x,y);bx.lineTo(x-px*.5,y+px*.8);bx.lineTo(x+px*.5,y+px*.8)}
+    bx.fill();
+   }
+  }
+ }else if(range<.5){ // faint night silhouette
+  bx.globalAlpha=alpha*.55*(1-range/.5);
+  hexa(-L/2,L/2,B/2*.85,B*.05,B/2,B*.2,0,sp.fb,[18,22,30]);for(const b of sp.boxes)hexa((b.a0-.5)*L,(b.a1-.5)*L,B/2*b.w,B/2*b.w,B/2*b.w,B/2*b.w,sp.fb+(b.b||0),sp.fb+(b.b||0)+b.h,[26,30,40]);
+ }
+ // lights
+ if(hasLights){
+  const rel=n180(n360(t.brg+180)-t.hdg),big=L>=50;
+  const R={mast:L>=50?6:L>=20?5:L>=12?3:2,sbd:L>=50?3:L>=20?2:1,prt:L>=50?3:L>=20?2:1,stern:2,all:L>=50?3:2};
+  const eff=k=>cfg.allLights?vis:Math.min(R[k],vis);
+  bx.globalCompositeOperation='lighter';
+  const lit=night?1:.55;
+  for(const l of lightsFor(t)){
+   if(l.way&&t.spd<.5)continue;
+   const k=l.k;
+   const arc=k==='all'||(k==='mast'&&Math.abs(rel)<=112.5)||(k==='sbd'&&rel>=0&&rel<=112.5)||(k==='prt'&&rel<=0&&rel>=-112.5)||(k==='stern'&&Math.abs(rel)>=112.5);
+   if(!arc)continue;
+   const e=eff(k);if(range>e)continue;
+   const a=clamp((e-range)/(e*.3),0,1)*lit;
+   const p=W(l.s,l.x,l.z),r=Math.min(9,1.1+1.7/(range+.15));
+   if(p.x<-20||p.x>BW+20)continue;
+   const col=LCOL[l.c];
+   const g=bx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*4);g.addColorStop(0,`rgba(${col},${(.55*a).toFixed(2)})`);g.addColorStop(1,`rgba(${col},0)`);
+   bx.fillStyle=g;bx.fillRect(p.x-r*4,p.y-r*4,r*8,r*8);
+   bx.fillStyle=`rgba(${col},${a.toFixed(2)})`;bx.beginPath();bx.arc(p.x,p.y,r,0,7);bx.fill();
+   bx.fillStyle=`rgba(255,255,255,${(.7*a).toFixed(2)})`;bx.beginPath();bx.arc(p.x,p.y,r*.45,0,7);bx.fill();
+  }
+ }
+ bx.restore();
+ if(t===sel){const y=Math.min(c0.y,HZ)-20-Math.min(60,sp.L/1852/Math.max(range,.01)*PXR*.12*VEX);bx.fillStyle='#fff';bx.beginPath();bx.moveTo(c0.x-6,y-8);bx.lineTo(c0.x+6,y-8);bx.lineTo(c0.x,y);bx.fill();bx.font='600 11px Inter,system-ui,sans-serif';bx.textAlign='center';bx.fillText('T'+t.id,c0.x,y-12)}
+}
+
+/* ---------- radar ---------- */
+let sweep=0,lastSweepT=0,clutter=[],clutT=0;
+const ropt={range:6,head:true,vec:'true',vecT:6,cpaLim:1,trails:true};
+function rpos(t,orient,ppn,cx,cy,wx,wy){const dx=(wx??t.x)-own.x,dy=(wy??t.y)-own.y,d=Math.hypot(dx,dy),a=(Math.atan2(dx,dy)*R2D-orient)*D2R;return{x:cx+Math.sin(a)*d*ppn,y:cy-Math.cos(a)*d*ppn,d}}
+function drawRadar(now){
+ const S=RS;if(!S)return;
+ const cx=S/2,cy=S/2,R=S/2-26,ppn=R/ropt.range,orient=ropt.head?own.hdg:0;
+ rx.clearRect(0,0,S,S);
+ rx.fillStyle='#020b06';rx.beginPath();rx.arc(cx,cy,S/2,0,7);rx.fill();
+ const G='#34d399',Gd='rgba(52,211,153,.22)';
+ // rings
+ rx.strokeStyle=Gd;rx.lineWidth=1;rx.fillStyle='rgba(52,211,153,.7)';rx.font='10px Inter,system-ui,sans-serif';rx.textAlign='left';
+ const nr=ropt.range===3?3:ropt.range===6?3:4,st=ropt.range/nr;
+ for(let i=1;i<=nr;i++){rx.beginPath();rx.arc(cx,cy,st*i*ppn,0,7);rx.stroke();rx.fillText(f1(st*i).replace('.0','')+' nm',cx+4,cy-st*i*ppn+11)}
+ // bearing scale
+ rx.strokeStyle='rgba(52,211,153,.6)';rx.beginPath();rx.arc(cx,cy,R,0,7);rx.stroke();
+ rx.textAlign='center';rx.textBaseline='middle';
+ for(let b=0;b<360;b+=5){
+  const a=(b-orient)*D2R,s=Math.sin(a),c=-Math.cos(a),l=b%10===0?9:5;
+  rx.beginPath();rx.moveTo(cx+s*R,cy+c*R);rx.lineTo(cx+s*(R+l),cy+c*(R+l));rx.stroke();
+  if(b%30===0){rx.fillStyle='#6ee7b7';rx.fillText(b3(b),cx+s*(R+19),cy+c*(R+19))}
+ }
+ rx.textBaseline='alphabetic';
+ // relative bearing ring (inside the scale): port red, starboard green
+ rx.lineWidth=1.2;rx.textAlign='center';rx.textBaseline='middle';rx.font='600 9px Inter,system-ui,sans-serif';
+ for(let r=0;r<360;r+=10){
+  const w=n180(r),col=(w===0||Math.abs(w)===180)?'#f8fafc':w<0?'#f87171':'#4ade80',a=(own.hdg+r-orient)*D2R,s=Math.sin(a),c=-Math.cos(a);
+  rx.strokeStyle=col;rx.beginPath();rx.moveTo(cx+s*R,cy+c*R);rx.lineTo(cx+s*(R-(r%30?4:8)),cy+c*(R-(r%30?4:8)));rx.stroke();
+  if(r%30===0){rx.fillStyle=col;rx.fillText(String(Math.abs(w)),cx+s*(R-17),cy+c*(R-17))}
+ }
+ rx.textBaseline='alphabetic';
+ // spokes
+ rx.strokeStyle='rgba(52,211,153,.1)';for(let b=0;b<360;b+=30){const a=(b-orient)*D2R;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(a)*R,cy-Math.cos(a)*R);rx.stroke()}
+ // CPA limit
+ rx.setLineDash([4,4]);rx.strokeStyle='rgba(251,191,36,.55)';rx.beginPath();rx.arc(cx,cy,ropt.cpaLim*ppn,0,7);rx.stroke();rx.setLineDash([]);
+ // heading line
+ // view wedge: where the bridge is looking
+ const va=(own.hdg+view.off-orient)*D2R,hf=view.fov/2*D2R;
+ rx.fillStyle='rgba(56,189,248,.12)';rx.strokeStyle='rgba(56,189,248,.8)';rx.lineWidth=1;
+ rx.beginPath();rx.moveTo(cx,cy);rx.arc(cx,cy,R,va-hf-Math.PI/2,va+hf-Math.PI/2);rx.closePath();rx.fill();rx.stroke();
+ rx.setLineDash([3,4]);rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(va)*R,cy-Math.cos(va)*R);rx.stroke();rx.setLineDash([]);
+ rx.save();rx.translate(cx,cy);rx.rotate(va);rx.fillStyle='#38bdf8';rx.beginPath();rx.moveTo(0,-R+1);rx.lineTo(-5,-R+11);rx.lineTo(5,-R+11);rx.closePath();rx.fill();rx.restore();
+ // heading line + bow arrow: where the ship is pointing
+ const ha=(own.hdg-orient)*D2R;rx.strokeStyle='#f8fafc';rx.lineWidth=2;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(ha)*R,cy-Math.cos(ha)*R);rx.stroke();
+ rx.save();rx.translate(cx,cy);rx.rotate(ha);rx.fillStyle='#f8fafc';rx.beginPath();rx.moveTo(0,-R-1);rx.lineTo(-6,-R+13);rx.lineTo(6,-R+13);rx.closePath();rx.fill();rx.restore();
+ // sweep
+ const dt=Math.min(.1,(now-lastSweepT)/1000||0);lastSweepT=now;
+ const prev=sweep;sweep=(sweep+dt*360/2.6)%360;
+ for(let i=0;i<28;i++){const a0=(sweep-i*1.6-orient)*D2R-Math.PI/2,a1=(sweep-(i+1)*1.6-orient)*D2R-Math.PI/2;rx.fillStyle=`rgba(52,211,153,${(.2*(1-i/28)).toFixed(3)})`;rx.beginPath();rx.moveTo(cx,cy);rx.arc(cx,cy,R,a1,a0);rx.fill()}
+ rx.strokeStyle='rgba(110,231,183,.9)';rx.lineWidth=1.2;const sa=(sweep-orient)*D2R;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(sa)*R,cy-Math.cos(sa)*R);rx.stroke();
+ // clutter
+ if(now-clutT>450){clutT=now;clutter=Array.from({length:45},()=>({a:Math.random()*360,d:Math.pow(Math.random(),2)*Math.min(1.2,ropt.range*.4)}))}
+ rx.fillStyle='rgba(52,211,153,.17)';for(const c of clutter){const a=c.a*D2R;rx.fillRect(cx+Math.sin(a)*c.d*ppn,cy-Math.cos(a)*c.d*ppn,2,2)}
+ // targets
+ const ov=vec(own.hdg,own.spd);
+ for(const t of targets){
+  if(t.range>ropt.range*1.02)continue;
+  // echo refresh when sweep passes target bearing
+  const tb=n360(t.brg);const crossed=prev<=sweep?(tb>=prev&&tb<sweep):(tb>=prev||tb<sweep);
+  if(crossed)t.echo={x:t.x,y:t.y,t:now};
+  if(t.echo){const age=(now-t.echo.t)/2600;if(age<1){const e=rpos(t,orient,ppn,cx,cy,t.echo.x,t.echo.y);const g=rx.createRadialGradient(e.x,e.y,0,e.x,e.y,9);g.addColorStop(0,`rgba(190,255,220,${(.9*(1-age)).toFixed(2)})`);g.addColorStop(1,'rgba(52,211,153,0)');rx.fillStyle=g;rx.fillRect(e.x-9,e.y-9,18,18)}}
+  const p=rpos(t,orient,ppn,cx,cy);
+  const danger=t.tcpa>0&&t.tcpa<20&&t.cpa<ropt.cpaLim&&t.range<12&&!t.anch;
+  const col=danger?((Math.floor(now/400)%2)?'#f87171':'#fecaca'):'#86efac';
+  // trails
+  if(ropt.trails){rx.fillStyle='rgba(134,239,172,.45)';for(const q of t.trail){const e=rpos(t,orient,ppn,cx,cy,q.x,q.y);if(e.d<ropt.range)rx.fillRect(e.x-1,e.y-1,2,2)}}
+  // vector
+  if(ropt.vec!=='off'&&t.spd>.1||ropt.vec==='rel'){
+   const tv=vec(t.hdg,t.spd),T=ropt.vecT;let vx=tv.x,vy=tv.y;if(ropt.vec==='rel'){vx-=ov.x;vy-=ov.y}
+   const e=rpos(t,orient,ppn,cx,cy,t.x+vx*T,t.y+vy*T);
+   if(ropt.vec!=='off'){rx.strokeStyle=ropt.vec==='rel'?'#fbbf24':col;rx.lineWidth=1.4;rx.beginPath();rx.moveTo(p.x,p.y);rx.lineTo(e.x,e.y);rx.stroke()}
+  }
+  rx.strokeStyle=col;rx.lineWidth=1.6;rx.beginPath();rx.arc(p.x,p.y,5,0,7);rx.stroke();
+  rx.fillStyle=col;rx.font='600 10px Inter,system-ui,sans-serif';rx.textAlign='left';rx.fillText(t.id,p.x+8,p.y-6);
+  if(t===sel){rx.strokeStyle='#fff';rx.lineWidth=1.3;rx.strokeRect(p.x-10,p.y-10,20,20)}
+  t.rx=p.x;t.ry=p.y;
+ }
+ // own ship vector + symbol
+ if(ropt.vec==='true'){const e=rpos(own,orient,ppn,cx,cy,own.x+ov.x*ropt.vecT,own.y+ov.y*ropt.vecT);rx.strokeStyle='#e5e7eb';rx.lineWidth=1.4;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(e.x,e.y);rx.stroke()}
+ rx.save();rx.translate(cx,cy);rx.rotate(ha);rx.fillStyle='#f8fafc';rx.beginPath();rx.moveTo(0,-10);rx.lineTo(5,7);rx.lineTo(0,3);rx.lineTo(-5,7);rx.closePath();rx.fill();rx.restore();
+}
+
+/* ================= UI ================= */
+function roleText(t){
+ if(!cfg.training)return'';
+ const A=t.A||assess(t);if(!t.risk&&A.role!=='keep-clear')return'<span style="color:#9ca3af">no risk</span>';
+ const m={'give-way':['GIVE-WAY','#fbbf24'],'stand-on':['STAND-ON','#86efac'],both:['BOTH ALTER STBD','#fbbf24'],'keep-clear':['KEEP CLEAR','#fbbf24']}[A.role];
+ return`<span style="color:${m[1]}">${m[0]}</span> R${A.rule}`;
+}
+function updateUI(){
+ {const lr=view.off;const _h=$('rinfo').offsetHeight;$('rinfo').innerHTML=`<span>${ropt.head?'HEAD-UP':'NORTH-UP'} · ${ropt.range} NM</span><span>${ropt.vec==='true'?'TRUE VECT':ropt.vec==='rel'?'REL VECT':'NO VECT'} ${ropt.vecT} MIN</span><span class="h">HDG ${b3(own.hdg)}°</span><span class="lk">LOOK ${b3(own.hdg+view.off)}°T · ${Math.abs(lr)<.5?'AHEAD':(lr<0?'P':'S')+Math.round(Math.abs(lr))+'°'}</span>`;if($('rinfo').offsetHeight!==_h&&typeof WIN!=='undefined'&&WIN.radar.nh)fit('radar')}
+ $('hHdg').textContent=b3(own.hdg)+'°';$('hSpd').textContent=f1(own.spd);$('hRot').textContent=Math.round(own.rot);$('cmdSpd').textContent=Math.round(own.cmdSpd);
+ $('clock').textContent=hms(simT);$('cq').textContent=closeQ;$('col').textContent=collisions;
+ $('roleH').style.display=cfg.training?'':'none';
+ const rows=[...targets].sort((a,b)=>a.range-b.range).filter(t=>t.range<14);
+ $('tbody').innerHTML=rows.map(t=>{const dg=t.tcpa>0&&t.tcpa<20&&t.cpa<ropt.cpaLim&&!t.anch;
+  return`<tr data-id="${t.id}" class="${t===sel?'sel':''} ${dg?'danger':''}"><td>T${t.id}</td><td>${b3(t.brg)}</td><td class="${n180(t.brg-own.hdg)<0?'pt':'sb'}">${relTxt(n180(t.brg-own.hdg))}</td><td>${f2(t.range)}</td><td>${b3(t.hdg)}</td><td>${f1(t.spd)}</td><td>${f2(t.cpa)}</td><td>${t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)}</td>${cfg.training?`<td class="role">${roleText(t)}</td>`:''}</tr>`}).join('')||'<tr><td colspan="9" style="color:#9ca3af;text-align:left">No targets in range</td></tr>';
+ const el=$('tinfo');
+ if(!sel){el.innerHTML='Click a vessel on the radar, bridge or in the list.';return}
+ const t=sel,rel=n180(t.brg-own.hdg),A=t.A||assess(t);
+ el.innerHTML=`<b style="font-size:1rem">Target ${t.id}</b>${cfg.training?` <span class="k">– ${nameOf(t)}</span>`:''}<br>
+ <span class="k">Bearing</span> ${b3(t.brg)}°T (<span class="${rel<0?'pt':'sb'}">${b3(Math.abs(rel))}° ${rel<0?'port':'stbd'}</span>) · <span class="k">Range</span> ${f2(t.range)} nm<br>
+ <span class="k">Course</span> ${b3(t.hdg)}° · <span class="k">Speed</span> ${f1(t.spd)} kn<br>
+ <span class="k">CPA</span> <b>${f2(t.cpa)} nm</b> · <span class="k">TCPA</span> <b>${t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)+' min'}</b> · <span class="k">Range rate</span> ${f1(t.rrate*60)} kn<br>
+ <span class="k">Aspect</span> you see her ${aspect(t)}
+ ${cfg.training?`<div class="rule">${A.text}${t.risk?'':'<br><i>No risk of collision at present (diverging, or CPA over 1 nm).</i>'}</div>`:''}`;
+}
+function aspect(t){const rel=n180(n360(t.brg+180)-t.hdg);return Math.abs(rel)>=112.5?'from astern (stern light)':Math.abs(rel)<=10?'head-on':rel>0?'on her starboard side (green)':'on her port side (red)'}
+
+/* inputs */
+const sc=$('scen');for(const k in SCEN){const o=document.createElement('option');o.value=k;o.textContent=SCEN[k].label;sc.appendChild(o)}
+sc.onchange=restart;$('restart').onclick=restart;
+$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Resume':'Pause'};
+$('ovOk').onclick=()=>{$('overlay').classList.remove('show');paused=false;$('pause').textContent='Pause'};
+$('mute').onclick=()=>{muted=!muted;$('mute').textContent='Sound: '+(muted?'off':'on')};
+$('helm').onclick=e=>{const d=e.target.dataset.dc;if(d)own.cmdHdg=n360(own.cmdHdg+ +d);$('course').value=Math.round(own.cmdHdg)};
+$('setCourse').onclick=()=>{own.cmdHdg=n360(+$('course').value||0)};
+$('course').onkeydown=e=>{if(e.key==='Enter')own.cmdHdg=n360(+$('course').value||0)};
+$('eng').onclick=e=>{const d=e.target.dataset.ds;if(d)own.cmdSpd=clamp(own.cmdSpd+ +d,0,25)};
+$('horn').onclick=e=>{const k=e.target.dataset.h;if(k)ownSignal(k)};
+$('ts').onchange=()=>{};
+$('light').onchange=e=>cfg.light=e.target.value;
+$('vis').oninput=e=>{cfg.vis=+e.target.value;$('visv').textContent=cfg.vis+' nm'};
+$('fov').oninput=e=>{view.fov=+e.target.value;$('fovv').textContent=Math.round(view.fov)+'°'};
+$('look').oninput=e=>setLook(+e.target.value);
+$('centre').onclick=()=>setLook(0);
+$('train').onchange=e=>{cfg.training=e.target.checked;updateUI()};
+$('rrange').onchange=e=>ropt.range=+e.target.value;
+$('orient').onchange=e=>ropt.head=e.target.value==='head';
+$('vec').onchange=e=>ropt.vec=e.target.value;
+$('vecT').onchange=e=>ropt.vecT=+e.target.value;
+$('cpaLim').onchange=e=>ropt.cpaLim=+e.target.value;
+$('trails').onchange=e=>ropt.trails=e.target.checked;
+function setLook(v){view.off=n180(v);$('look').value=Math.round(view.off);$('lookv').textContent=Math.round(view.off)+'°'}
+function setFov(v){view.fov=clamp(v,8,110);$('fov').value=view.fov;$('fovv').textContent=Math.round(view.fov)+'°'}
+$('tbody').onclick=e=>{const tr=e.target.closest('tr');if(tr)sel=targets.find(t=>t.id==tr.dataset.id)||null};
+rc.onclick=e=>{const r=rc.getBoundingClientRect(),x=(e.clientX-r.left)/rk,y=(e.clientY-r.top)/rk;let b=null,bd=18;for(const t of targets){if(t.rx==null)continue;const d=Math.hypot(t.rx-x,t.ry-y);if(d<bd){bd=d;b=t}}sel=b};
+// bridge drag / click / wheel
+let drag=null;
+bc.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,off:view.off,moved:false};bc.setPointerCapture(e.pointerId)};
+bc.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x;if(Math.abs(dx)>4)drag.moved=true;if(drag.moved)setLook(drag.off-dx/BW*view.fov)};
+bc.onpointerup=e=>{if(drag&&!drag.moved){const r=bc.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let b=null,bd=1e9;
+  for(const t of targets){if(t.sx==null)continue;const d=Math.abs(t.sx-x);if(d<Math.max(16,t.sw)&&Math.abs(y-HZ)<BH*.35&&d<bd){bd=d;b=t}}if(b)sel=b}drag=null};
+bc.onwheel=e=>{e.preventDefault();setFov(view.fov*(e.deltaY>0?1.12:.89))};
+const PANELS={radar:'pRadar',helm:'pHelm',sim:'pSim',tgt:'pTgt',list:'pList',log:'pLog',help:'pHelp'};
+const PKEYS={r:'radar',h:'helm',s:'sim',t:'tgt',g:'list',l:'log','?':'help','/':'help'};
+const PLAB={radar:'R',helm:'H',sim:'S',tgt:'T',list:'G',log:'L',help:'?'};
+function togglePanel(n,show){
+ const el=$(PANELS[n]);const on=show===undefined?el.classList.contains('hid'):show;
+ el.classList.toggle('hid',!on);if(on)showWin(n);
+ const bt=document.querySelector(`#bar [data-p="${n}"]`);if(bt)bt.classList.toggle('on',on);
+ resize();
+}
+function hideAll(){for(const n in PANELS)togglePanel(n,false)}
+for(const n in PANELS){const h=$(PANELS[n]).querySelector('h2');h.insertAdjacentHTML('beforeend',`<span class="sp"></span><kbd>${PLAB[n]}</kbd><button class="x" data-x="${n}" title="Hide">×</button>`)}
+document.addEventListener('click',e=>{
+ const x=e.target.closest('[data-x]');if(x)togglePanel(x.dataset.x,false);
+ const p=e.target.closest('#bar [data-p]');if(p)togglePanel(p.dataset.p);
+ if(e.target.closest('button'))e.target.closest('button').blur();
+});
+document.addEventListener('change',e=>{if(e.target.tagName==='SELECT')e.target.blur()});
+
+/* ---- floating, movable, resizable windows ---- */
+const WIN={radar:{w:340,m:'both'},helm:{w:290,m:'both'},sim:{w:300,m:'both'},tgt:{w:300,m:'width'},list:{w:470,m:'width'},log:{w:300,m:'width'},help:{w:540,m:'width'}};
+let zTop=100;
+for(const n in PANELS){
+ const el=$(PANELS[n]),c=WIN[n],h=el.querySelector('h2');
+ document.body.appendChild(el);el.classList.add('win');el.dataset.n=n;
+ const wrap=document.createElement('div'),wc=document.createElement('div');wrap.className='wrap';wc.className='wc'+(c.m==='width'?' fl':'');wc.style.width=c.w+'px';
+ [...el.childNodes].forEach(x=>{if(x!==h)wc.appendChild(x)});
+ if(n==='list'){const t=wc.querySelector('table'),sc=document.createElement('div');sc.className='sc';t.replaceWith(sc);sc.appendChild(t)}
+ wrap.appendChild(wc);el.appendChild(wrap);c.el=el;c.wc=wc;c.h=h;
+ for(const k of['nw','ne','sw','se'])el.insertAdjacentHTML('beforeend',`<i class="rz" data-c="${k}"></i>`);
+}
+$('dockL').remove();$('dockR').remove();
+function fit(n){
+ const c=WIN[n],el=c.el,wc=c.wc;if(el.classList.contains('hid'))return;
+ const wrap=wc.parentNode,iw=el.clientWidth-20,k=clamp(iw/c.w,.35,3.5);c.k=k;
+ if(c.m==='both'){c.nh=wc.offsetHeight+4;el.style.height=Math.round(c.h.offsetHeight+8+12+c.nh*k)+'px'}
+ wc.style.transform=`scale(${k})`;
+ if(c.m==='width')wc.style.height=(wrap.clientHeight/k)+'px';
+ resize();
+}
+function showWin(n){
+ const c=WIN[n],el=c.el,W=innerWidth,H=innerHeight;
+ if(!c.nh){c.nh=c.wc.offsetHeight}
+ if(!el.dataset.placed){
+  el.dataset.placed=1;
+  const bw=Math.min(c.w+20,W-20);el.style.width=bw+'px';
+  const hh=c.h.offsetHeight+18,nat=Math.min(hh+c.nh*(bw-20)/c.w,H*.6);
+  if(c.m==='width')el.style.height=nat+'px';
+  const pos={radar:[W-bw-10,98],tgt:[W-370-bw-10,98],list:[W-bw-10,H-72-nat],helm:[10,98],sim:[bw>0?330:10,98],log:[10,H-72-nat],help:[(W-bw)/2,(H-nat)/2]}[n];
+  el.style.left=Math.max(0,pos[0])+'px';el.style.top=Math.max(0,pos[1])+'px';
+ }
+ front(el);fit(n);
+}
+function front(el){el.style.zIndex=++zTop}
+function clampWin(el){const r=el.getBoundingClientRect();el.style.left=clamp(r.left,80-r.width,innerWidth-80)+'px';el.style.top=clamp(r.top,0,innerHeight-34)+'px'}
+let act=null;
+document.addEventListener('pointerdown',e=>{
+ const el=e.target.closest('.win');if(!el)return;front(el);
+ const rz=e.target.closest('.rz'),hd=e.target.closest('.win>h2'),r=el.getBoundingClientRect();
+ if(rz)act={t:'rz',el,c:rz.dataset.c,sx:e.clientX,sy:e.clientY,r};
+ else if(hd&&!e.target.closest('button'))act={t:'mv',el,sx:e.clientX,sy:e.clientY,r};
+ else return;
+ e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!act)return;const {el,r}=act,dx=e.clientX-act.sx,dy=e.clientY-act.sy;
+ if(act.t==='mv'){el.style.left=clamp(r.left+dx,80-r.width,innerWidth-80)+'px';el.style.top=clamp(r.top+dy,0,innerHeight-34)+'px';return}
+ const n=el.dataset.n,c=WIN[n],west=act.c.includes('w'),north=act.c.includes('n');
+ const w=clamp(west?r.width-dx:r.width+dx,170,Math.min(1000,innerWidth));
+ el.style.width=w+'px';
+ if(c.m==='width'){el.style.height=clamp(north?r.height-dy:r.height+dy,110,innerHeight)+'px'}
+ fit(n);
+ el.style.left=(west?r.right-w:r.left)+'px';
+ el.style.top=(north?r.bottom-el.offsetHeight:r.top)+'px';
+});
+const endAct=()=>{act=null};document.addEventListener('pointerup',endAct);document.addEventListener('pointercancel',endAct);
+addEventListener('resize',()=>{for(const n in WIN){const el=WIN[n].el;if(!el.classList.contains('hid'))clampWin(el)}});
+$('barPause').onclick=()=>$('pause').click();
+function toggleBar(show){const on=show===undefined?$('bar').classList.contains('hid'):show;$('bar').classList.toggle('hid',!on);$('barShow').classList.toggle('hid',on)}
+function toggleFs(){
+ const d=document,el=d.documentElement;
+ if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}
+ else{const f=el.requestFullscreen||el.webkitRequestFullscreen;if(f)try{const r=f.call(el);if(r&&r.catch)r.catch(()=>{})}catch(_){}}
+}
+function fsLabel(){const on=document.fullscreenElement||document.webkitFullscreenElement;$('barFs').innerHTML=(on?'⛶ Exit full screen':'⛶ Full screen')+' <kbd>F</kbd>';resize()}
+$('barFs').onclick=toggleFs;document.addEventListener('fullscreenchange',fsLabel);document.addEventListener('webkitfullscreenchange',fsLabel);
+$('barMin').onclick=()=>toggleBar(false);$('barShow').onclick=()=>toggleBar(true);
+$('trans').oninput=e=>{const t=+e.target.value;document.documentElement.style.setProperty('--pa',(1-t/100).toFixed(2));$('transv').textContent=t+'%'};
+$('rng').onchange=e=>{cfg.allLights=!e.target.checked};
+$('deck').oninput=e=>{deckScale=+e.target.value;$('deckv').textContent=deckScale.toFixed(1)+'×'};
+// start with the bridge full-screen plus radar and helm
+['sim','tgt','list','log','help'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
+window.onkeydown=e=>{
+ if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&e.target.type!=='checkbox'&&e.target.type!=='range')return;
+ if(e.ctrlKey||e.metaKey||e.altKey)return;
+ const pk=PKEYS[e.key.toLowerCase()];if(pk){togglePanel(pk);e.preventDefault();return}
+ if(e.key.toLowerCase()==='f'){toggleFs();e.preventDefault();return}
+ if(e.key.toLowerCase()==='b'){toggleBar();e.preventDefault();return}
+ if(e.key==='Escape'){hideAll();return}
+ const k=e.key;
+ if(k==='ArrowLeft'){own.cmdHdg=n360(own.cmdHdg-(e.shiftKey?10:1))}else if(k==='ArrowRight'){own.cmdHdg=n360(own.cmdHdg+(e.shiftKey?10:1))}
+ else if(k==='ArrowUp')own.cmdSpd=clamp(own.cmdSpd+1,0,25);else if(k==='ArrowDown')own.cmdSpd=clamp(own.cmdSpd-1,0,25);
+ else if(k==='a'||k==='A')setLook(view.off-5);else if(k==='d'||k==='D')setLook(view.off+5);else if(k==='c'||k==='C')setLook(0);
+ else if(k===' '){paused=!paused;$('pause').textContent=paused?'Resume':'Pause'}else return;
+ e.preventDefault();$('course').value=Math.round(own.cmdHdg);
+};
+
+/* ================= main loop ================= */
+let last=performance.now(),acc=0,uiT=0;
+function frame(now){
+ const dt=Math.min(.1,(now-last)/1000);last=now;
+ if(!paused){acc+=dt*(+$('ts').value);let n=0;while(acc>=1&&n<400){stepSim(1);acc-=1;n++;if(paused)break}if(n>=400)acc=0}
+ drawBridge(now);drawRadar(now);
+ if(now-uiT>250){uiT=now;updateUI()}
+ requestAnimationFrame(frame);
+}
+window.SIM={own,get targets(){return targets},step:n=>{for(let i=0;i<n;i++)stepSim(1)},restart,view,cfg,ropt,setSel:id=>{sel=targets.find(t=>t.id===id)||null},spawn,setPaused:v=>{paused=v}};
+/* ================= 3D bridge renderer (Three.js r128) — reads own/targets/cfg/view, never writes sim state ================= */
+const M3=1852,MAXL=2048;
+const PAL={
+ day:{top:'#3f86d0',hor:'#bcdcf3',deep:'#1d4a6c',fog:[205,220,232],az:215,el:32,sc:[1,.95,.82],hc:0xcfe3f5,gc:0x3b5568,hi:.95,dc:0xfff1d6,di:1.15,cl:.7,cc:'#ffffff',st:0},
+ dusk:{top:'#1a2240',hor:'#e29a63',deep:'#141a2c',fog:[120,100,110],az:250,el:3,sc:[1,.55,.25],hc:0x7a6a80,gc:0x1a1c2c,hi:.55,dc:0xff9a5a,di:.55,cl:.5,cc:'#a8788a',st:.3},
+ night:{top:'#010309',hor:'#0b1428',deep:'#02050b',fog:[8,12,22],az:120,el:38,sc:[.3,.35,.5],hc:0x1a2440,gc:0x05070c,hi:.22,dc:0x9fb4ff,di:.1,cl:.25,cc:'#141a2c',st:.9}};
+const LC={white:[1,.96,.88],red:[1,.23,.19],green:[.15,.89,.42],yellow:[1,.84,.04]};
+const NOISE=`float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float nz(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),mix(h(i+vec2(0.,1.)),h(i+vec2(1.,1.)),f.x),f.y);}
+float fbm(vec2 p){return .55*nz(p)+.3*nz(p*2.1)+.15*nz(p*4.3);}`;
+const SKY_FS=`uniform vec3 uTop,uHor,uSun,uSunCol,uCloudCol;uniform float uFog,uCloud;varying vec3 vD;${NOISE}
+void main(){vec3 d=normalize(vD);float e=max(d.y,0.);vec3 c=mix(uHor,uTop,pow(e,.45));float s=max(dot(d,uSun),0.);
+ c+=uSunCol*(pow(s,48.)*.35+pow(s,2000.)*4.)*(1.-uFog);
+ float cl=uCloud*smoothstep(.45,.8,fbm(d.xz/(e+.18)*1.6))*smoothstep(0.,.12,e);
+ c=mix(c,uCloudCol,cl*(1.-.5*uFog));c=mix(c,uHor,uFog*exp(-e*4.));gl_FragColor=vec4(c,1.);}`;
+const SEA_FS=`uniform vec3 uHor,uTop,uDeep,uSun,uSunCol;uniform float uTime,uFogD,uFog;uniform vec2 uOff;varying vec3 vW;
+vec2 wv(vec2 p,vec2 d,float k,float a,float dist){return d*k*a*cos(dot(p,d)*k+uTime*sqrt(9.81*k))/(1.+dist*k*.02);}
+void main(){float dist=length(vW-cameraPosition);vec2 p=vec2(vW.x,-vW.z)+uOff;
+ vec2 g=wv(p,vec2(.8,.6),.05,.9,dist)+wv(p,vec2(-.6,.8),.11,.35,dist)+wv(p,vec2(.95,-.3),.23,.14,dist)+wv(p,vec2(-.3,-.95),.51,.06,dist)+wv(p,vec2(.2,.98),1.1,.025,dist);
+ vec3 n=normalize(vec3(-g.x,1.,g.y));n=normalize(mix(n,vec3(0.,1.,0.),clamp(dist/6000.,0.,.8)));
+ vec3 V=normalize(cameraPosition-vW);float nv=clamp(dot(n,V),0.,1.),fr=.02+.98*pow(1.-nv,5.);
+ vec3 R=reflect(-V,n);R.y=abs(R.y);vec3 refl=mix(uHor,uTop,pow(R.y,.45));
+ float sp=pow(max(dot(R,uSun),0.),700.)*3.+pow(max(dot(R,uSun),0.),60.)*.15;
+ vec3 col=mix(mix(uDeep*1.6,uDeep,nv),refl,fr)+uSunCol*sp*(1.-uFog);
+ col=mix(col,uHor,1.-exp(-pow(dist*uFogD,2.)));gl_FragColor=vec4(col,1.);}`;
+
+function init3D(){
+ if(!window.THREE)return null;
+ let r;try{r=new THREE.WebGLRenderer({canvas:$('gl'),antialias:true})}catch(e){return null}
+ const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(60,1,1.5,70000),V3=THREE.Vector3,C3=()=>new THREE.Color();
+ cam.position.set(0,EYE,0);
+ const hemi=new THREE.HemisphereLight(0xffffff,0x222233,1),sun=new THREE.DirectionalLight(0xffffff,1);sc.add(hemi,sun);
+ const U={uTop:{value:C3()},uHor:{value:C3()},uDeep:{value:C3()},uSunCol:{value:C3()},uCloudCol:{value:C3()},uSun:{value:new V3(0,1,0)},uFog:{value:0},uFogD:{value:1e-4},uTime:{value:0},uOff:{value:new THREE.Vector2()},uCloud:{value:0}};
+ // sky dome, stars, sea
+ const sky=new THREE.Mesh(new THREE.SphereGeometry(50000,24,12),new THREE.ShaderMaterial({uniforms:U,side:THREE.BackSide,depthTest:false,depthWrite:false,
+  vertexShader:'varying vec3 vD;void main(){vD=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',fragmentShader:SKY_FS}));
+ sky.position.copy(cam.position);sky.renderOrder=-2;sky.frustumCulled=false;sc.add(sky);
+ const sp=[];for(let i=0;i<600;i++){const a=Math.random()*6.283,e=Math.asin(.02+Math.random()*.98),c=Math.cos(e);sp.push(Math.sin(a)*c*40000,Math.sin(e)*40000,Math.cos(a)*c*40000)}
+ const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
+ const smat=new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:false,transparent:true,depthWrite:false,fog:false});
+ const stars=new THREE.Points(sg,smat);stars.position.copy(cam.position);stars.renderOrder=-1;stars.frustumCulled=false;sc.add(stars);
+ const sea=new THREE.Mesh(new THREE.PlaneGeometry(120000,120000).rotateX(-Math.PI/2),new THREE.ShaderMaterial({uniforms:U,
+  vertexShader:'varying vec3 vW;void main(){vW=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(vW,1.);}',fragmentShader:SEA_FS}));
+ sea.frustumCulled=false;sc.add(sea);
+ // navigation lights: one GPU point buffer, refilled each frame from lightsFor()
+ const lp=new Float32Array(MAXL*3),lc=new Float32Array(MAXL*4),ls=new Float32Array(MAXL),lg=new THREE.BufferGeometry();
+ const aP=new THREE.BufferAttribute(lp,3),aC=new THREE.BufferAttribute(lc,4),aS=new THREE.BufferAttribute(ls,1);
+ [aP,aC,aS].forEach(a=>a.setUsage(THREE.DynamicDrawUsage));lg.setAttribute('position',aP);lg.setAttribute('aCol',aC);lg.setAttribute('aSize',aS);
+ const pts=new THREE.Points(lg,new THREE.ShaderMaterial({transparent:true,depthTest:false,depthWrite:false,blending:THREE.AdditiveBlending,
+  vertexShader:'attribute vec4 aCol;attribute float aSize;varying vec4 vC;void main(){vC=aCol;gl_PointSize=aSize;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+  fragmentShader:'varying vec4 vC;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;float core=smoothstep(.28,0.,d),glow=pow(1.-d,2.5)*.6;gl_FragColor=vec4(vC.rgb*glow+vec3(core*.85),vC.a);}'}));
+ pts.frustumCulled=false;pts.renderOrder=10;sc.add(pts);
+ // ship models built from the TYPES table
+ const geo={box:new THREE.BoxGeometry(1,1,1),cyl:new THREE.CylinderGeometry(1,1,1,6),sph:new THREE.SphereGeometry(.5,10,8),oct:new THREE.OctahedronGeometry(.5),cone:new THREE.ConeGeometry(.5,.8,8)};
+ const mc={},mat=c=>mc[c]||(mc[c]=new THREE.MeshLambertMaterial({color:c})),hg={};
+ const sailMat=new THREE.MeshLambertMaterial({color:'#f5f7fa',side:THREE.DoubleSide}),blk=new THREE.MeshBasicMaterial({color:0x050505});
+ const hullGeo=(k,s)=>hg[k]||(hg[k]=(()=>{const L=s.L,hw=s.B/2,sh=new THREE.Shape();
+  sh.moveTo(-hw*.85,-L/2);sh.lineTo(hw*.85,-L/2);sh.lineTo(hw,-L*.25);sh.lineTo(hw,L*.2);sh.quadraticCurveTo(hw*.9,L*.38,0,L/2);sh.quadraticCurveTo(-hw*.9,L*.38,-hw,L*.2);sh.lineTo(-hw,-L*.25);sh.closePath();
+  return new THREE.ExtrudeGeometry(sh,{depth:s.fb+2,bevelEnabled:false}).rotateX(-Math.PI/2).translate(0,-2,0)})());
+ const tri=p=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p.flatMap(([s,y])=>[0,y,-s]),3));g.computeVertexNormals();return g};
+ function buildShip(t){
+  const s=TYPES[t.type],L=s.L,B=s.B,g=new THREE.Group(),shapes=[];
+  const put=(m,x,y,z)=>{m.position.set(x,y,z);g.add(m);return m};
+  put(new THREE.Mesh(hullGeo(t.type,s),mat(s.hull)),0,0,0);
+  for(const b of s.boxes){const m=new THREE.Mesh(geo.box,mat(b.c));m.scale.set(B*b.w,b.h,(b.a1-b.a0)*L);put(m,0,s.fb+(b.b||0)+b.h/2,-((b.a0+b.a1)/2-.5)*L)}
+  for(const k of s.masts){const h=k.top-s.fb,m=new THREE.Mesh(geo.cyl,mat('#222222'));m.scale.set(.25,h,.25);put(m,0,s.fb+h/2,-(k.a-.5)*L)}
+  if(s.kind==='sail'){const m=(s.masts[0].a-.5)*L,top=s.masts[0].top,fb=s.fb;
+   for(const p of[[[m,fb+1.2],[m,top-1],[-L/2,fb+1.3]],[[m+.4,top-2],[L/2*.95,fb+.8],[m+.4,fb+1.2]]]){const sm=new THREE.Mesh(tri(p),sailMat);sm.userData.dispose=1;g.add(sm)}}
+  if(t.type==='tow'){const e=t.towLen||100,s1=-L/2-25,m=new THREE.Mesh(geo.box,mat('#44403c'));m.scale.set(7,1.8,e);put(m,0,.9,-(s1-e/2))}
+  for(const q of shapesFor(t)){let m;const d=q.d;
+   if(q.sh==='ball'){m=new THREE.Mesh(geo.sph,blk);m.scale.setScalar(d*.9)}
+   else if(q.sh==='diamond'){m=new THREE.Mesh(geo.oct,blk);m.scale.set(.8*d,1.2*d,.8*d)}
+   else if(q.sh==='cyl'){m=new THREE.Mesh(geo.cyl,blk);m.scale.set(.35*d,1.2*d,.35*d)}
+   else{m=new THREE.Group();const a=new THREE.Mesh(geo.cone,blk),b=new THREE.Mesh(geo.cone,blk);a.position.y=.4;b.position.y=-.4;b.rotation.x=Math.PI;m.add(a,b)}
+   put(m,0,q.z,-q.s);shapes.push(m)}
+  return{g,shapes,key:t.type+t.anch+t.longTow};
+ }
+ const ships=new Map(),tv=new V3();
+ function fillLights(on){
+  let n=0;
+  if(on){const vis=cfg.vis,lit=cfg.light==='night'?1:.55,dpr=r.getPixelRatio();
+   for(const t of targets){
+    const s=TYPES[t.type],L=s.L,range=t.range,rel=n180(n360(t.brg+180)-t.hdg),h=t.hdg*D2R,sn=Math.sin(h),cs=Math.cos(h),ex=(t.x-own.x)*M3,ny=(t.y-own.y)*M3;
+    const RG={mast:L>=50?6:L>=20?5:L>=12?3:2,sbd:L>=50?3:L>=20?2:1,prt:L>=50?3:L>=20?2:1,stern:2,all:L>=50?3:2};
+    for(const l of lightsFor(t)){
+     if(n>=MAXL)break;if(l.way&&t.spd<.5)continue;const k=l.k;
+     if(!(k==='all'||(k==='mast'&&Math.abs(rel)<=112.5)||(k==='sbd'&&rel>=0&&rel<=112.5)||(k==='prt'&&rel<=0&&rel>=-112.5)||(k==='stern'&&Math.abs(rel)>=112.5)))continue;
+     const e=cfg.allLights?vis:Math.min(RG[k],vis);if(range>e)continue;
+     const a=clamp((e-range)/(e*.3),0,1)*lit,c=LC[l.c];if(a<.01)continue;
+     lp[n*3]=ex+l.s*sn+l.x*cs;lp[n*3+1]=l.z;lp[n*3+2]=-(ny+l.s*cs-l.x*sn);
+     lc[n*4]=c[0];lc[n*4+1]=c[1];lc[n*4+2]=c[2];lc[n*4+3]=a;ls[n]=Math.min(9,1.1+1.7/(range+.15))*8*dpr;n++;
+    }}}
+  aP.needsUpdate=aC.needsUpdate=aS.needsUpdate=true;lg.setDrawRange(0,n);
+ }
+ function render(now){
+  const day=cfg.light==='day',night=cfg.light==='night',P=PAL[cfg.light],vis=Math.max(cfg.vis,.5),fa=clamp((10-cfg.vis)/9,0,1),fc=C3().setRGB(P.fog[0]/255,P.fog[1]/255,P.fog[2]/255);
+  U.uTop.value.set(P.top).lerp(fc,fa*.8);U.uHor.value.set(P.hor).lerp(fc,fa);U.uDeep.value.set(P.deep).lerp(fc,fa*.5);
+  U.uFog.value=fa;U.uFogD.value=1.3/(vis*M3);U.uCloud.value=P.cl;U.uCloudCol.value.set(P.cc);U.uSunCol.value.setRGB(...P.sc);
+  const az=P.az*D2R,el=P.el*D2R;U.uSun.value.set(Math.sin(az)*Math.cos(el),Math.sin(el),-Math.cos(az)*Math.cos(el));
+  U.uTime.value=now*.001;const ts=+$('ts').value||1;U.uOff.value.set(own.x*M3/ts,own.y*M3/ts);
+  hemi.color.set(P.hc);hemi.groundColor.set(P.gc);hemi.intensity=P.hi;sun.color.set(P.dc);sun.intensity=P.di;sun.position.copy(U.uSun.value).multiplyScalar(1000);
+  sc.fog=sc.fog||new THREE.FogExp2(0,1e-4);sc.fog.color.copy(U.uHor.value);sc.fog.density=U.uFogD.value;
+  smat.opacity=P.st*(1-fa);stars.visible=P.st>0;
+  cam.aspect=BW/BH;cam.fov=2*Math.atan(Math.tan(view.fov*D2R/2)/cam.aspect)*R2D;cam.setViewOffset(BW,BH,0,-BH*.06,BW,BH); // horizon at 56% like the 2D view
+  cam.rotation.y=-(own.hdg+view.off)*D2R;cam.updateMatrixWorld();
+  const px=BW/(view.fov*D2R),live=new Set();
+  for(const t of targets){
+   live.add(t);let e=ships.get(t);const key=t.type+t.anch+t.longTow;
+   if(!e||e.key!==key){if(e)sc.remove(e.g);e=buildShip(t);sc.add(e.g);ships.set(t,e)}
+   e.g.position.set((t.x-own.x)*M3,0,-(t.y-own.y)*M3);e.g.rotation.y=-t.hdg*D2R;
+   e.g.visible=!(day&&t.range>vis*1.15);e.shapes.forEach(m=>m.visible=!night);
+   const s=TYPES[t.type];tv.set(e.g.position.x,s.fb,e.g.position.z);
+   if(e.g.visible&&tv.clone().applyMatrix4(cam.matrixWorldInverse).z<0){tv.project(cam);t.sx=(tv.x+1)/2*BW;t.sy=(1-tv.y)/2*BH;t.sw=Math.max(14,s.L/2/1852/Math.max(t.range,.01)*px)}else t.sx=null;
+  }
+  for(const[t,e]of ships)if(!live.has(t)){sc.remove(e.g);e.g.traverse(o=>{if(o.userData.dispose)o.geometry.dispose()});ships.delete(t)}
+  fillLights(!day);r.render(sc,cam);
+ }
+ const resize=()=>{r.setPixelRatio(Math.min(window.devicePixelRatio||1,2));r.setSize(bc.clientWidth,bc.clientHeight,false)};
+ new ResizeObserver(resize).observe(bc);resize();
+ return{render};
+}
+let GL=false;const R3=init3D();
+function applyGL(){GL=!!R3&&$('gl3d').checked;$('gl').style.display=GL?'block':'none';bc.style.background=GL?'transparent':'#000'}
+if(!R3){$('gl3d').checked=false;$('gl3d').disabled=true;$('gl3d').parentNode.title='WebGL or Three.js unavailable'}
+$('gl3d').onchange=applyGL;applyGL();
+function drawBridge(now){if(GL)R3.render(now);drawBridge2D(now)}
+
+resize();restart();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
