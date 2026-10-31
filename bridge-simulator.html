@@ -75,6 +75,27 @@ td.role{text-align:left;font-size:.7rem}
 #barShow{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:5000}
 #rinfo{margin-top:.5rem;display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem;font:600 .74rem Inter,sans-serif;font-variant-numeric:tabular-nums;color:#6ee7b7}
 #rinfo .h{color:#f8fafc}#rinfo .lk{color:#38bdf8}
+/* ECPINS */
+.ecp{display:grid;grid-template-columns:380px 1fr;gap:.7rem}
+.ecpL{min-width:0}
+#ecp{width:100%;height:auto;aspect-ratio:1;display:block;border-radius:6px;background:#071426;border:1px solid rgba(125,211,252,.25);cursor:crosshair}
+.ecpR{position:relative;min-width:0}
+.ecpR .in{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding-right:.3rem}
+#eOwn{margin-top:.5rem;min-height:2.6rem;display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem;font:600 .72rem Inter,sans-serif;font-variant-numeric:tabular-nums;color:#7dd3fc}
+#eOwn .h{color:#f8fafc}
+#eHead{font-size:.8rem;margin-bottom:.4rem;min-height:1.4rem}
+#eInt{width:100%;display:flex;justify-content:center;align-items:center;gap:.4rem;background:#0e7490;border-color:#22d3ee}
+#eInt:disabled{opacity:.55;cursor:default;background:#1e293b;border-color:rgba(255,255,255,.12)}
+#eInt kbd{background:#0b1327;border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:0 .3rem;font:600 .68rem Inter,sans-serif;color:var(--text)}
+.ecpR .k{color:var(--muted)}
+.ecpR .er{display:flex;justify-content:space-between;gap:.6rem;font-size:.72rem;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.04);font-variant-numeric:tabular-nums}
+.ecpR .er .k{white-space:nowrap}
+.ecpR .er .v{text-align:right}
+.ecpR .sh{margin:.5rem 0 .15rem;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:#7dd3fc;font-weight:600}
+.ecpR .sh .k{text-transform:none;letter-spacing:0;font-weight:400}
+.ecpR .bad{color:#f87171;font-weight:700}
+.ecpR .hi{color:#e2f3ff;font-weight:700}
+.ecpR .note{font-size:.74rem;color:var(--muted);line-height:1.45;margin-top:.5rem;padding:.4rem .5rem;border-radius:8px;background:#0b1327;border-left:3px solid #7dd3fc}
 /* floating windows */
 .win{position:fixed;display:flex;flex-direction:column;padding:0;overflow:hidden;max-height:none;transform:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 .win>h2{padding:.5rem 1.4rem .4rem .6rem;margin:0;cursor:move;user-select:none;-webkit-user-select:none;touch-action:none;flex:none;border-bottom:1px solid rgba(255,255,255,.06)}
@@ -138,6 +159,27 @@ td.role{text-align:left;font-size:.7rem}
     </div>
     <div id="rinfo"></div>
   </section>
+  <section class="box" id="pEcp"><h2>ECPINS</h2>
+    <div class="ecp">
+      <div class="ecpL">
+        <canvas id="ecp" aria-label="ECPINS chart display"></canvas>
+        <div class="ctl">
+          <label>Range nm<select id="eRange"><option>1.5</option><option>3</option><option selected>6</option><option>12</option><option>24</option></select></label>
+          <label>Orientation<select id="eOri"><option value="north">North-up</option><option value="head">Head-up</option></select></label>
+          <label>Vector<select id="eVec"><option value="0">Off</option><option value="3">3 min</option><option value="6" selected>6 min</option><option value="12">12 min</option></select></label>
+          <label>CPA limit nm<select id="eCpa"><option>0.5</option><option selected>1</option><option>2</option></select></label>
+          <label>TCPA limit min<select id="eTcpa"><option>6</option><option>12</option><option selected>20</option></select></label>
+          <label class="chk"><input type="checkbox" id="eTrk" checked> Past tracks</label>
+        </div>
+        <div id="eOwn"></div>
+      </div>
+      <div class="ecpR"><div class="in">
+        <div id="eHead"></div>
+        <button class="b" id="eInt" disabled>Interrogate <kbd>I</kbd></button>
+        <div id="eData"></div>
+      </div></div>
+    </div>
+  </section>
   <section class="box" id="pTgt"><h2>Selected target</h2><div id="tinfo">Click a vessel on the radar, bridge or in the list.</div></section>
   <section class="box" id="pList"><h2>Tracked targets</h2>
     <table><thead><tr><th>ID</th><th>Brg °T</th><th>Rel</th><th>Rng nm</th><th>Crs °</th><th>Spd kn</th><th>CPA nm</th><th>TCPA min</th><th id="roleH" style="text-align:left">Your role</th></tr></thead><tbody id="tbody"></tbody></table>
@@ -146,9 +188,10 @@ td.role{text-align:left;font-size:.7rem}
 
 <section class="box help" id="pHelp"><h2>Controls</h2>
   <p><kbd>←</kbd><kbd>→</kbd> helm 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · drag a panel's title bar to move it, drag any corner to resize (contents scale) · <kbd>B</kbd> minimise / show the menu bar · <kbd>F</kbd> full screen</p>
-  <p>Panels: <kbd>R</kbd> radar · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
+  <p>Panels: <kbd>R</kbd> radar · <kbd>E</kbd> ECPINS · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
   <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
   <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
+  <p><b>ECPINS:</b> a chart-style display of AIS targets (no real chart data, just a graticule and range rings). Small hollow triangles are sleeping targets; selecting one activates it, showing its vector, past track and the predicted closest point of approach. Press <b>Interrogate</b> (<kbd>I</kbd>) to request its AIS static and voyage data (name, MMSI, IMO, call sign, ship type, navigational status, size, draught, destination, ETA) alongside its CPA, TCPA, BCR/BCT and bearing at CPA. Flashing red targets break the CPA/TCPA limits.</p>
   <p>Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and the visibility setting; the radar always sees out to its range.</p>
 </section>
 
@@ -158,6 +201,7 @@ td.role{text-align:left;font-size:.7rem}
   <button class="b" id="barPause" title="Pause / resume (Space)">⏯ <kbd>Space</kbd></button>
   <span class="sep"></span>
   <button class="b" data-p="radar">Radar <kbd>R</kbd></button>
+  <button class="b" data-p="ecp">ECPINS <kbd>E</kbd></button>
   <button class="b" data-p="helm">Helm <kbd>H</kbd></button>
   <button class="b" data-p="sim">Sim <kbd>S</kbd></button>
   <button class="b" data-p="tgt">Target <kbd>T</kbd></button>
@@ -444,14 +488,15 @@ function restart(){
 function showOverlay(msg){paused=true;$('pause').textContent='Resume';$('ovText').textContent=msg;$('overlay').classList.add('show')}
 
 /* ================= canvases ================= */
-const bc=$('bridge'),bx=bc.getContext('2d'),rc=$('radar'),rx=rc.getContext('2d');
-let BW=0,BH=0,RS=0,rk=1;
+const bc=$('bridge'),bx=bc.getContext('2d'),rc=$('radar'),rx=rc.getContext('2d'),ec=$('ecp'),ex=ec.getContext('2d');
+let BW=0,BH=0,RS=0,rk=1,ES=0,ek=1;
 function resize(){
  const d=Math.min(window.devicePixelRatio||1,2);
  BW=bc.clientWidth;BH=bc.clientHeight;bc.width=BW*d;bc.height=BH*d;bx.setTransform(d,0,0,d,0,0);
  RS=rc.clientWidth;const rr=rc.getBoundingClientRect();rk=(RS&&rr.width)?rr.width/RS:1;const q=d*rk;rc.width=Math.round(RS*q);rc.height=Math.round(RS*q);rx.setTransform(q,0,0,q,0,0);
+ ES=ec.clientWidth;const er=ec.getBoundingClientRect();ek=(ES&&er.width)?er.width/ES:1;{const q2=d*ek;ec.width=Math.round(ES*q2);ec.height=Math.round(ES*q2);ex.setTransform(q2,0,0,q2,0,0)}
 }
-new ResizeObserver(resize).observe(bc);new ResizeObserver(resize).observe(rc);
+new ResizeObserver(resize).observe(bc);new ResizeObserver(resize).observe(rc);new ResizeObserver(resize).observe(ec);
 
 /* ---------- bridge ---------- */
 const EYE=18,VEX=3;
@@ -631,7 +676,7 @@ function drawRadar(now){
  const G='#34d399',Gd='rgba(52,211,153,.22)';
  // rings
  rx.strokeStyle=Gd;rx.lineWidth=1;rx.fillStyle='rgba(52,211,153,.7)';rx.font='10px Inter,system-ui,sans-serif';rx.textAlign='left';
- const nr=ropt.range===3?3:ropt.range===6?3:4,st=ropt.range/nr;
+ const nr=ropt.range===3?3:ropt.range===6?6:4,st=ropt.range/nr;
  for(let i=1;i<=nr;i++){rx.beginPath();rx.arc(cx,cy,st*i*ppn,0,7);rx.stroke();rx.fillText(f1(st*i).replace('.0','')+' nm',cx+4,cy-st*i*ppn+11)}
  // bearing scale
  rx.strokeStyle='rgba(52,211,153,.6)';rx.beginPath();rx.arc(cx,cy,R,0,7);rx.stroke();
@@ -701,6 +746,212 @@ function drawRadar(now){
  rx.save();rx.translate(cx,cy);rx.rotate(ha);rx.fillStyle='#f8fafc';rx.beginPath();rx.moveTo(0,-10);rx.lineTo(5,7);rx.lineTo(0,3);rx.lineTo(-5,7);rx.closePath();rx.fill();rx.restore();
 }
 
+/* ================= ECPINS (chart display + AIS interrogation) ================= */
+// No chart data: a graticule, range rings and AIS targets over open water.
+const T0=Date.now(),MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const utcAt=s=>new Date(T0+s*1000),utcHMS=s=>{const d=utcAt(s);return pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+':'+pad(d.getUTCSeconds())};
+const etaTxt=d=>pad(d.getUTCDate())+' '+MON[d.getUTCMonth()]+' '+pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+' UTC';
+const GEO={lat:50,lon:-1},COSL=Math.cos(GEO.lat*D2R); // own ship start position (flat-earth)
+const toLL=(x,y)=>({lat:GEO.lat+y/60,lon:GEO.lon+x/60/COSL});
+function dm(deg,pl,hs){const a=Math.abs(deg),tot=Math.round(a*6000),d=Math.floor(tot/6000),m=(tot%6000)/100;return String(d).padStart(pl,'0')+'°'+m.toFixed(2).padStart(5,'0')+'′'+hs[deg<0?1:0]}
+const fmtLat=v=>dm(v,2,'NS'),fmtLon=v=>dm(v,3,'EW');
+function gl(A,pl,hs,dec){const a=Math.abs(A),d=Math.floor(a/60+1e-9),m=a-d*60;return String(d).padStart(pl,'0')+'°'+m.toFixed(dec).padStart(dec?4:2,'0')+'′'+hs[A<0?1:0]}
+
+const ecp={range:6,north:true,vecT:6,cpaLim:1,tcpaLim:20,trk:true};
+const ecDanger=t=>!t.anch&&t.tcpa>0&&t.tcpa<ecp.tcpaLim&&t.cpa<ecp.cpaLim;
+
+/* ---- AIS data a vessel returns when interrogated ---- */
+const AIS_FLAG=[['232','United Kingdom','M'],['211','Germany','DA'],['244','Netherlands','PA'],['205','Belgium','OO'],['227','France','F'],['219','Denmark','OU'],['257','Norway','LA'],['538','Marshall Islands','V7'],['636','Liberia','A8'],['351','Panama','H3'],['248','Malta','9H'],['209','Cyprus','5B']];
+const AIS_LOCAL=[0,2,3,4];
+const AIS_W1=['BALTIC','NORDIC','ATLANTIC','CELTIC','CHANNEL','ORIENT','PACIFIC','HANSE','MAAS','NORTHERN','SILVER','GOLDEN'];
+const AIS_W2=['TRADER','SPIRIT','EXPRESS','PIONEER','VOYAGER','HARMONY','GRACE','ENDEAVOUR','FORTUNE','CARRIER','STAR','PRIDE'];
+const AIS_FISH=['OCEAN HARVEST','SILVER DAWN','LADY JANE','MARGARET ROSE','NORTHERN PRIDE','PROVIDENCE','ANNA MARIE','CORAL REEF','SEA HUNTER','BOY WILLIAM'];
+const AIS_SAIL=['WINDSONG','SEA BREEZE','ARIEL','KESTREL','TALISMAN','MISTRAL','SANDPIPER','GALATEA','SKYLARK','WILD GOOSE'];
+const AIS_TUG=['HERCULES','ATLAS','TITAN','SEA GIANT','MARINER','VALIANT'];
+const AIS_RAM=['CABLE VENTURE','SEABED EXPLORER','DEEP SURVEYOR','OCEAN SENTINEL'];
+const AIS_PORTS=['SOUTHAMPTON','LE HAVRE','ROTTERDAM','ANTWERP','HAMBURG','FELIXSTOWE','CHERBOURG','BILBAO','LISBON','GIBRALTAR','LONDON GATEWAY','DOVER','ZEEBRUGGE','DUNKERQUE','FOR ORDERS'];
+const AIS_LPORTS=['PLYMOUTH','BRIXHAM','NEWHAVEN','CHERBOURG','DIEPPE','POOLE','GUERNSEY','COWES'];
+const AIS_STATUS=['Under way using engine','At anchor','Not under command','Restricted manoeuvrability','Constrained by her draught','Moored','Aground','Engaged in fishing','Under way sailing'];
+const AIS_DRAUGHT={pdS:[2.5,4],pdL:[6.5,9.5],tow:[3,4.5],sail:[1.4,2.2],trawl:[3,4.5],fish:[2.2,3.5],ram:[4.5,6.5],nuc:[5,7],cbd:[12,15],pilot:[1.2,1.8]};
+function imoNo(){const d=[9];for(let i=0;i<5;i++)d.push(Math.floor(Math.random()*10));return'IMO '+d.join('')+d.reduce((s,x,i)=>s+x*(7-i),0)%10}
+function makeAis(t){
+ const sp=TYPES[t.type],k=sp.kind,big=sp.L>=50,loc=['tow','sail','trawl','fish','pilot'].includes(k);
+ const fl=AIS_FLAG[loc?pick(AIS_LOCAL):Math.floor(Math.random()*AIS_FLAG.length)];
+ const nm=()=>pick(AIS_W1)+' '+pick(AIS_W2);let ty,gen;
+ switch(k){
+  case 'sail':ty=[36,'Sailing'];gen=()=>pick(AIS_SAIL);break;
+  case 'trawl':case 'fish':ty=[30,'Fishing'];gen=()=>pick(AIS_FISH);break;
+  case 'tow':ty=t.longTow?[32,'Towing (large)']:[31,'Towing'];gen=()=>pick(AIS_TUG);break;
+  case 'ram':ty=[33,'Dredging / underwater ops'];gen=()=>pick(AIS_RAM);break;
+  case 'pilot':ty=[50,'Pilot vessel'];gen=()=>'PILOT '+(1+Math.floor(Math.random()*9));break;
+  case 'cbd':ty=[80,'Tanker'];gen=nm;break;
+  case 'nuc':ty=[70,'Cargo'];gen=nm;break;
+  default:ty=big?pick([[70,'Cargo'],[70,'Cargo'],[80,'Tanker'],[60,'Passenger']]):pick([[70,'Cargo'],[80,'Tanker'],[52,'Tug']]);gen=ty[0]===52?()=>pick(AIS_TUG):nm;
+ }
+ let name=gen();for(let i=0;i<25&&targets.some(o=>o!==t&&o.ais&&o.ais.name===name);i++)name=gen(); // no two ships with the same name nearby
+ let call=fl[2];while(call.length<5)call+=Math.random()<.35?Math.floor(Math.random()*10):pick('ABCDEFGHJKLMNPQRSTUVWXYZ');
+ const status=t.anch?1:({trawl:7,fish:7,sail:8,ram:3,nuc:2,cbd:4}[k]??(k==='tow'&&t.longTow?3:0));
+ const dr=AIS_DRAUGHT[t.type],hrs=loc?rnd(1,10):rnd(3,40);
+ return{name,mmsi:fl[0]+String(Math.floor(Math.random()*1e6)).padStart(6,'0'),
+  imo:(['pd','cbd','nuc','ram'].includes(k)&&ty[0]!==52)?imoNo():'–',call,flag:fl[1],
+  typeTxt:`${ty[1]} (${ty[0]})`,statusTxt:AIS_STATUS[status],dims:`${t.L} × ${sp.B} m`,draught:f1(rnd(dr[0],dr[1])),
+  dest:pick(loc?AIS_LPORTS:AIS_PORTS),eta:etaTxt(utcAt(simT+hrs*3600)),at:simT};
+}
+function interrogate(){
+ if($('pEcp').classList.contains('hid'))togglePanel('ecp',true);
+ const t=sel;if(!t||t.ais||t.query)return;
+ t.act=true;t.query={t0:performance.now(),dur:rnd(1800,3200)};
+ addLog(`ECPINS: AIS interrogation sent to T${t.id}`);
+}
+function ecpStep(now){
+ for(const t of targets){
+  if(t.query&&now-t.query.t0>=t.query.dur){t.query=null;t.ais=makeAis(t);addLog(`ECPINS: T${t.id} replied – ${t.ais.name} · ${t.ais.typeTxt} · ${t.ais.statusTxt}`)}
+  const r=t._r||(t._r={h:t.hdg,T:simT,rot:0});
+  if(simT-r.T>=4){r.rot=n180(t.hdg-r.h)/(simT-r.T)*60;r.h=t.hdg;r.T=simT}
+ }
+}
+// where the target's relative track crosses own ship's heading line: a>0 = ahead (BCR), a<0 = astern
+function bowCross(t){
+ const h=own.hdg*D2R,fx=Math.sin(h),fy=Math.cos(h),sx=Math.cos(h),sy=-Math.sin(h);
+ const tv=vec(t.hdg,t.spd),ov=vec(own.hdg,own.spd),rx_=t.x-own.x,ry_=t.y-own.y,vx=tv.x-ov.x,vy=tv.y-ov.y;
+ const l0=rx_*sx+ry_*sy,lv=vx*sx+vy*sy,a0=rx_*fx+ry_*fy,av=vx*fx+vy*fy;
+ if(Math.abs(lv)<1e-9)return null;
+ const tc=-l0/lv;if(tc<=0)return null;
+ return{t:tc,a:a0+av*tc};
+}
+
+/* ---- chart drawing ---- */
+function drawEcp(now){
+ const S=ES;if(!S||$('pEcp').classList.contains('hid'))return;
+ const cx=S/2,cy=S/2,R=S/2-24,ppn=R/ecp.range,orient=ecp.north?0:own.hdg,oa=orient*D2R,co=Math.cos(oa),si=Math.sin(oa);
+ const ep=(wx,wy)=>{const dx=wx-own.x,dy=wy-own.y;return{x:cx+(dx*co-dy*si)*ppn,y:cy-(dx*si+dy*co)*ppn}};
+ const ov=vec(own.hdg,own.spd),F='Inter,system-ui,sans-serif';
+ ex.clearRect(0,0,S,S);ex.fillStyle='#071426';ex.fillRect(0,0,S,S);
+ // graticule
+ const step=ecp.range<=1.5?.5:ecp.range<=3?1:ecp.range<=6?2:ecp.range<=12?5:10,L=S/ppn;
+ const la0=GEO.lat*60+own.y,lo0=GEO.lon*60+own.x/COSL;
+ ex.lineWidth=1;ex.strokeStyle='rgba(120,160,210,.16)';ex.fillStyle='rgba(150,180,220,.6)';ex.font='9px '+F;ex.textBaseline='alphabetic';
+ let lastY=-1e9,lastX=-1e9;
+ for(let m=Math.ceil((la0-L)/step);m*step<=la0+L;m++){
+  const A=m*step,y=A-GEO.lat*60,a=ep(own.x-L,y),b=ep(own.x+L,y);
+  ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(b.x,b.y);ex.stroke();
+  if(ecp.north&&a.y>22&&a.y<S-8&&Math.abs(a.y-lastY)>=24){lastY=a.y;ex.textAlign='left';ex.fillText(gl(A,2,'NS',step<1?1:0),4,a.y-3)}
+ }
+ for(let m=Math.ceil((lo0-L/COSL)/step);m*step<=lo0+L/COSL;m++){
+  const A=m*step,x=(A-GEO.lon*60)*COSL,a=ep(x,own.y-L),b=ep(x,own.y+L);
+  ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(b.x,b.y);ex.stroke();
+  if(ecp.north&&a.x>30&&a.x<S-30&&a.x-lastX>=52){lastX=a.x;ex.textAlign='center';ex.fillText(gl(A,3,'EW',step<1?1:0),a.x,S-5)}
+ }
+ // range rings, CPA limit, compass ring
+ const nr={1.5:3,3:3,6:3,12:4,24:4}[ecp.range]||3,st=ecp.range/nr;
+ ex.strokeStyle='rgba(125,211,252,.30)';ex.fillStyle='rgba(125,211,252,.8)';ex.textAlign='left';
+ for(let i=1;i<=nr;i++){ex.beginPath();ex.arc(cx,cy,st*i*ppn,0,7);ex.stroke();ex.fillText(String(+(st*i).toFixed(2))+' nm',cx+4,cy-st*i*ppn+10)}
+ ex.setLineDash([4,4]);ex.strokeStyle='rgba(251,191,36,.55)';ex.beginPath();ex.arc(cx,cy,ecp.cpaLim*ppn,0,7);ex.stroke();ex.setLineDash([]);
+ ex.strokeStyle='rgba(125,211,252,.55)';ex.beginPath();ex.arc(cx,cy,R,0,7);ex.stroke();
+ ex.textAlign='center';ex.textBaseline='middle';
+ for(let b=0;b<360;b+=10){
+  const a=(b-orient)*D2R,s=Math.sin(a),c=-Math.cos(a),l=b%30===0?8:4;
+  ex.beginPath();ex.moveTo(cx+s*R,cy+c*R);ex.lineTo(cx+s*(R+l),cy+c*(R+l));ex.stroke();
+  if(b%30===0){ex.fillStyle=b===0?'#fbbf24':'#9fb6d4';ex.fillText(b===0?'N':b3(b),cx+s*(R+16),cy+c*(R+16))}
+ }
+ ex.textBaseline='alphabetic';
+ // own ship: heading line, vector, symbol
+ const ha=(own.hdg-orient)*D2R;
+ ex.strokeStyle='rgba(248,250,252,.75)';ex.lineWidth=1;ex.beginPath();ex.moveTo(cx,cy);ex.lineTo(cx+Math.sin(ha)*R,cy-Math.cos(ha)*R);ex.stroke();
+ if(ecp.vecT>0&&own.spd>.1){const e=ep(own.x+ov.x*ecp.vecT,own.y+ov.y*ecp.vecT);ex.strokeStyle='#f8fafc';ex.lineWidth=2;ex.beginPath();ex.moveTo(cx,cy);ex.lineTo(e.x,e.y);ex.stroke()}
+ ex.strokeStyle='rgba(248,250,252,.5)';ex.lineWidth=1;ex.beginPath();ex.arc(cx,cy,10,0,7);ex.stroke();
+ ex.save();ex.translate(cx,cy);ex.rotate(ha);ex.fillStyle='#f8fafc';ex.beginPath();ex.moveTo(0,-9);ex.lineTo(4.5,6);ex.lineTo(0,3);ex.lineTo(-4.5,6);ex.closePath();ex.fill();ex.restore();
+ // AIS targets (far first so near ones sit on top)
+ for(const t of [...targets].sort((a,b)=>b.range-a.range)){
+  if(t===sel)t.act=true;
+  const dg=ecDanger(t),isAct=!!(t.act||dg||t.ais),p=ep(t.x,t.y);t.ex=p.x;t.ey=p.y;
+  if(p.x<-20||p.x>S+20||p.y<-20||p.y>S+20)continue;
+  const col=dg?((Math.floor(now/400)%2)?'#f87171':'#fecaca'):isAct?'#7dd3fc':'#7c93b3';
+  if(ecp.trk&&isAct&&t.trail.length){
+   ex.strokeStyle='rgba(125,211,252,.35)';ex.fillStyle='rgba(125,211,252,.6)';ex.lineWidth=1;ex.beginPath();
+   t.trail.forEach((q,i)=>{const e=ep(q.x,q.y);i?ex.lineTo(e.x,e.y):ex.moveTo(e.x,e.y)});ex.lineTo(p.x,p.y);ex.stroke();
+   for(const q of t.trail){const e=ep(q.x,q.y);ex.fillRect(e.x-1.5,e.y-1.5,3,3)}
+  }
+  if(isAct&&ecp.vecT>0&&t.spd>.1){const tv=vec(t.hdg,t.spd),e=ep(t.x+tv.x*ecp.vecT,t.y+tv.y*ecp.vecT);ex.strokeStyle=col;ex.lineWidth=dg?1.8:1.3;ex.beginPath();ex.moveTo(p.x,p.y);ex.lineTo(e.x,e.y);ex.stroke()}
+  const sz=isAct?7:4.5;
+  ex.save();ex.translate(p.x,p.y);ex.rotate((t.hdg-orient)*D2R);
+  ex.beginPath();ex.moveTo(0,-sz*1.5);ex.lineTo(sz*.85,sz);ex.lineTo(-sz*.85,sz);ex.closePath();
+  ex.lineWidth=isAct?1.8:1.2;ex.strokeStyle=col;ex.stroke();
+  if(isAct){ex.fillStyle=dg?'rgba(248,113,113,.35)':'rgba(125,211,252,.22)';ex.fill()}
+  ex.restore();
+  ex.font='600 10px '+F;ex.fillStyle=col;ex.textAlign='left';
+  {const lab='T'+t.id+(t.ais?' '+t.ais.name:''),w=ex.measureText(lab).width;ex.fillText(lab,p.x+sz+5+w>S-3?p.x-sz-5-w:p.x+sz+5,p.y-sz)}
+  if(t.query){const k=((now-t.query.t0)/700)%1;ex.strokeStyle=`rgba(250,204,21,${(1-k).toFixed(2)})`;ex.lineWidth=1.5;ex.beginPath();ex.arc(p.x,p.y,8+k*16,0,7);ex.stroke()}
+  if(t===sel){
+   const q=14,m=5;ex.strokeStyle='#fff';ex.lineWidth=1.4;ex.beginPath();
+   for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]){ex.moveTo(p.x+sx*q,p.y+sy*(q-m));ex.lineTo(p.x+sx*q,p.y+sy*q);ex.lineTo(p.x+sx*(q-m),p.y+sy*q)}
+   ex.stroke();
+  }
+ }
+ // predicted closest point of approach for the selected target
+ if(sel&&targets.includes(sel)&&sel.tcpa>0&&sel.tcpa<90){
+  const tc=sel.tcpa,tv=vec(sel.hdg,sel.spd),a=ep(own.x+ov.x*tc,own.y+ov.y*tc),b=ep(sel.x+tv.x*tc,sel.y+tv.y*tc);
+  ex.strokeStyle='rgba(251,191,36,.9)';ex.lineWidth=1.2;ex.setLineDash([3,3]);ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(b.x,b.y);ex.stroke();ex.setLineDash([]);
+  ex.fillStyle='#f8fafc';ex.beginPath();ex.arc(a.x,a.y,3,0,7);ex.fill();ex.fillStyle='#fbbf24';ex.beginPath();ex.arc(b.x,b.y,3,0,7);ex.fill();
+  ex.font='600 10px '+F;ex.textAlign='left';ex.fillText(`CPA ${f2(sel.cpa)} nm · ${f1(tc)} min`,(a.x+b.x)/2+6,(a.y+b.y)/2-5);
+ }
+ // status text
+ ex.font='600 10px '+F;ex.fillStyle='#9fb6d4';ex.textAlign='left';ex.fillText((ecp.north?'NORTH-UP':'HEAD-UP')+' · '+ecp.range+' NM',8,14);
+ ex.textAlign='right';ex.fillText(`CPA ${ecp.cpaLim} nm · TCPA ${ecp.tcpaLim} min`,S-8,14);
+}
+
+/* ---- data panel ---- */
+function setHtml(el,h){if(el._h!==h){el._h=h;el.innerHTML=h}}
+const kv=(k,v,c='')=>`<div class="er"><span class="k">${k}</span><span class="v ${c}">${v}</span></div>`;
+function updateEcp(){
+ if($('pEcp').classList.contains('hid'))return;
+ const ll=toLL(own.x,own.y),btn=$('eInt');
+ const _oh=$('eOwn').offsetHeight;setHtml($('eOwn'),`<span>${fmtLat(ll.lat)} ${fmtLon(ll.lon)}</span><span>${utcHMS(simT)} UTC</span><span class="h">HDG ${b3(own.hdg)}° · SOG ${f1(own.spd)} kn</span><span>COG ${b3(own.hdg)}° · ROT ${Math.round(own.rot)}°/min</span>`);if($('eOwn').offsetHeight!==_oh)fit('ecp');
+ const setBtn=(txt,dis)=>{const h=txt+' <kbd>I</kbd>';if(btn._h!==h){btn._h=h;btn.innerHTML=h}btn.disabled=dis};
+ const t=sel;
+ if(!t){
+  setHtml($('eHead'),'<span class="k">No target selected</span>');
+  setHtml($('eData'),'<div class="note">Click a target on the chart, then press <b>Interrogate</b> to request its AIS identity and voyage data.</div>');
+  setBtn('Interrogate',true);return;
+ }
+ const dg=ecDanger(t),rel=n180(t.brg-own.hdg),bcr=bowCross(t),A=t.ais,p=toLL(t.x,t.y),rot=Math.round(t._r?t._r.rot:0);
+ let cb='–';
+ if(t.tcpa>0&&t.tcpa!==Infinity){
+  const tv=vec(t.hdg,t.spd),ov=vec(own.hdg,own.spd),px=t.x-own.x+(tv.x-ov.x)*t.tcpa,py=t.y-own.y+(tv.y-ov.y)*t.tcpa,r=n180(Math.atan2(px,py)*R2D-own.hdg);
+  cb=`<span class="${r<0?'pt':'sb'}">${relTxt(r)}</span>`;
+ }
+ const bcTxt=bcr?(bcr.a>0?`${f2(bcr.a)} nm / ${f1(bcr.t)} min`:'crosses astern'):'–';
+ setHtml($('eHead'),`<b style="font-size:.95rem">T${t.id}</b> <span class="k">${A?A.name:'unidentified'}</span>${dg?' <span class="bad">⚠ CPA/TCPA</span>':''}`);
+ let h=`<div class="sh">Track data</div>`
+  +kv('Range',f2(t.range)+' nm')
+  +kv('Bearing',`${b3(t.brg)}°T <span class="${rel<0?'pt':'sb'}">${relTxt(rel)}</span>`)
+  +kv('Lat',fmtLat(p.lat))+kv('Lon',fmtLon(p.lon))
+  +kv('COG / SOG',`${b3(t.hdg)}° / ${f1(t.spd)} kn`)
+  +kv('HDG / ROT',`${b3(t.hdg)}° / ${rot>0?'+':''}${rot}°/min`)
+  +kv('CPA',f2(t.cpa)+' nm',dg?'bad':'hi')
+  +kv('TCPA',t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)+' min',dg?'bad':'hi')
+  +kv('Brg at CPA',cb)
+  +kv('BCR / BCT',bcTxt)
+  +kv('Range rate',`${f1(Math.abs(t.rrate)*60)} kn ${t.rrate<0?'closing':'opening'}`);
+ if(A){
+  h+=`<div class="sh">AIS static &amp; voyage <span class="k">· rcvd ${utcHMS(A.at)}</span></div>`
+   +kv('Name',A.name)+kv('MMSI',A.mmsi)+kv('IMO',A.imo)+kv('Call sign',A.call)+kv('Flag',A.flag)
+   +kv('Ship type',A.typeTxt)+kv('Nav status',A.statusTxt)+kv('L × B',A.dims)+kv('Draught',A.draught+' m')
+   +kv('Destination',A.dest)+kv('ETA',A.eta)+(cfg.training?kv('COLREGS',nameOf(t)):'');
+ }else if(t.query)h+='<div class="note">Interrogating… waiting for the vessel to reply.</div>';
+ else h+='<div class="note">Static data not held. Press <b>Interrogate</b> to request name, MMSI, type, status, size, draught, destination and ETA.</div>';
+ setHtml($('eData'),h);
+ if(A)setBtn('Reply received',true);else if(t.query)setBtn('Interrogating…',true);else setBtn('Interrogate',false);
+}
+$('eRange').onchange=e=>ecp.range=+e.target.value;
+$('eOri').onchange=e=>ecp.north=e.target.value==='north';
+$('eVec').onchange=e=>ecp.vecT=+e.target.value;
+$('eCpa').onchange=e=>ecp.cpaLim=+e.target.value;
+$('eTcpa').onchange=e=>ecp.tcpaLim=+e.target.value;
+$('eTrk').onchange=e=>ecp.trk=e.target.checked;
+$('eInt').onclick=interrogate;
+ec.onclick=e=>{const r=ec.getBoundingClientRect(),x=(e.clientX-r.left)/ek,y=(e.clientY-r.top)/ek;let b=null,bd=16;for(const t of targets){if(t.ex==null)continue;const d=Math.hypot(t.ex-x,t.ey-y);if(d<bd){bd=d;b=t}}sel=b;if(b)b.act=true};
+
 /* ================= UI ================= */
 function roleText(t){
  if(!cfg.training)return'';
@@ -763,9 +1014,9 @@ bc.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x;if(Math.abs(dx)>4
 bc.onpointerup=e=>{if(drag&&!drag.moved){const r=bc.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let b=null,bd=1e9;
   for(const t of targets){if(t.sx==null)continue;const d=Math.abs(t.sx-x);if(d<Math.max(16,t.sw)&&Math.abs(y-HZ)<BH*.35&&d<bd){bd=d;b=t}}if(b)sel=b}drag=null};
 bc.onwheel=e=>{e.preventDefault();setFov(view.fov*(e.deltaY>0?1.12:.89))};
-const PANELS={radar:'pRadar',helm:'pHelm',sim:'pSim',tgt:'pTgt',list:'pList',log:'pLog',help:'pHelp'};
-const PKEYS={r:'radar',h:'helm',s:'sim',t:'tgt',g:'list',l:'log','?':'help','/':'help'};
-const PLAB={radar:'R',helm:'H',sim:'S',tgt:'T',list:'G',log:'L',help:'?'};
+const PANELS={radar:'pRadar',helm:'pHelm',sim:'pSim',tgt:'pTgt',list:'pList',log:'pLog',help:'pHelp',ecp:'pEcp'};
+const PKEYS={r:'radar',h:'helm',s:'sim',t:'tgt',g:'list',l:'log','?':'help','/':'help',e:'ecp'};
+const PLAB={radar:'R',helm:'H',sim:'S',tgt:'T',list:'G',log:'L',help:'?',ecp:'E'};
 function togglePanel(n,show){
  const el=$(PANELS[n]);const on=show===undefined?el.classList.contains('hid'):show;
  el.classList.toggle('hid',!on);if(on)showWin(n);
@@ -782,7 +1033,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.tagName==='SELECT')e.target.blur()});
 
 /* ---- floating, movable, resizable windows ---- */
-const WIN={radar:{w:340,m:'both'},helm:{w:290,m:'both'},sim:{w:300,m:'both'},tgt:{w:300,m:'width'},list:{w:470,m:'width'},log:{w:300,m:'width'},help:{w:540,m:'width'}};
+const WIN={radar:{w:340,m:'both'},helm:{w:290,m:'both'},sim:{w:300,m:'both'},tgt:{w:300,m:'width'},list:{w:470,m:'width'},log:{w:300,m:'width'},help:{w:540,m:'width'},ecp:{w:650,m:'both'}};
 let zTop=100;
 for(const n in PANELS){
  const el=$(PANELS[n]),c=WIN[n],h=el.querySelector('h2');
@@ -810,7 +1061,7 @@ function showWin(n){
   const bw=Math.min(c.w+20,W-20);el.style.width=bw+'px';
   const hh=c.h.offsetHeight+18,nat=Math.min(hh+c.nh*(bw-20)/c.w,H*.6);
   if(c.m==='width')el.style.height=nat+'px';
-  const pos={radar:[W-bw-10,98],tgt:[W-370-bw-10,98],list:[W-bw-10,H-72-nat],helm:[10,98],sim:[bw>0?330:10,98],log:[10,H-72-nat],help:[(W-bw)/2,(H-nat)/2]}[n];
+  const pos={radar:[W-bw-10,98],tgt:[W-370-bw-10,98],list:[W-bw-10,H-72-nat],helm:[10,98],sim:[bw>0?330:10,98],log:[10,H-72-nat],help:[(W-bw)/2,(H-nat)/2],ecp:[(W-bw)/2,90]}[n];
   el.style.left=Math.max(0,pos[0])+'px';el.style.top=Math.max(0,pos[1])+'px';
  }
  front(el);fit(n);
@@ -853,13 +1104,14 @@ $('trans').oninput=e=>{const t=+e.target.value;document.documentElement.style.se
 $('rng').onchange=e=>{cfg.allLights=!e.target.checked};
 $('deck').oninput=e=>{deckScale=+e.target.value;$('deckv').textContent=deckScale.toFixed(1)+'×'};
 // start with the bridge full-screen plus radar and helm
-['sim','tgt','list','log','help'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
+['sim','tgt','list','log','help','ecp'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
 window.onkeydown=e=>{
  if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&e.target.type!=='checkbox'&&e.target.type!=='range')return;
  if(e.ctrlKey||e.metaKey||e.altKey)return;
  const pk=PKEYS[e.key.toLowerCase()];if(pk){togglePanel(pk);e.preventDefault();return}
  if(e.key.toLowerCase()==='f'){toggleFs();e.preventDefault();return}
  if(e.key.toLowerCase()==='b'){toggleBar();e.preventDefault();return}
+ if(e.key.toLowerCase()==='i'){interrogate();e.preventDefault();return}
  if(e.key==='Escape'){hideAll();return}
  const k=e.key;
  if(k==='ArrowLeft'){own.cmdHdg=n360(own.cmdHdg-(e.shiftKey?10:1))}else if(k==='ArrowRight'){own.cmdHdg=n360(own.cmdHdg+(e.shiftKey?10:1))}
@@ -874,11 +1126,11 @@ let last=performance.now(),acc=0,uiT=0;
 function frame(now){
  const dt=Math.min(.1,(now-last)/1000);last=now;
  if(!paused){acc+=dt*(+$('ts').value);let n=0;while(acc>=1&&n<400){stepSim(1);acc-=1;n++;if(paused)break}if(n>=400)acc=0}
- drawBridge(now);drawRadar(now);
- if(now-uiT>250){uiT=now;updateUI()}
+ ecpStep(now);drawBridge(now);drawRadar(now);drawEcp(now);
+ if(now-uiT>250){uiT=now;updateUI();updateEcp()}
  requestAnimationFrame(frame);
 }
-window.SIM={own,get targets(){return targets},step:n=>{for(let i=0;i<n;i++)stepSim(1)},restart,view,cfg,ropt,setSel:id=>{sel=targets.find(t=>t.id===id)||null},spawn,setPaused:v=>{paused=v}};
+window.SIM={ecp,interrogate,own,get targets(){return targets},step:n=>{for(let i=0;i<n;i++)stepSim(1)},restart,view,cfg,ropt,setSel:id=>{sel=targets.find(t=>t.id===id)||null},spawn,setPaused:v=>{paused=v}};
 resize();restart();requestAnimationFrame(frame);
 </script>
 </body>
