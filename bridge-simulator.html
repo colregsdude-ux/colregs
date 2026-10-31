@@ -125,10 +125,12 @@ td.role{text-align:left;font-size:.7rem}
     <div class="btns" id="eng"><button class="b" data-ds="-5">−5</button><button class="b" data-ds="-1">−1</button><button class="b" data-ds="1">+1</button><button class="b" data-ds="5">+5</button><button class="b" data-ds="-99">Stop</button></div>
     <div class="row2" style="margin-top:.3rem">Sound signals</div>
     <div class="btns" id="horn"><button class="b" data-h="1">1 short</button><button class="b" data-h="2">2 short</button><button class="b" data-h="3">3 short</button><button class="b red" data-h="5">5 short</button><button class="b" data-h="p">1 prolonged</button></div>
+    <div id="tssBox" class="hid" style="margin-top:.45rem;font-size:.72rem;line-height:1.4;padding:.35rem .5rem;border-radius:8px;background:#0b1327;border-left:3px solid #c026d3"></div>
   </section>
   <section class="box" id="pSim"><h2>Simulation</h2>
     <div class="ctl" style="margin-top:0">
-      <label>Scenario<select id="scen"></select></label>
+      <label style="grid-column:1/-1">Location<select id="loc"></select></label>
+      <label style="grid-column:1/-1">Scenario<select id="scen"></select></label>
       <label>Time speed<select id="ts"><option>1</option><option>2</option><option>5</option><option selected>10</option><option>20</option><option>30</option><option>60</option></select></label>
       <label>Lighting<select id="light"><option value="night">Night</option><option value="dusk">Dusk</option><option value="day">Day</option></select></label>
       <label>Visibility <span id="visv">10 nm</span><input type="range" id="vis" min="0.5" max="10" step="0.5" value="10"></label>
@@ -192,6 +194,7 @@ td.role{text-align:left;font-size:.7rem}
   <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
   <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
   <p><b>ECPINS:</b> a chart-style display of AIS targets (no real chart data, just a graticule and range rings). Small hollow triangles are sleeping targets; selecting one activates it, showing its vector, past track and the predicted closest point of approach. Press <b>Interrogate</b> (<kbd>I</kbd>) to request its AIS static and voyage data (name, MMSI, IMO, call sign, ship type, navigational status, size, draught, destination, ETA) alongside its CPA, TCPA, BCR/BCT and bearing at CPA. Flashing red targets break the CPA/TCPA limits.</p>
+  <p><b>Locations:</b> choose a Location in the Simulation panel (<kbd>S</kbd>). <b>Open sea</b> is the free-roaming sandbox. <b>English Channel</b> is a schematic Dover Strait TSS (SW-bound lane on the English side, NE-bound on the French side, ferries crossing). <b>Strait of Malacca</b> is a dense schematic TSS with deep-draught tankers, tugs with tows, anchored ships, unlit fishing boats and <b>dhows that may not follow the Rules</b> (no or dim lights, no AIS, weak radar echo, erratic courses, failing to give way). Lanes, separation zones and coasts show on the ECPINS display; with rule assessment on, your own Rule 10 status appears under Own ship.</p>
   <p>Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and the visibility setting; the radar always sees out to its range.</p>
 </section>
 
@@ -248,14 +251,20 @@ const TYPES={
  cbd:{name:'Vessel constrained by her draught',cat:'cbd',kind:'cbd',L:190,B:32,fb:6,hull:'#1f2937',rot:.18,
   boxes:[{a0:.03,a1:.16,w:.8,h:19,c:'#e5e7eb'},{a0:.3,a1:.78,w:.5,h:1.5,c:'#475569'}],masts:[{a:.8,top:30}],zm:17,za:26,zs:12,zt:9},
  pilot:{name:'Pilot vessel on duty',cat:'power',kind:'pilot',L:18,B:5,fb:1.6,hull:'#f97316',rot:.9,
-  boxes:[{a0:.25,a1:.6,w:.7,h:2.6,c:'#fff7ed'}],masts:[{a:.45,top:10}],zm:7,zs:3.5,zt:3}
+  boxes:[{a0:.25,a1:.6,w:.7,h:2.6,c:'#fff7ed'}],masts:[{a:.45,top:10}],zm:7,zs:3.5,zt:3},
+ ferry:{name:'Passenger / Ro-Ro ferry',cat:'power',kind:'pd',L:140,B:26,fb:8,hull:'#e2e8f0',rot:.3,
+  boxes:[{a0:.08,a1:.72,w:.9,h:9,c:'#f8fafc'},{a0:.2,a1:.55,w:.7,h:7,b:9,c:'#2b6cb0'},{a0:.12,a1:.2,w:.8,h:5,b:16,c:'#f1f5f9'}],masts:[{a:.8,top:28},{a:.12,top:34}],zm:28,za:34,zs:14,zt:10},
+ dhow:{name:'Dhow (traditional wooden vessel)',cat:'sail',kind:'dhow',L:24,B:6,fb:1.8,hull:'#7c5a35',rot:.8,
+  boxes:[{a0:.05,a1:.28,w:.6,h:2,c:'#a16207'}],masts:[{a:.42,top:15}],zm:4.5,zs:2.5,zt:2.8}
 };
 const RANK={nuc:1,ram:2,cbd:2.5,fish:3,sail:4,power:5,anch:0};
 
 function lightsFor(t){
  const sp=TYPES[t.type],L=sp.L,B=sp.B,big=L>=50,o=[];
- const add=(c,k,s,z,x=0,way=false)=>o.push({c,k,s,z,x,way});
+ const add=(c,k,s,z,x=0,way=false,r)=>o.push({c,k,s,z,x,way,r});
  if(t.anch){add('white','all',.38*L,sp.zm,0);if(big)add('white','all',-.38*L,sp.zm-5,0);return o}
+ if(t.lightMode==='none')return[];
+ if(t.lightMode==='dim'){add('white','all',0,sp.zm||2,0,false,1.2);return o}
  const sides=(s,z,way)=>{add('green','sbd',s,z,B*.42,way);add('red','prt',s,z,-B*.42,way)};
  const stern=(z,way,s=-L/2+1)=>add('white','stern',s,z,0,way);
  const pd=(way)=>{
@@ -267,6 +276,7 @@ function lightsFor(t){
   case 'pd':pd(false);break;
   case 'pilot':add('white','all',-.05*L,sp.zm+2);add('red','all',-.05*L,sp.zm);pd(false);break;
   case 'sail':sides(.3*L,sp.zs);stern(sp.zt);break;
+  case 'dhow':if(t.motor)pd(false);else{sides(.2*L,sp.zs);stern(sp.zt)}break;
   case 'tow':{
    const n=t.longTow?3:2;for(let i=0;i<n;i++)add('white','mast',-.1*L,sp.zm+i*2.2);
    sides(.2*L,sp.zs);stern(sp.zt);add('yellow','stern',-L/2+1,sp.zt+2.5);
@@ -294,8 +304,8 @@ function shapesFor(t){
  }
  return[];
 }
-const catOf=t=>t.anch?'anch':TYPES[t.type].cat;
-const nameOf=t=>t.anch?TYPES[t.type].name+' – at anchor':TYPES[t.type].name+(t.type==='tow'&&t.longTow?' (tow over 200 m)':'');
+const catOf=t=>t.anch?'anch':t.type==='dhow'?(t.motor?'power':'sail'):TYPES[t.type].cat;
+const nameOf=t=>t.anch?TYPES[t.type].name+' – at anchor':t.type==='dhow'?TYPES.dhow.name+(t.motor?(t.sailUp?' – motor-sailing (power-driven)':' – under engine (power-driven)'):' – under sail only'):TYPES[t.type].name+(t.type==='tow'&&t.longTow?' (tow over 200 m)':'');
 
 /* ================= state ================= */
 const own={x:0,y:0,hdg:0,spd:12,cmdHdg:0,cmdSpd:12,rot:0,L:120};
@@ -303,6 +313,7 @@ let targets=[],nextId=1,simT=0,paused=false,collisions=0,closeQ=0,sel=null,lastS
 const view={off:0,fov:70};
 const cfg={light:'night',vis:10,training:true};
 const RISK_CPA=1.0;
+let curLoc='sea',curS=null,tss=null,ownTssKey=null;
 
 const SCEN={
  mixed:{label:'Mixed traffic (continuous)',start:['cross_stbd','cross_port','overtaking_us','sail','trawl'],cont:true},
@@ -318,6 +329,38 @@ const SCEN={
  busy:{label:'Busy waters (everything)',start:['cross_stbd','cross_port','head_on','overtaking_us','sail','trawl','cbd','anch','tow'],cont:true}
 };
 const KINDS=[['cross_stbd',3],['cross_port',3],['head_on',1.2],['overtaking_us',1],['overtake_them',1],['sail',1.6],['trawl',1],['fish',.6],['ram',.6],['nuc',.3],['cbd',.7],['anch',.6],['tow',1],['pilot',.7]];
+const LOCS={
+ sea:{label:'Open sea',geo:{lat:50,lon:-1},tss:null},
+ channel:{label:'English Channel – Dover Strait (TSS)',geo:{lat:51.0,lon:1.6},
+  tss:{name:'Dover Strait TSS (schematic)',ax:50,z:1.0,w:2.5,land:9.5,inshore:4,laneNames:{F:'NE-bound',R:'SW-bound'},landNames:['ENGLAND','FRANCE']},
+  lane:[['pdL',6],['pdS',3],['cbd',.6],['tow',.6]],
+  kinds:[['ln_any',9],['ferry_x',2.6],['sail_x',1.2],['fish_lane',.7],['tow_lane',.6],['pilot',.4],['anch_out',.4],['ln_wrong',.12]],
+  max:11,p:.6,
+  ferryDest:['DOVER','CALAIS','DUNKERQUE'],ferryNames:['CHANNEL SPIRIT','SEAWAYS EXPRESS','COTE OPALE','WHITE CLIFFS','NORTHERN LINK'],
+  lports:['DOVER','FOLKESTONE','CALAIS','RAMSGATE','BOULOGNE','DIEPPE','NEWHAVEN','DUNKERQUE']},
+ malacca:{label:'Strait of Malacca (TSS)',geo:{lat:2.4,lon:101.35},
+  tss:{name:'Malacca Strait TSS (schematic)',ax:315,z:.5,w:2,land:16,inshore:6,laneNames:{F:'NW-bound',R:'SE-bound'},landNames:['SUMATRA','MALAYSIA']},
+  lane:[['pdL',5],['cbd',2.2],['pdS',2.2],['tow',1]],
+  kinds:[['ln_any',8],['dhow',1.7],['dhow_z',.6],['fish_my',2.2],['tow_lane',.9],['ferry_x',.6],['anch_out',.9],['ln_wrong',.15],['sail_x',.3]],
+  max:12,p:.6,
+  flags:[['563','Singapore','9V'],['564','Singapore','9V'],['533','Malaysia','9M'],['525','Indonesia','YB'],['477','Hong Kong','VR'],['412','China','BY'],['538','Marshall Islands','V7'],['636','Liberia','A8'],['351','Panama','H3']],
+  localIdx:[0,2,3],
+  ports:['SINGAPORE','PORT KLANG','TANJUNG PELEPAS','COLOMBO','BELAWAN','PENANG','JEDDAH','FUJAIRAH','HONG KONG','SHANGHAI','MUMBAI','FOR ORDERS'],
+  lports:['PORT DICKSON','DUMAI','MALACCA','BATAM','PORT KLANG','BELAWAN'],
+  fishNames:['BINTANG LAUT','NELAYAN JAYA','SRI PANTAI','MUTIARA 7','BAHTERA','LAUT TIMUR','KM RAJAWALI','PERAIRAN 12'],
+  ferryDest:['DUMAI','PORT DICKSON','MALACCA','TANJUNG BALAI'],ferryNames:['SRI SELAT','SELAT EXPRESS','BAHARI JAYA','PERMATA']}
+};
+Object.assign(SCEN,{
+ ch_lane:{loc:'channel',label:'SW-bound lane – busy lane traffic (Rule 10)',own:{lane:'R',spd:13},start:['ln_over','ln_slow','ln_opp','ln_opp','ln_opp','ferry_x','sail_x'],cont:true},
+ ch_ne:{loc:'channel',label:'NE-bound lane – ferries crossing ahead',own:{lane:'F',spd:14},start:['ln_opp','ln_opp','ln_over','ferry_x','ferry_x','ln_slow'],cont:true},
+ ch_cross:{loc:'channel',label:'You are a ferry crossing the TSS (Rule 10(c))',own:{lane:'cross',spd:18},start:['ln_any','ln_any','ln_any','ln_any','ln_any','sail_x'],cont:true},
+ ch_small:{loc:'channel',label:'Yachts, fishing vessels & tows in the lanes (10(i)/(j))',own:{lane:'R',spd:13},start:['sail_x','sail_x','fish_lane','fish_lane','tow_lane','ln_opp'],cont:false},
+ ch_wrong:{loc:'channel',label:'Vessel proceeding against the traffic flow',own:{lane:'R',spd:13},start:['ln_wrong','ln_opp','ln_over'],cont:false},
+ ml_busy:{loc:'malacca',label:'SE-bound lane – dense traffic, tows, anchored ships',own:{lane:'R',spd:12},start:['ln_over','ln_slow','ln_opp','ln_opp','ln_opp','tow_lane','anch_out','fish_my','dhow'],cont:true},
+ ml_dhows:{loc:'malacca',label:'Dhows crossing & in the separation zone (non-conforming)',own:{lane:'R',spd:12},start:['dhow','dhow','dhow','dhow_z','ln_opp','ln_over'],cont:true,kinds:[['dhow',4],['dhow_z',1.2],['ln_any',4],['fish_my',1]]},
+ ml_fish:{loc:'malacca',label:'Fishing fleet & unlit small craft (try Night)',own:{lane:'R',spd:11},start:['fish_my','fish_my','fish_my','fish_my','dhow','dhow','ln_opp'],cont:true,kinds:[['fish_my',4],['dhow',2],['ln_any',3]]},
+ ml_cross:{loc:'malacca',label:'You are a ferry crossing the strait',own:{lane:'cross',spd:16},start:['ln_any','ln_any','ln_any','ln_any','dhow','dhow','fish_my'],cont:true}
+});
 
 /* ================= spawning ================= */
 function mk(type,o){
@@ -355,10 +398,149 @@ function build(kind){
   case 'anch':{p=ahead(rnd(5,8),rnd(-.9,.9));t=mk(pd(),{x:p.x,y:p.y,hdg:rnd(0,360),spd:0,anch:true});break}
   case 'tow':case 'tow_long':{h=n360(oc+pick([-1,1])*rnd(50,120));s=rnd(4,6.5);p=intercept(h,s,rnd(6,8),rnd(-.2,.2));
    t=mk('tow',{x:p.x,y:p.y,hdg:h,spd:s});if(kind==='tow_long'){t.longTow=true;t.towLen=250}else t.towLen=rnd(70,150);break}
+  case 'ln_opp':case 'ln_over':case 'ln_slow':case 'ln_any':case 'tow_lane':case 'ln_wrong':case 'ferry_x':case 'sail_x':case 'fish_lane':case 'fish_my':case 'anch_out':case 'dhow':case 'dhow_z':
+   t=tssBuild(kind);break;
   case 'pilot':{h=n360(oc+pick([-1,1])*rnd(40,110));s=rnd(12,18);p=intercept(h,s,rnd(7,9),rnd(-.2,.2));t=mk('pilot',{x:p.x,y:p.y,hdg:h,spd:s});break}
  }
  return t;
 }
+/* ================= locations / traffic separation schemes ================= */
+const tlat=(x,y)=>(x-tss.ox)*tss.sx+(y-tss.oy)*tss.sy;
+const talong=(x,y)=>(x-tss.ox)*tss.ux+(y-tss.oy)*tss.uy;
+const tpos=(al,la)=>({x:tss.ox+tss.ux*al+tss.sx*la,y:tss.oy+tss.uy*al+tss.sy*la});
+function setupLoc(S){
+ const L=LOCS[curLoc],ol=S.own||{};
+ GEO.lat=L.geo.lat;GEO.lon=L.geo.lon;COSL=Math.cos(GEO.lat*D2R);
+ own.x=own.y=0;tss=null;
+ if(L.tss){
+  const T=L.tss,c=T.z+T.w/2,ax=T.ax,lane=ol.lane||'R';
+  const lat0=lane==='F'?c:lane==='R'?-c:-(T.z+T.w+2);
+  tss=Object.assign({c,ux:Math.sin(ax*D2R),uy:Math.cos(ax*D2R),sx:Math.cos(ax*D2R),sy:-Math.sin(ax*D2R),ox:0,oy:0},T);
+  tss.ox=-tss.sx*lat0;tss.oy=-tss.sy*lat0;
+  own.hdg=own.cmdHdg=n360(lane==='F'?ax:lane==='R'?ax+180:ax+90);
+ }else own.hdg=own.cmdHdg=0;
+ own.spd=own.cmdSpd=ol.spd||12;
+ $('course').value=Math.round(own.cmdHdg);
+}
+const ownFlow=()=>{const c=Math.cos(n180(own.hdg-tss.ax)*D2R);return c>.5?1:c<-.5?-1:0};
+const SPD={pdL:[12,17],pdS:[9,13],cbd:[9.5,13],tow:[4.5,6.5],ferry:[18,23],sail:[4,7],pilot:[12,18]};
+function wpick(L){let r=Math.random()*L.reduce((a,k)=>a+k[1],0);for(const [k,w] of L){r-=w;if(r<=0)return k}return L[0][0]}
+// give a vessel rule-breaking habits: o = probabilities
+function quirk(t,o){
+ const q=[];
+ if(Math.random()<(o.noAis||0)){t.noAis=true;q.push('not transmitting AIS')}
+ const r=Math.random(),nn=o.none||0,dd=o.dim||0;
+ t.lightMode=r<nn?'none':r<nn+dd?'dim':'proper';
+ if(t.lightMode==='none')q.push('shows no navigation lights');else if(t.lightMode==='dim')q.push('shows a single dim white light only');
+ if(Math.random()<(o.erratic||0)){t.erratic=true;t.b0=t.hdg;t.nextE=simT+rnd(30,120);q.push('makes erratic course changes')}
+ if(o.comply!==undefined&&Math.random()>=o.comply){t.complies=false;q.push('may fail to give way')}
+ if(TYPES[t.type].kind==='dhow')q.push('poor radar echo (wooden, small)');
+ t.quirks=q;return t;
+}
+function laneBuild(mode,type,forceLane){
+ const T=tss,of=ownFlow(),oa=talong(own.x,own.y);
+ let ln=forceLane;
+ if(of===0)mode='opp';
+ if(!ln){
+  if(of===0)ln=Math.random()<.5?'F':'R';
+  else{const ol=of>0?'F':'R';ln=mode==='opp'?(ol==='F'?'R':'F'):ol}
+ }
+ const sg=ln==='F'?1:-1;
+ if(!type)type=mode==='over'?pick(['pdL','pdL','pdS']):mode==='slow'?pick(['pdS','tow','cbd']):wpick(LOCS[curLoc].lane);
+ let s=rnd(...(SPD[type]||[10,14])),al;
+ if(mode==='over'){s=clamp(own.spd+rnd(3,6),12,23);al=oa-sg*rnd(5.5,7.5)}
+ else if(mode==='slow'){s=clamp(own.spd-rnd(3,5),3.5,Math.max(3.5,own.spd-2.5));al=oa+sg*rnd(5.5,7.5)}
+ else al=oa-sg*rnd(8,10.5);
+ const p=tpos(al,sg*T.c+rnd(-.4,.4)*Math.min(1,T.w/2.5));
+ const h=n360(T.ax+(ln==='F'?0:180)+rnd(-1.2,1.2));
+ const t=mk(type,{x:p.x,y:p.y,hdg:h,spd:s,towLen:rnd(70,150)});
+ t.lane=ln;if(type==='tow'&&Math.random()<.25){t.longTow=true;t.towLen=250}
+ return t;
+}
+function tssBuild(kind){
+ const T=tss,of=ownFlow(),oa=talong(own.x,own.y);let t,p,h,s;
+ switch(kind){
+  case 'ln_opp':return laneBuild('opp');
+  case 'ln_over':return laneBuild('over');
+  case 'ln_slow':return laneBuild('slow');
+  case 'ln_any':{const r=Math.random();return laneBuild(r<.55?'opp':r<.8?'over':'slow')}
+  case 'tow_lane':return laneBuild(Math.random()<.5?'opp':'slow','tow');
+  case 'ln_wrong':{
+   const ln=of>0?'F':of<0?'R':(Math.random()<.5?'F':'R'),sg=ln==='F'?1:-1;
+   p=tpos(oa+sg*rnd(8,10),sg*T.c+rnd(-.3,.3));
+   t=mk(pick(['pdS','pdS','pdL']),{x:p.x,y:p.y,hdg:n360(T.ax+(ln==='F'?180:0)+rnd(-1,1)),spd:rnd(8,12)});
+   t.wrongWay=true;t.lane=ln;t.quirks=['proceeding against the traffic flow'];return t}
+  case 'ferry_x':{
+   if(of===0)return laneBuild('opp');
+   const sg=pick([-1,1]);h=n360(T.ax+sg*90+rnd(-5,5));s=rnd(18,23);p=intercept(h,s,rnd(7.5,9.5),rnd(-.2,.2));
+   t=mk('ferry',{x:p.x,y:p.y,hdg:h,spd:s});t.crossing=true;return t}
+  case 'sail_x':{
+   const sg=pick([-1,1]);h=n360(T.ax+sg*90+rnd(-30,30));s=rnd(4,7);p=intercept(h,s,rnd(6,8),rnd(-.3,.3));
+   t=mk('sail',{x:p.x,y:p.y,hdg:h,spd:s});if(Math.random()<.5)t.tack={d:pick([-1,1])*rnd(70,90),n:rnd(500,900)};return t}
+  case 'fish_lane':case 'fish_my':{
+   const sd=of||1,ed=T.z+T.w+(kind==='fish_my'?4:1.5),k=pick(['trawl','fish','fish']);h=rnd(0,360);
+   p=tpos(oa+sd*rnd(5,8),rnd(-ed,ed));
+   t=mk(k,{x:p.x,y:p.y,hdg:h,spd:k==='trawl'?rnd(2,4):rnd(.5,3)});t.wander=true;t.b0=h;t.nextW=simT+rnd(60,200);
+   if(kind==='fish_my')quirk(t,{noAis:.5,dim:.3,none:.15});
+   return t}
+  case 'anch_out':{
+   const sd=pick([-1,1]);p=tpos(oa+rnd(-4,9),sd*(T.z+T.w+rnd(1.5,4)));
+   return mk(pick(['pdL','pdL','pdS']),{x:p.x,y:p.y,hdg:rnd(0,360),spd:0,anch:true})}
+  case 'dhow':{ // crosses the lanes at any angle, ignores the Rules
+   const sg=pick([-1,1]),motor=Math.random()<.5;
+   h=n360(T.ax+sg*90+rnd(-50,50));s=motor?rnd(5,8.5):rnd(3,6.5);p=intercept(h,s,rnd(6,8),rnd(-.3,.3));
+   t=mk('dhow',{x:p.x,y:p.y,hdg:h,spd:s});t.motor=motor;t.sailUp=!motor||Math.random()<.5;t.b0=h;
+   return quirk(t,{noAis:.65,dim:.35,none:.25,erratic:.4,comply:motor?.45:undefined})}
+  case 'dhow_z':{ // runs along the separation zone
+   const sg=of?-of:pick([-1,1]),motor=Math.random()<.5;s=motor?rnd(5,8):rnd(3.5,6);
+   p=tpos(oa-sg*rnd(7,9),rnd(-.7,.7)*T.z);
+   t=mk('dhow',{x:p.x,y:p.y,hdg:n360(T.ax+(sg>0?0:180)+rnd(-8,8)),spd:s});t.motor=motor;t.sailUp=!motor||Math.random()<.5;t.b0=t.hdg;
+   return quirk(t,{noAis:.65,dim:.35,none:.25,erratic:.4,comply:motor?.45:undefined})}
+ }
+}
+// Rule 10 status of a vessel (target or own ship)
+function tssStat(o,isOwn){
+ if(!tss)return null;
+ const T=tss,lat=tlat(o.x,o.y),al=Math.abs(lat),edge=T.z+T.w,cat=isOwn?'power':catOf(o),L=isOwn?120:o.L;
+ const ang0=Math.abs(n180(o.hdg-T.ax)),ang=Math.min(ang0,180-ang0),stat=o.spd<.5;
+ let where,lk=null;
+ if(al<T.z)where='zone';else if(al<=edge){where='lane';lk=lat>0?'F':'R'}else where=al<edge+(T.inshore||4)?'inshore':'clear';
+ if(where==='clear')return{key:'clear',ok:null,text:'Clear of the traffic separation scheme.'};
+ if(where==='inshore')return{key:'inshore',ok:null,text:'Outside the lanes (inshore traffic zone) – through traffic should keep clear of it (Rule 10(d)).'};
+ const nm=lk?T.laneNames[lk]+' lane':'separation zone';
+ let cls,ok=null,tx;
+ if(stat){cls='stat';ok=false;tx=`Stationary in the ${nm} – anchoring or lying stopped in a scheme should be avoided (Rule 10(g)).`}
+ else if(ang<=25){
+  if(where==='zone'){cls='zpar';if(cat==='fish'){ok=true;tx='Fishing vessel in the separation zone – permitted (Rule 10(e)(ii)).'}else{ok=false;tx='Proceeding along the separation zone – only crossing, joining or leaving a lane, emergencies and fishing may use it (Rule 10(e)).'}}
+  else{const lh=n360(T.ax+(lk==='F'?0:180)),dd=Math.abs(n180(o.hdg-lh));
+   if(dd<=60){cls='par';ok=true;tx=`In the ${nm}, going with the traffic flow (Rule 10(b)(i)).`}
+   else{cls='wrong';ok=false;tx=`In the ${nm} but heading AGAINST the traffic flow – breach of Rule 10(b)(i).`}}
+ }else if(ang>=50){cls='cross';ok=ang>=70?null:false;tx=`Crossing the ${nm} at ${Math.round(ang)}° to the traffic flow – should be as near 90° as practicable (Rule 10(c)).${ang<70?' Too oblique.':''}`}
+ else{cls='obl';ok=false;tx=`Cutting the ${nm} at ${Math.round(ang)}° – neither lane-keeping nor a proper crossing; joining or leaving should be at a small angle to the flow (Rule 10(b)(iii)).`}
+ if(!isOwn&&where==='lane'&&!stat){
+  if(cat==='fish')tx+=' A fishing vessel must not impede vessels following the lane (Rule 10(i)).';
+  else if(cat==='sail'||L<20)tx+=' A sailing vessel or one under 20 m must not impede a power-driven vessel following the lane (Rule 10(j)).';
+ }
+ return{key:where+(lk||'')+cls,ok,text:tx};
+}
+function extraInfo(t){
+ if(!cfg.training)return'';
+ let h='';const st=tssStat(t,false);
+ if(st&&st.key!=='clear')h+=`<div class="rule" style="border-left-color:#c026d3">TSS: ${st.text}</div>`;
+ if(t.quirks&&t.quirks.length)h+=`<div class="rule" style="border-left-color:#f59e0b">Non-conforming vessel: ${t.quirks.join(', ')}.</div>`;
+ return h;
+}
+function tssOwnUpdate(){
+ const el=$('tssBox'),st=(tss&&cfg.training)?tssStat(own,true):null;
+ const h=st?`<b>${tss.name}</b><br>${st.text}`:'';
+ if(el._h!==h){el._h=h;el.innerHTML=h;el.classList.toggle('hid',!st);el.style.borderLeftColor=!st||st.ok==null?'#c026d3':st.ok?'#4ade80':'#f87171';if(typeof WIN!=='undefined'&&WIN.helm&&WIN.helm.nh)fit('helm')}
+ if(st&&st.key!==ownTssKey){if(ownTssKey!==null&&st.key!=='clear')addLog('TSS: '+st.text,st.ok===false?'w':'s');ownTssKey=st.key}
+ if(!st)ownTssKey=null;
+}
+// small wooden craft: weak radar echo, only seen close in
+const detected=t=>TYPES[t.type].kind!=='dhow'||t.range<=3;
+const radarSees=(t,now)=>{if(TYPES[t.type].kind!=='dhow')return true;if(t.range>3)return false;return t.range<1.2||((Math.floor(now/1100)+t.id)%3!==0)};
+
 function spawn(kind){
  for(let i=0;i<8;i++){
   const t=build(kind);nextId--; // id assigned only if accepted
@@ -443,7 +625,8 @@ function stepSim(dt){
  }
  if($('cont').checked&&simT-lastSpawn>45){
   lastSpawn=simT;
-  if(targets.length<7&&Math.random()<.4){let r=Math.random()*KINDS.reduce((a,k)=>a+k[1],0);for(const [k,w] of KINDS){r-=w;if(r<=0){spawn(k);break}}}
+  const M=LOCS[curLoc],KL=(curS&&curS.kinds)||M.kinds||KINDS;
+  if(targets.length<((curS&&curS.max)||M.max||7)&&Math.random()<(M.p||.4))spawn(wpick(KL));
  }
 }
 function remove(t){targets=targets.filter(o=>o!==t);if(sel===t)sel=null}
@@ -454,6 +637,7 @@ function ai(t){
  const mans=c==='power'||c==='cbd';
  if(t.wander&&simT>=t.nextW){t.base=n360(t.b0+rnd(-40,40));t.cmd=t.base;t.nextW=simT+rnd(180,420)}
  if(t.tack&&simT>=(t.nextT||0)){t.ts=!t.ts;t.base=n360((t.b0=t.b0??t.hdg)+(t.ts?t.tack.d:0));t.cmd=t.base;t.nextT=simT+t.tack.n+rnd(0,300)}
+ if(t.erratic&&!t.acting&&!t.emerg&&simT>=(t.nextE||0)){t.base=n360((t.b0??t.hdg)+rnd(-50,50));t.cmd=t.base;t.nextE=simT+rnd(60,200)}
  if(!mans)return;
  const tRole=A.role==='give-way'?'stand-on':A.role==='stand-on'?'give-way':A.role==='both'?'give-way':'none';
  if(tRole==='give-way'&&t.risk){
@@ -479,8 +663,7 @@ function ai(t){
 /* ================= scenario control ================= */
 function restart(){
  targets=[];nextId=1;simT=0;lastSpawn=0;collisions=0;closeQ=0;sel=null;logLines=[];
- own.x=own.y=0;own.hdg=own.cmdHdg=0;own.spd=own.cmdSpd=12;own.rot=0;
- const S=SCEN[$('scen').value];$('cont').checked=S.cont;
+ const S=SCEN[$('scen').value];curS=S;curLoc=S.loc||'sea';ownTssKey=null;own.rot=0;setupLoc(S);$('cont').checked=S.cont;
  S.start.forEach(k=>spawn(k));
  for(const t of targets)derive(t);
  addLog('Scenario started: '+S.label);renderLog();paused=false;$('pause').textContent='Pause';$('overlay').classList.remove('show');
@@ -614,11 +797,12 @@ function drawVessel(t,C,vis,day,dusk,night){
   // masts
   bx.strokeStyle=night?'#000':mixc([40,44,52],fog,fogA);bx.lineWidth=Math.max(1,PXR/(range*1852)*.5);
   for(const m of sp.masts){const a=W((m.a-.5)*L,0,sp.fb),b=W((m.a-.5)*L,0,m.top);bx.beginPath();bx.moveTo(a.x,a.y);bx.lineTo(b.x,b.y);bx.stroke()}
-  if(sp.kind==='sail'){
+  if(sp.kind==='sail'||(sp.kind==='dhow'&&t.sailUp)){
    const m=(sp.masts[0].a-.5)*L,top=sp.masts[0].top;
    const poly=(pts,col)=>{bx.fillStyle=col;bx.beginPath();pts.forEach((p,i)=>{const q=W(p[0],0,p[1]);i?bx.lineTo(q.x,q.y):bx.moveTo(q.x,q.y)});bx.closePath();bx.fill()};
    const sc=dusk?mixc([120,100,110],fog,fogA):mixc([245,247,250],fog,fogA);
-   poly([[m,sp.fb+1.2],[m,top-1],[-L/2,sp.fb+1.3]],sc);poly([[m+.4,top-2],[L/2*.95,sp.fb+.8],[m+.4,sp.fb+1.2]],sc);
+   if(sp.kind==='dhow'){poly([[.42*L,sp.fb+.5],[-.04*L,top],[-.46*L,sp.fb+1.4]],dusk?mixc([110,95,80],fog,fogA):mixc([232,220,190],fog,fogA))}
+   else{poly([[m,sp.fb+1.2],[m,top-1],[-L/2,sp.fb+1.3]],sc);poly([[m+.4,top-2],[L/2*.95,sp.fb+.8],[m+.4,sp.fb+1.2]],sc)}
   }
   // day shapes
   if(!night){
@@ -649,7 +833,7 @@ function drawVessel(t,C,vis,day,dusk,night){
    const k=l.k;
    const arc=k==='all'||(k==='mast'&&Math.abs(rel)<=112.5)||(k==='sbd'&&rel>=0&&rel<=112.5)||(k==='prt'&&rel<=0&&rel>=-112.5)||(k==='stern'&&Math.abs(rel)>=112.5);
    if(!arc)continue;
-   const e=eff(k);if(range>e)continue;
+   const e=cfg.allLights?vis:(l.r?Math.min(l.r,vis):eff(k));if(range>e)continue;
    const a=clamp((e-range)/(e*.3),0,1)*lit;
    const p=W(l.s,l.x,l.z),r=Math.min(9,1.1+1.7/(range+.15));
    if(p.x<-20||p.x>BW+20)continue;
@@ -720,7 +904,7 @@ function drawRadar(now){
  // targets
  const ov=vec(own.hdg,own.spd);
  for(const t of targets){
-  if(t.range>ropt.range*1.02)continue;
+  if(t.range>ropt.range*1.02||!radarSees(t,now)){t.rx=null;continue}
   // echo refresh when sweep passes target bearing
   const tb=n360(t.brg);const crossed=prev<=sweep?(tb>=prev&&tb<sweep):(tb>=prev||tb<sweep);
   if(crossed)t.echo={x:t.x,y:t.y,t:now};
@@ -751,7 +935,7 @@ function drawRadar(now){
 const T0=Date.now(),MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const utcAt=s=>new Date(T0+s*1000),utcHMS=s=>{const d=utcAt(s);return pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+':'+pad(d.getUTCSeconds())};
 const etaTxt=d=>pad(d.getUTCDate())+' '+MON[d.getUTCMonth()]+' '+pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+' UTC';
-const GEO={lat:50,lon:-1},COSL=Math.cos(GEO.lat*D2R); // own ship start position (flat-earth)
+const GEO={lat:50,lon:-1};let COSL=Math.cos(GEO.lat*D2R); // own ship start position (flat-earth)
 const toLL=(x,y)=>({lat:GEO.lat+y/60,lon:GEO.lon+x/60/COSL});
 function dm(deg,pl,hs){const a=Math.abs(deg),tot=Math.round(a*6000),d=Math.floor(tot/6000),m=(tot%6000)/100;return String(d).padStart(pl,'0')+'°'+m.toFixed(2).padStart(5,'0')+'′'+hs[deg<0?1:0]}
 const fmtLat=v=>dm(v,2,'NS'),fmtLon=v=>dm(v,3,'EW');
@@ -768,44 +952,48 @@ const AIS_W2=['TRADER','SPIRIT','EXPRESS','PIONEER','VOYAGER','HARMONY','GRACE',
 const AIS_FISH=['OCEAN HARVEST','SILVER DAWN','LADY JANE','MARGARET ROSE','NORTHERN PRIDE','PROVIDENCE','ANNA MARIE','CORAL REEF','SEA HUNTER','BOY WILLIAM'];
 const AIS_SAIL=['WINDSONG','SEA BREEZE','ARIEL','KESTREL','TALISMAN','MISTRAL','SANDPIPER','GALATEA','SKYLARK','WILD GOOSE'];
 const AIS_TUG=['HERCULES','ATLAS','TITAN','SEA GIANT','MARINER','VALIANT'];
+const AIS_DHOW=['AL NOOR','AL FARID','SALAMA','BAHARI','MUTIARA LAUT','FATH AL KHAIR','SHAMS','KM SAMUDRA'];
+const AIS_FERRY=['CHANNEL STAR','SEA LINK','ISLAND EXPRESS','HARBOUR PRIDE'];
 const AIS_RAM=['CABLE VENTURE','SEABED EXPLORER','DEEP SURVEYOR','OCEAN SENTINEL'];
 const AIS_PORTS=['SOUTHAMPTON','LE HAVRE','ROTTERDAM','ANTWERP','HAMBURG','FELIXSTOWE','CHERBOURG','BILBAO','LISBON','GIBRALTAR','LONDON GATEWAY','DOVER','ZEEBRUGGE','DUNKERQUE','FOR ORDERS'];
 const AIS_LPORTS=['PLYMOUTH','BRIXHAM','NEWHAVEN','CHERBOURG','DIEPPE','POOLE','GUERNSEY','COWES'];
 const AIS_STATUS=['Under way using engine','At anchor','Not under command','Restricted manoeuvrability','Constrained by her draught','Moored','Aground','Engaged in fishing','Under way sailing'];
-const AIS_DRAUGHT={pdS:[2.5,4],pdL:[6.5,9.5],tow:[3,4.5],sail:[1.4,2.2],trawl:[3,4.5],fish:[2.2,3.5],ram:[4.5,6.5],nuc:[5,7],cbd:[12,15],pilot:[1.2,1.8]};
+const AIS_DRAUGHT={pdS:[2.5,4],pdL:[6.5,9.5],tow:[3,4.5],sail:[1.4,2.2],trawl:[3,4.5],fish:[2.2,3.5],ram:[4.5,6.5],nuc:[5,7],cbd:[12,15],pilot:[1.2,1.8],ferry:[5,6.5],dhow:[1.2,2.4]};
 function imoNo(){const d=[9];for(let i=0;i<5;i++)d.push(Math.floor(Math.random()*10));return'IMO '+d.join('')+d.reduce((s,x,i)=>s+x*(7-i),0)%10}
 function makeAis(t){
- const sp=TYPES[t.type],k=sp.kind,big=sp.L>=50,loc=['tow','sail','trawl','fish','pilot'].includes(k);
- const fl=AIS_FLAG[loc?pick(AIS_LOCAL):Math.floor(Math.random()*AIS_FLAG.length)];
+ const sp=TYPES[t.type],k=sp.kind,big=sp.L>=50,loc=['tow','sail','trawl','fish','pilot','dhow'].includes(k),LC=LOCS[curLoc],FL=LC.flags||AIS_FLAG,LI=LC.localIdx||AIS_LOCAL;
+ const fl=FL[loc?pick(LI):Math.floor(Math.random()*FL.length)];
  const nm=()=>pick(AIS_W1)+' '+pick(AIS_W2);let ty,gen;
  switch(k){
   case 'sail':ty=[36,'Sailing'];gen=()=>pick(AIS_SAIL);break;
-  case 'trawl':case 'fish':ty=[30,'Fishing'];gen=()=>pick(AIS_FISH);break;
+  case 'trawl':case 'fish':ty=[30,'Fishing'];gen=()=>pick(LC.fishNames||AIS_FISH);break;
+  case 'dhow':ty=t.motor?[70,'Cargo']:[36,'Sailing'];gen=()=>pick(AIS_DHOW);break;
   case 'tow':ty=t.longTow?[32,'Towing (large)']:[31,'Towing'];gen=()=>pick(AIS_TUG);break;
   case 'ram':ty=[33,'Dredging / underwater ops'];gen=()=>pick(AIS_RAM);break;
   case 'pilot':ty=[50,'Pilot vessel'];gen=()=>'PILOT '+(1+Math.floor(Math.random()*9));break;
   case 'cbd':ty=[80,'Tanker'];gen=nm;break;
   case 'nuc':ty=[70,'Cargo'];gen=nm;break;
-  default:ty=big?pick([[70,'Cargo'],[70,'Cargo'],[80,'Tanker'],[60,'Passenger']]):pick([[70,'Cargo'],[80,'Tanker'],[52,'Tug']]);gen=ty[0]===52?()=>pick(AIS_TUG):nm;
+  default:ty=t.type==='ferry'?[60,'Passenger']:big?pick([[70,'Cargo'],[70,'Cargo'],[80,'Tanker'],[60,'Passenger']]):pick([[70,'Cargo'],[80,'Tanker'],[52,'Tug']]);gen=ty[0]===52?()=>pick(AIS_TUG):nm;
  }
+ if(t.type==='ferry')gen=()=>pick(LC.ferryNames||AIS_FERRY);
  let name=gen();for(let i=0;i<25&&targets.some(o=>o!==t&&o.ais&&o.ais.name===name);i++)name=gen(); // no two ships with the same name nearby
  let call=fl[2];while(call.length<5)call+=Math.random()<.35?Math.floor(Math.random()*10):pick('ABCDEFGHJKLMNPQRSTUVWXYZ');
- const status=t.anch?1:({trawl:7,fish:7,sail:8,ram:3,nuc:2,cbd:4}[k]??(k==='tow'&&t.longTow?3:0));
+ const status=t.anch?1:({trawl:7,fish:7,sail:8,dhow:t.motor?0:8,ram:3,nuc:2,cbd:4}[k]??(k==='tow'&&t.longTow?3:0));
  const dr=AIS_DRAUGHT[t.type],hrs=loc?rnd(1,10):rnd(3,40);
  return{name,mmsi:fl[0]+String(Math.floor(Math.random()*1e6)).padStart(6,'0'),
   imo:(['pd','cbd','nuc','ram'].includes(k)&&ty[0]!==52)?imoNo():'–',call,flag:fl[1],
   typeTxt:`${ty[1]} (${ty[0]})`,statusTxt:AIS_STATUS[status],dims:`${t.L} × ${sp.B} m`,draught:f1(rnd(dr[0],dr[1])),
-  dest:pick(loc?AIS_LPORTS:AIS_PORTS),eta:etaTxt(utcAt(simT+hrs*3600)),at:simT};
+  dest:(t.type==='ferry'&&LC.ferryDest)?pick(LC.ferryDest):pick(loc?(LC.lports||AIS_LPORTS):(LC.ports||AIS_PORTS)),eta:etaTxt(utcAt(simT+hrs*3600)),at:simT};
 }
 function interrogate(){
  if($('pEcp').classList.contains('hid'))togglePanel('ecp',true);
- const t=sel;if(!t||t.ais||t.query)return;
+ const t=sel;if(!t||t.ais||t.query||t.noReply)return;
  t.act=true;t.query={t0:performance.now(),dur:rnd(1800,3200)};
  addLog(`ECPINS: AIS interrogation sent to T${t.id}`);
 }
 function ecpStep(now){
  for(const t of targets){
-  if(t.query&&now-t.query.t0>=t.query.dur){t.query=null;t.ais=makeAis(t);addLog(`ECPINS: T${t.id} replied – ${t.ais.name} · ${t.ais.typeTxt} · ${t.ais.statusTxt}`)}
+  if(t.query&&now-t.query.t0>=t.query.dur){t.query=null;if(t.noAis){t.noReply=true;addLog('ECPINS: no reply from T'+t.id+' – not transmitting AIS','w');continue}t.ais=makeAis(t);addLog(`ECPINS: T${t.id} replied – ${t.ais.name} · ${t.ais.typeTxt} · ${t.ais.statusTxt}`)}
   const r=t._r||(t._r={h:t.hdg,T:simT,rot:0});
   if(simT-r.T>=4){r.rot=n180(t.hdg-r.h)/(simT-r.T)*60;r.h=t.hdg;r.T=simT}
  }
@@ -821,6 +1009,36 @@ function bowCross(t){
 }
 
 /* ---- chart drawing ---- */
+function drawTss(ep,S,ppn){
+ if(!tss)return;
+ const T=tss,a0=talong(own.x,own.y),Lh=S/ppn*.8+4,F='Inter,system-ui,sans-serif',stp=Math.max(.2,ecp.range/12);
+ const P=(al,la)=>{const p=tpos(al,la);return ep(p.x,p.y)};
+ const coast=(sd,al)=>sd*(T.land+.9*Math.sin(al*.55)+.6*Math.sin(al*1.7+2));
+ for(const sd of [-1,1]){
+  ex.beginPath();let q;
+  for(let al=a0-Lh;al<=a0+Lh;al+=stp){q=P(al,coast(sd,al));al===a0-Lh?ex.moveTo(q.x,q.y):ex.lineTo(q.x,q.y)}
+  q=P(a0+Lh,sd*(T.land+400));ex.lineTo(q.x,q.y);q=P(a0-Lh,sd*(T.land+400));ex.lineTo(q.x,q.y);ex.closePath();
+  ex.fillStyle='rgba(120,113,80,.38)';ex.fill();
+  ex.beginPath();
+  for(let al=a0-Lh;al<=a0+Lh;al+=stp){q=P(al,coast(sd,al));al===a0-Lh?ex.moveTo(q.x,q.y):ex.lineTo(q.x,q.y)}
+  ex.strokeStyle='rgba(214,200,140,.8)';ex.lineWidth=1.4;ex.stroke();
+  const lb=P(a0,sd*(T.land+5));ex.font='700 11px '+F;ex.fillStyle='rgba(235,225,170,.9)';ex.textAlign='center';
+  ex.fillText(T.landNames[sd<0?0:1],clamp(lb.x,60,S-60),clamp(lb.y,34,S-16));
+ }
+ const ln=la=>{ex.beginPath();let q=P(a0-Lh,la);ex.moveTo(q.x,q.y);q=P(a0+Lh,la);ex.lineTo(q.x,q.y);ex.stroke()};
+ ex.beginPath();let q=P(a0-Lh,-T.z);ex.moveTo(q.x,q.y);q=P(a0+Lh,-T.z);ex.lineTo(q.x,q.y);q=P(a0+Lh,T.z);ex.lineTo(q.x,q.y);q=P(a0-Lh,T.z);ex.lineTo(q.x,q.y);ex.closePath();
+ ex.fillStyle='rgba(192,38,211,.26)';ex.fill();
+ ex.lineWidth=1.3;ex.strokeStyle='rgba(217,70,239,.85)';ln(-T.z);ln(T.z);
+ ex.setLineDash([6,5]);ex.lineWidth=1;ex.strokeStyle='rgba(217,70,239,.55)';ln(-(T.z+T.w));ln(T.z+T.w);ex.setLineDash([]);
+ const sp=5,al0=Math.ceil((a0-Lh)/sp)*sp;
+ ex.strokeStyle='rgba(217,70,239,.85)';ex.lineWidth=1.4;
+ for(let al=al0;al<=a0+Lh;al+=sp)for(const sd of [1,-1]){
+  const la=sd*T.c,d=sd,tail=P(al-d*.7,la),tip=P(al+d*.7,la),h1=P(al+d*.35,la+.25),h2=P(al+d*.35,la-.25);
+  ex.beginPath();ex.moveTo(tail.x,tail.y);ex.lineTo(tip.x,tip.y);ex.moveTo(h1.x,h1.y);ex.lineTo(tip.x,tip.y);ex.lineTo(h2.x,h2.y);ex.stroke();
+ }
+ ex.font='600 9px '+F;ex.fillStyle='rgba(240,171,252,.9)';ex.textAlign='center';
+ for(const sd of [1,-1]){const lb=P(a0+2,sd*(T.c+T.w*.38));ex.fillText(T.laneNames[sd>0?'F':'R'].toUpperCase(),clamp(lb.x,40,S-40),clamp(lb.y,22,S-8))}
+}
 function drawEcp(now){
  const S=ES;if(!S||$('pEcp').classList.contains('hid'))return;
  const cx=S/2,cy=S/2,R=S/2-24,ppn=R/ecp.range,orient=ecp.north?0:own.hdg,oa=orient*D2R,co=Math.cos(oa),si=Math.sin(oa);
@@ -842,6 +1060,7 @@ function drawEcp(now){
   ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(b.x,b.y);ex.stroke();
   if(ecp.north&&a.x>30&&a.x<S-30&&a.x-lastX>=52){lastX=a.x;ex.textAlign='center';ex.fillText(gl(A,3,'EW',step<1?1:0),a.x,S-5)}
  }
+ drawTss(ep,S,ppn);
  // range rings, CPA limit, compass ring
  const nr={1.5:3,3:3,6:3,12:4,24:4}[ecp.range]||3,st=ecp.range/nr;
  ex.strokeStyle='rgba(125,211,252,.30)';ex.fillStyle='rgba(125,211,252,.8)';ex.textAlign='left';
@@ -864,6 +1083,7 @@ function drawEcp(now){
  // AIS targets (far first so near ones sit on top)
  for(const t of [...targets].sort((a,b)=>b.range-a.range)){
   if(t===sel)t.act=true;
+  if(t.noAis){t.ex=null;t.ey=null;continue}
   const dg=ecDanger(t),isAct=!!(t.act||dg||t.ais),p=ep(t.x,t.y);t.ex=p.x;t.ey=p.y;
   if(p.x<-20||p.x>S+20||p.y<-20||p.y>S+20)continue;
   const col=dg?((Math.floor(now/400)%2)?'#f87171':'#fecaca'):isAct?'#7dd3fc':'#7c93b3';
@@ -938,10 +1158,11 @@ function updateEcp(){
    +kv('Name',A.name)+kv('MMSI',A.mmsi)+kv('IMO',A.imo)+kv('Call sign',A.call)+kv('Flag',A.flag)
    +kv('Ship type',A.typeTxt)+kv('Nav status',A.statusTxt)+kv('L × B',A.dims)+kv('Draught',A.draught+' m')
    +kv('Destination',A.dest)+kv('ETA',A.eta)+(cfg.training?kv('COLREGS',nameOf(t)):'');
- }else if(t.query)h+='<div class="note">Interrogating… waiting for the vessel to reply.</div>';
+ }else if(t.noReply)h+='<div class="note">No reply to AIS interrogation – this vessel is not transmitting AIS. Treat it as a radar / visual contact only.</div>';
+ else if(t.query)h+='<div class="note">Interrogating… waiting for the vessel to reply.</div>';
  else h+='<div class="note">Static data not held. Press <b>Interrogate</b> to request name, MMSI, type, status, size, draught, destination and ETA.</div>';
  setHtml($('eData'),h);
- if(A)setBtn('Reply received',true);else if(t.query)setBtn('Interrogating…',true);else setBtn('Interrogate',false);
+ if(A)setBtn('Reply received',true);else if(t.noReply)setBtn('No reply',true);else if(t.query)setBtn('Interrogating…',true);else setBtn('Interrogate',false);
 }
 $('eRange').onchange=e=>ecp.range=+e.target.value;
 $('eOri').onchange=e=>ecp.north=e.target.value==='north';
@@ -963,8 +1184,8 @@ function updateUI(){
  {const lr=view.off;const _h=$('rinfo').offsetHeight;$('rinfo').innerHTML=`<span>${ropt.head?'HEAD-UP':'NORTH-UP'} · ${ropt.range} NM</span><span>${ropt.vec==='true'?'TRUE VECT':ropt.vec==='rel'?'REL VECT':'NO VECT'} ${ropt.vecT} MIN</span><span class="h">HDG ${b3(own.hdg)}°</span><span class="lk">LOOK ${b3(own.hdg+view.off)}°T · ${Math.abs(lr)<.5?'AHEAD':(lr<0?'P':'S')+Math.round(Math.abs(lr))+'°'}</span>`;if($('rinfo').offsetHeight!==_h&&typeof WIN!=='undefined'&&WIN.radar.nh)fit('radar')}
  $('hHdg').textContent=b3(own.hdg)+'°';$('hSpd').textContent=f1(own.spd);$('hRot').textContent=Math.round(own.rot);$('cmdSpd').textContent=Math.round(own.cmdSpd);
  $('clock').textContent=hms(simT);$('cq').textContent=closeQ;$('col').textContent=collisions;
- $('roleH').style.display=cfg.training?'':'none';
- const rows=[...targets].sort((a,b)=>a.range-b.range).filter(t=>t.range<14);
+ $('roleH').style.display=cfg.training?'':'none';tssOwnUpdate();
+ const rows=[...targets].sort((a,b)=>a.range-b.range).filter(t=>t.range<14&&detected(t));
  $('tbody').innerHTML=rows.map(t=>{const dg=t.tcpa>0&&t.tcpa<20&&t.cpa<ropt.cpaLim&&!t.anch;
   return`<tr data-id="${t.id}" class="${t===sel?'sel':''} ${dg?'danger':''}"><td>T${t.id}</td><td>${b3(t.brg)}</td><td class="${n180(t.brg-own.hdg)<0?'pt':'sb'}">${relTxt(n180(t.brg-own.hdg))}</td><td>${f2(t.range)}</td><td>${b3(t.hdg)}</td><td>${f1(t.spd)}</td><td>${f2(t.cpa)}</td><td>${t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)}</td>${cfg.training?`<td class="role">${roleText(t)}</td>`:''}</tr>`}).join('')||'<tr><td colspan="9" style="color:#9ca3af;text-align:left">No targets in range</td></tr>';
  const el=$('tinfo');
@@ -975,12 +1196,15 @@ function updateUI(){
  <span class="k">Course</span> ${b3(t.hdg)}° · <span class="k">Speed</span> ${f1(t.spd)} kn<br>
  <span class="k">CPA</span> <b>${f2(t.cpa)} nm</b> · <span class="k">TCPA</span> <b>${t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)+' min'}</b> · <span class="k">Range rate</span> ${f1(t.rrate*60)} kn<br>
  <span class="k">Aspect</span> you see her ${aspect(t)}
- ${cfg.training?`<div class="rule">${A.text}${t.risk?'':'<br><i>No risk of collision at present (diverging, or CPA over 1 nm).</i>'}</div>`:''}`;
+ ${cfg.training?`<div class="rule">${A.text}${t.risk?'':'<br><i>No risk of collision at present (diverging, or CPA over 1 nm).</i>'}</div>`:''}${extraInfo(t)}`;
 }
 function aspect(t){const rel=n180(n360(t.brg+180)-t.hdg);return Math.abs(rel)>=112.5?'from astern (stern light)':Math.abs(rel)<=10?'head-on':rel>0?'on her starboard side (green)':'on her port side (red)'}
 
 /* inputs */
-const sc=$('scen');for(const k in SCEN){const o=document.createElement('option');o.value=k;o.textContent=SCEN[k].label;sc.appendChild(o)}
+const lsel=$('loc');for(const k in LOCS){const o=document.createElement('option');o.value=k;o.textContent=LOCS[k].label;lsel.appendChild(o)}
+const sc=$('scen');
+function fillScen(){sc.innerHTML='';for(const k in SCEN){if((SCEN[k].loc||'sea')!==lsel.value)continue;const o=document.createElement('option');o.value=k;o.textContent=SCEN[k].label;sc.appendChild(o)}}
+fillScen();lsel.onchange=()=>{fillScen();restart()};
 sc.onchange=restart;$('restart').onclick=restart;
 $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Resume':'Pause'};
 $('ovOk').onclick=()=>{$('overlay').classList.remove('show');paused=false;$('pause').textContent='Pause'};
