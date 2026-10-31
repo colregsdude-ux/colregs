@@ -10,143 +10,141 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
 <style>
-body{padding:1rem}
-.sim{max-width:1500px;margin:0 auto;display:grid;gap:.9rem}
-.top{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;justify-content:space-between}
-.top h1{font-size:1.4rem;margin:0}
-.top p{font-size:.85rem}
-.box{background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:.7rem}
-.box h2{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;font-weight:600}
-#bridgeWrap{position:relative;padding:0;overflow:hidden;line-height:0}
-#bridge{border-radius:0;box-shadow:none;max-width:none;max-height:none;background:#000;width:100%;height:clamp(260px,38vw,520px);display:block;cursor:grab;touch-action:none}
+html,body{height:100%;overflow:hidden}
+body{padding:0;min-height:0}
+#bridge{position:fixed;inset:0;width:100vw;height:100dvh;border-radius:0;box-shadow:none;max-width:none;max-height:none;background:#000;display:block;cursor:grab;touch-action:none}
 #bridge:active{cursor:grabbing}
-.hint{position:absolute;right:.6rem;bottom:.4rem;font-size:.68rem;color:#cbd5e1;background:#0008;padding:.15rem .4rem;border-radius:6px;line-height:1.3;pointer-events:none}
-.lower{display:grid;gap:.9rem;grid-template-columns:minmax(0,1fr)}
-@media(max-width:640px){.hint{display:none}}
-@media(min-width:1050px){.lower{grid-template-columns:minmax(380px,560px) minmax(0,1fr)}}
-#radar{max-height:none;box-shadow:none;width:100%;aspect-ratio:1;display:block;border-radius:50%;background:#020b06;cursor:crosshair;max-width:560px;margin:0 auto}
-.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.45rem .6rem;margin-top:.6rem;font-size:.78rem;color:var(--muted)}
+.hint{position:fixed;left:.6rem;bottom:2.2rem;font-size:.68rem;color:#cbd5e1;background:#0008;padding:.15rem .4rem;border-radius:6px;line-height:1.3;pointer-events:none;z-index:5}
+@media(max-width:700px){.hint{display:none}}
+.hid{display:none!important}
+.dock{position:fixed;top:96px;bottom:68px;display:flex;flex-direction:column;gap:.55rem;overflow-y:auto;overflow-x:hidden;pointer-events:none;scrollbar-width:none;z-index:10}
+.dock::-webkit-scrollbar{display:none}
+.dock>*{pointer-events:auto;flex:none}
+#dockL{left:.6rem;width:min(310px,46vw)}
+#dockR{right:.6rem;align-items:flex-end}
+.box{background:rgba(14,21,40,.86);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem;width:100%}
+.box h2{display:flex;align-items:center;gap:.4rem;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem;font-weight:600}
+.box h2 .sp{flex:1}
+.box h2 kbd,#bar kbd,.help kbd{background:#1e293b;border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:0 .3rem;font:600 .68rem Inter,sans-serif;color:var(--text)}
+.x{background:none;border:0;color:var(--muted);font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .2rem}
+.x:hover{color:#fff}
+#pRadar{width:clamp(250px,min(44vh,34vw),470px)}
+#pTgt{width:min(340px,46vw)}
+#pList{width:min(500px,60vw);max-height:32vh;overflow:auto}
+#pHelp{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(580px,92vw);z-index:40;background:rgba(14,21,40,.96)}
+#radar{max-height:none;max-width:none;box-shadow:none;width:100%;height:auto;aspect-ratio:1;display:block;border-radius:50%;background:#020b06;cursor:crosshair}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:.4rem .5rem;margin-top:.5rem;font-size:.74rem;color:var(--muted)}
 .ctl label{display:grid;gap:.15rem}
-select,input[type=number],input[type=range]{width:100%;background:#0b1327;color:var(--text);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:.3rem .4rem;font:inherit;font-size:.82rem}
+select,input[type=number],input[type=range]{width:100%;background:#0b1327;color:var(--text);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:.25rem .35rem;font:inherit;font-size:.8rem}
 input[type=range]{padding:0}
 .chk{display:flex!important;align-items:center;gap:.4rem;grid-template-columns:none}
 .chk input{width:auto}
-.sidecol{display:grid;gap:.9rem;align-content:start}
-.two{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-.hud{display:flex;gap:1rem;flex-wrap:wrap;font-variant-numeric:tabular-nums;margin-bottom:.5rem}
-.hud b{display:block;font-size:1.25rem;color:#e2f3ff}
-.hud span{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.hud{display:flex;gap:1rem;flex-wrap:wrap;font-variant-numeric:tabular-nums;margin-bottom:.4rem}
+.hud b{display:block;font-size:1.2rem;color:#e2f3ff}
+.hud span{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .btns{display:flex;flex-wrap:wrap;gap:.3rem;margin:.25rem 0}
-.b{background:#1e293b;color:var(--text);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:.3rem .55rem;font:600 .78rem Inter,sans-serif;cursor:pointer}
+.b{display:inline-block;text-decoration:none;background:#1e293b;color:var(--text);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:.3rem .55rem;font:600 .78rem Inter,sans-serif;cursor:pointer;white-space:nowrap}
 .b:hover{border-color:var(--accent)}
 .b.on{background:var(--accent);border-color:var(--accent)}
 .b.red{background:#7f1d1d}
-.row2{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;font-size:.78rem;color:var(--muted)}
+.row2{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;font-size:.76rem;color:var(--muted)}
 .row2 input[type=number]{width:70px}
-table{width:100%;border-collapse:collapse;font-size:.76rem;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:.74rem;font-variant-numeric:tabular-nums}
 th{color:var(--muted);font-weight:600;text-align:right;padding:.2rem .3rem;border-bottom:1px solid rgba(255,255,255,.1)}
 td{text-align:right;padding:.22rem .3rem;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
 th:first-child,td:first-child{text-align:left}
 tr.sel td{background:rgba(59,130,246,.22)}
 tr.danger td{color:#fca5a5}
 td.role{text-align:left;font-size:.7rem}
-#tinfo{font-size:.82rem;line-height:1.45;min-height:7.5rem}
+.pt{color:#f87171;font-weight:600}.sb{color:#4ade80;font-weight:600}
+#tinfo{font-size:.8rem;line-height:1.45}
 #tinfo .k{color:var(--muted)}
-#tinfo .rule{margin-top:.4rem;padding:.4rem .5rem;border-radius:8px;background:#0b1327;border-left:3px solid var(--accent);font-size:.78rem}
-#log{font-size:.74rem;height:8.5rem;overflow:auto;line-height:1.4;color:#cbd5e1}
+#tinfo .rule{margin-top:.4rem;padding:.4rem .5rem;border-radius:8px;background:#0b1327;border-left:3px solid var(--accent);font-size:.76rem}
+#log{font-size:.72rem;height:9rem;overflow:auto;line-height:1.4;color:#cbd5e1}
 #log div{border-bottom:1px solid rgba(255,255,255,.04);padding:.1rem 0}
 #log .w{color:#fca5a5}#log .s{color:#fde68a}
-#overlay{position:absolute;inset:0;display:none;place-items:center;background:#000a;color:#fff;text-align:center;line-height:1.4;z-index:3}
+#overlay{position:fixed;inset:0;display:none;place-items:center;background:#000a;color:#fff;text-align:center;line-height:1.4;z-index:50}
 #overlay.show{display:grid}
 #overlay div{background:#7f1d1d;border:2px solid #fca5a5;border-radius:14px;padding:1rem 1.5rem}
-.help{font-size:.74rem;color:var(--muted);line-height:1.5}
-.help kbd{background:#1e293b;border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:0 .3rem;font-size:.7rem;color:var(--text)}
+#bar{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;max-width:96vw;padding:.3rem;background:rgba(8,12,20,.82);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:12px;z-index:20}
+#bar .b{display:inline-flex;align-items:center;gap:.35rem}
+#bar .sep{width:1px;background:rgba(255,255,255,.15);margin:0 .15rem}
+#bar #centre{background:#166534;border-color:#22c55e}
+.help{font-size:.78rem;color:var(--muted);line-height:1.65}
+.help p{color:var(--muted);margin:.35rem 0}
 </style>
 </head>
 <body>
-<div class="sim">
-  <div class="top">
-    <div><h1>Bridge &amp; Radar Simulator</h1><p>Identify vessels from their lights and shapes, work out CPA/TCPA on the radar, and apply the Rules.</p></div>
-    <a class="btn" href="index.html">← Back to home</a>
-  </div>
+<canvas id="bridge" aria-label="Bridge view"></canvas>
+<div class="hint">Drag to look around · wheel to zoom (binoculars) · click a vessel to select</div>
+<div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem;display:block">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
 
-  <section class="box" id="bridgeWrap">
-    <canvas id="bridge" aria-label="Bridge view"></canvas>
-    <div class="hint">Drag to look around · wheel to zoom (binoculars) · click a vessel to select</div>
-    <div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
+<div class="dock" id="dockL">
+  <section class="box" id="pHelm"><h2>Own ship</h2>
+    <div class="hud"><div><b id="hHdg">000°</b><span>Heading</span></div><div><b id="hSpd">12.0</b><span>Speed kn</span></div><div><b id="hRot">0</b><span>ROT °/min</span></div></div>
+    <div class="row2">Course <input type="number" id="course" min="0" max="359" value="0"> <button class="b" id="setCourse">Set</button></div>
+    <div class="btns" id="helm"><button class="b" data-dc="-10">◀ 10</button><button class="b" data-dc="-5">◀ 5</button><button class="b" data-dc="-1">◀ 1</button><button class="b" data-dc="1">1 ▶</button><button class="b" data-dc="5">5 ▶</button><button class="b" data-dc="10">10 ▶</button></div>
+    <div class="row2">Speed <span id="cmdSpd">12</span> kn</div>
+    <div class="btns" id="eng"><button class="b" data-ds="-5">−5</button><button class="b" data-ds="-1">−1</button><button class="b" data-ds="1">+1</button><button class="b" data-ds="5">+5</button><button class="b" data-ds="-99">Stop</button></div>
+    <div class="row2" style="margin-top:.3rem">Sound signals</div>
+    <div class="btns" id="horn"><button class="b" data-h="1">1 short</button><button class="b" data-h="2">2 short</button><button class="b" data-h="3">3 short</button><button class="b red" data-h="5">5 short</button><button class="b" data-h="p">1 prolonged</button></div>
   </section>
-
-  <div class="lower">
-    <section class="box">
-      <h2>Radar</h2>
-      <canvas id="radar" aria-label="Radar display"></canvas>
-      <div class="ctl">
-        <label>Range<select id="rrange"><option>3</option><option selected>6</option><option>12</option></select></label>
-        <label>Orientation<select id="orient"><option value="head">Head-up</option><option value="north">North-up</option></select></label>
-        <label>Vectors<select id="vec"><option value="true">True</option><option value="rel">Relative</option><option value="off">Off</option></select></label>
-        <label>Vector length<select id="vecT"><option value="3">3 min</option><option value="6" selected>6 min</option><option value="12">12 min</option></select></label>
-        <label>CPA limit<select id="cpaLim"><option>0.5</option><option selected>1</option><option>2</option></select></label>
-        <label class="chk"><input type="checkbox" id="trails" checked> Trails</label>
-      </div>
-    </section>
-
-    <div class="sidecol">
-      <div class="two">
-        <section class="box">
-          <h2>Own ship</h2>
-          <div class="hud">
-            <div><b id="hHdg">000°</b><span>Heading</span></div>
-            <div><b id="hSpd">12.0</b><span>Speed kn</span></div>
-            <div><b id="hRot">0</b><span>ROT °/min</span></div>
-          </div>
-          <div class="row2">Course <input type="number" id="course" min="0" max="359" value="0"> <button class="b" id="setCourse">Set</button></div>
-          <div class="btns" id="helm">
-            <button class="b" data-dc="-10">◀ 10</button><button class="b" data-dc="-5">◀ 5</button><button class="b" data-dc="-1">◀ 1</button>
-            <button class="b" data-dc="1">1 ▶</button><button class="b" data-dc="5">5 ▶</button><button class="b" data-dc="10">10 ▶</button>
-          </div>
-          <div class="row2">Speed <span id="cmdSpd">12</span> kn</div>
-          <div class="btns" id="eng">
-            <button class="b" data-ds="-5">−5</button><button class="b" data-ds="-1">−1</button><button class="b" data-ds="1">+1</button><button class="b" data-ds="5">+5</button><button class="b" data-ds="-99">Stop</button>
-          </div>
-          <div class="row2" style="margin-top:.35rem">Sound signals</div>
-          <div class="btns" id="horn">
-            <button class="b" data-h="1">1 short</button><button class="b" data-h="2">2 short</button><button class="b" data-h="3">3 short</button><button class="b red" data-h="5">5 short</button><button class="b" data-h="p">1 prolonged</button>
-          </div>
-        </section>
-
-        <section class="box">
-          <h2>Simulation</h2>
-          <div class="ctl" style="margin-top:0">
-            <label>Scenario<select id="scen"></select></label>
-            <label>Time speed<select id="ts"><option>1</option><option>2</option><option>5</option><option selected>10</option><option>20</option><option>30</option><option>60</option></select></label>
-            <label>Lighting<select id="light"><option value="night">Night</option><option value="dusk">Dusk</option><option value="day">Day</option></select></label>
-            <label>Visibility <span id="visv">10 nm</span><input type="range" id="vis" min="0.5" max="10" step="0.5" value="10"></label>
-            <label>View zoom <span id="fovv">70°</span><input type="range" id="fov" min="8" max="110" step="1" value="70"></label>
-            <label>Look <span id="lookv">0°</span><input type="range" id="look" min="-180" max="180" step="1" value="0"></label>
-            <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
-            <label class="chk"><input type="checkbox" id="train" checked> Training: show rule assessment</label>
-          </div>
-          <div class="btns" style="margin-top:.5rem">
-            <button class="b" id="pause">Pause</button><button class="b" id="restart">Restart</button><button class="b" id="centre">Look ahead</button><button class="b" id="mute">Sound: on</button>
-          </div>
-          <div class="row2" style="margin-top:.3rem">Close-quarters: <b id="cq">0</b> · Collisions: <b id="col">0</b> · Sim time <b id="clock">00:00:00</b></div>
-        </section>
-      </div>
-
-      <div class="two">
-        <section class="box"><h2>Selected target</h2><div id="tinfo">Click a vessel on the radar, bridge or in the list.</div></section>
-        <section class="box"><h2>Event log</h2><div id="log"></div></section>
-      </div>
-
-      <section class="box">
-        <h2>Tracked targets</h2>
-        <table><thead><tr><th>ID</th><th>Brg °T</th><th>Rng nm</th><th>Crs °</th><th>Spd kn</th><th>CPA nm</th><th>TCPA min</th><th id="roleH" style="text-align:left">Your role</th></tr></thead><tbody id="tbody"></tbody></table>
-      </section>
+  <section class="box" id="pSim"><h2>Simulation</h2>
+    <div class="ctl" style="margin-top:0">
+      <label>Scenario<select id="scen"></select></label>
+      <label>Time speed<select id="ts"><option>1</option><option>2</option><option>5</option><option selected>10</option><option>20</option><option>30</option><option>60</option></select></label>
+      <label>Lighting<select id="light"><option value="night">Night</option><option value="dusk">Dusk</option><option value="day">Day</option></select></label>
+      <label>Visibility <span id="visv">10 nm</span><input type="range" id="vis" min="0.5" max="10" step="0.5" value="10"></label>
+      <label>View zoom <span id="fovv">70°</span><input type="range" id="fov" min="8" max="110" step="1" value="70"></label>
+      <label>Look <span id="lookv">0°</span><input type="range" id="look" min="-180" max="180" step="1" value="0"></label>
+      <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
+      <label class="chk"><input type="checkbox" id="train" checked> Show rule assessment</label>
     </div>
-  </div>
-
-  <p class="help"><kbd>←</kbd><kbd>→</kbd> helm 1° (hold <kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause. Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and by the visibility setting; the radar always sees out to its range.</p>
+    <div class="btns" style="margin-top:.5rem"><button class="b" id="pause">Pause</button><button class="b" id="restart">Restart</button><button class="b" id="mute">Sound: on</button></div>
+    <div class="row2" style="margin-top:.3rem">Close-quarters: <b id="cq">0</b> · Collisions: <b id="col">0</b> · Time <b id="clock">00:00:00</b></div>
+  </section>
+  <section class="box" id="pLog"><h2>Event log</h2><div id="log"></div></section>
 </div>
+
+<div class="dock" id="dockR">
+  <section class="box" id="pRadar"><h2>Radar</h2>
+    <canvas id="radar" aria-label="Radar display"></canvas>
+    <div class="ctl">
+      <label>Range<select id="rrange"><option>3</option><option selected>6</option><option>12</option></select></label>
+      <label>Orientation<select id="orient"><option value="head">Head-up</option><option value="north">North-up</option></select></label>
+      <label>Vectors<select id="vec"><option value="true">True</option><option value="rel">Relative</option><option value="off">Off</option></select></label>
+      <label>Vector length<select id="vecT"><option value="3">3 min</option><option value="6" selected>6 min</option><option value="12">12 min</option></select></label>
+      <label>CPA limit<select id="cpaLim"><option>0.5</option><option selected>1</option><option>2</option></select></label>
+      <label class="chk"><input type="checkbox" id="trails" checked> Trails</label>
+    </div>
+  </section>
+  <section class="box" id="pTgt"><h2>Selected target</h2><div id="tinfo">Click a vessel on the radar, bridge or in the list.</div></section>
+  <section class="box" id="pList"><h2>Tracked targets</h2>
+    <table><thead><tr><th>ID</th><th>Brg °T</th><th>Rel</th><th>Rng nm</th><th>Crs °</th><th>Spd kn</th><th>CPA nm</th><th>TCPA min</th><th id="roleH" style="text-align:left">Your role</th></tr></thead><tbody id="tbody"></tbody></table>
+  </section>
+</div>
+
+<section class="box help" id="pHelp"><h2>Controls</h2>
+  <p><kbd>←</kbd><kbd>→</kbd> helm 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels</p>
+  <p>Panels: <kbd>R</kbd> radar · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
+  <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
+  <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
+  <p>Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and the visibility setting; the radar always sees out to its range.</p>
+</section>
+
+<nav id="bar" aria-label="Panels">
+  <a class="b" href="index.html" title="Back to home">⌂ Home</a>
+  <button class="b" id="centre" title="Look straight ahead along the ship's heading (C)">⌖ Look ahead <kbd>C</kbd></button>
+  <button class="b" id="barPause" title="Pause / resume (Space)">⏯ <kbd>Space</kbd></button>
+  <span class="sep"></span>
+  <button class="b" data-p="radar">Radar <kbd>R</kbd></button>
+  <button class="b" data-p="helm">Helm <kbd>H</kbd></button>
+  <button class="b" data-p="sim">Sim <kbd>S</kbd></button>
+  <button class="b" data-p="tgt">Target <kbd>T</kbd></button>
+  <button class="b" data-p="list">Targets <kbd>G</kbd></button>
+  <button class="b" data-p="log">Log <kbd>L</kbd></button>
+  <button class="b" data-p="help">Help <kbd>?</kbd></button>
+</nav>
 
 <script>
 'use strict';
@@ -476,19 +474,37 @@ function drawBridge(now){
  bx.fillStyle='#9fb3c8';bx.font='11px Inter,system-ui,sans-serif';bx.textAlign='left';
  bx.fillText(`VIEW ${b3(vc)}°T (${view.off>=0?'+':''}${Math.round(view.off)}° rel)   HDG ${b3(own.hdg)}°   SPD ${f1(own.spd)} kn   FOV ${Math.round(view.fov)}°   VIS ${cfg.vis} nm`,12,H-9);
 }
+const CH=90;
+function relTxt(r){return(r<0?'P':r>0?'S':'')+b3(Math.abs(r))}
 function compass(vc){
- const W=BW;bx.fillStyle='rgba(8,12,20,.78)';bx.fillRect(0,0,W,40);
+ const W=BW,fov=view.fov;bx.fillStyle='rgba(8,12,20,.82)';bx.fillRect(0,0,W,CH);
+ const step=fov>60?5:fov>25?2:1,lab=fov>25?10:5;
+ // true bearing strip
  bx.strokeStyle='#cbd5e1';bx.fillStyle='#e5e7eb';bx.font='10px Inter,system-ui,sans-serif';bx.textAlign='center';bx.lineWidth=1;
- const step=view.fov>60?5:view.fov>25?2:1,lab=view.fov>60?10:view.fov>25?10:5,s0=Math.floor((vc-view.fov/2)/step)*step;
- bx.beginPath();
- for(let b=s0;b<=vc+view.fov/2+step;b+=step){const x=W/2+n180(b-vc)/view.fov*W,big=n360(b)%lab===0;bx.moveTo(x,0);bx.lineTo(x,big?10:5);if(big)bx.fillText(b3(b),x,22)}
+ const s0=Math.floor((vc-fov/2)/step)*step;bx.beginPath();
+ for(let b=s0;b<=vc+fov/2+step;b+=step){const x=W/2+n180(b-vc)/fov*W,big=n360(b)%lab===0;bx.moveTo(x,0);bx.lineTo(x,big?10:5);if(big)bx.fillText(b3(b),x,22)}
  bx.stroke();
- const hx=W/2+n180(own.hdg-vc)/view.fov*W;bx.fillStyle='#22c55e';bx.beginPath();bx.moveTo(hx-5,0);bx.lineTo(hx+5,0);bx.lineTo(hx,8);bx.fill();
- bx.font='600 10px Inter,system-ui,sans-serif';
+ bx.fillStyle='rgba(148,163,184,.25)';bx.fillRect(0,29,W,1);
+ // relative bearing strip: 0-180 each side of the bow, port red / starboard green
+ const r0=Math.floor((view.off-fov/2)/step)*step;bx.lineWidth=1.2;
+ for(let r=r0;r<=view.off+fov/2+step;r+=step){
+  const w=n180(r),x=W/2+(r-view.off)/fov*W,big=Math.abs(w)%lab===0;
+  const col=(w===0||Math.abs(w)===180)?'#f8fafc':w<0?'#f87171':'#4ade80';
+  bx.strokeStyle=col;bx.beginPath();bx.moveTo(x,32);bx.lineTo(x,big?43:37);bx.stroke();
+  if(big){bx.fillStyle=col;bx.font='600 10px Inter,system-ui,sans-serif';bx.fillText(String(Math.abs(w)),x,55)}
+ }
+ const bowx=W/2+(0-view.off)/fov*W;
+ bx.fillStyle='#22c55e';bx.beginPath();bx.moveTo(bowx-5,0);bx.lineTo(bowx+5,0);bx.lineTo(bowx,8);bx.fill();
+ bx.fillStyle='rgba(248,113,113,.9)';bx.font='600 9px Inter,system-ui,sans-serif';bx.textAlign='left';bx.fillText('◀ PORT',6,44);
+ bx.fillStyle='rgba(74,222,128,.9)';bx.textAlign='right';bx.fillText('STBD ▶',W-6,44);bx.textAlign='center';
+ bx.fillStyle='rgba(148,163,184,.25)';bx.fillRect(0,60,W,1);
+ // target tags: name + relative bearing
  for(const t of targets){
   if(cfg.light==='day'&&t.range>cfg.vis)continue;
-  const x=W/2+n180(t.brg-vc)/view.fov*W;if(x<0||x>W)continue;
-  bx.fillStyle=t===sel?'#fff':'#7dd3fc';bx.fillText('T'+t.id,x,35);bx.fillRect(x-.5,25,1,3);
+  const x=W/2+n180(t.brg-vc)/fov*W;if(x<0||x>W)continue;
+  const rel=n180(t.brg-own.hdg);
+  bx.fillStyle=t===sel?'#fff':'#7dd3fc';bx.font='600 10px Inter,system-ui,sans-serif';bx.fillRect(x-.5,62,1,4);bx.fillText('T'+t.id,x,76);
+  bx.fillStyle=rel<0?'#f87171':'#4ade80';bx.font='600 9px Inter,system-ui,sans-serif';bx.fillText(relTxt(rel)+'°',x,87);
  }
 }
 function shade(rgb,f){return[rgb[0]*f,rgb[1]*f,rgb[2]*f].map(v=>clamp(Math.round(v),0,255))}
@@ -602,12 +618,28 @@ function drawRadar(now){
   if(b%30===0){rx.fillStyle='#6ee7b7';rx.fillText(b3(b),cx+s*(R+19),cy+c*(R+19))}
  }
  rx.textBaseline='alphabetic';
+ // relative bearing ring (inside the scale): port red, starboard green
+ rx.lineWidth=1.2;rx.textAlign='center';rx.textBaseline='middle';rx.font='600 9px Inter,system-ui,sans-serif';
+ for(let r=0;r<360;r+=10){
+  const w=n180(r),col=(w===0||Math.abs(w)===180)?'#f8fafc':w<0?'#f87171':'#4ade80',a=(own.hdg+r-orient)*D2R,s=Math.sin(a),c=-Math.cos(a);
+  rx.strokeStyle=col;rx.beginPath();rx.moveTo(cx+s*R,cy+c*R);rx.lineTo(cx+s*(R-(r%30?4:8)),cy+c*(R-(r%30?4:8)));rx.stroke();
+  if(r%30===0){rx.fillStyle=col;rx.fillText(String(Math.abs(w)),cx+s*(R-17),cy+c*(R-17))}
+ }
+ rx.textBaseline='alphabetic';
  // spokes
  rx.strokeStyle='rgba(52,211,153,.1)';for(let b=0;b<360;b+=30){const a=(b-orient)*D2R;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(a)*R,cy-Math.cos(a)*R);rx.stroke()}
  // CPA limit
  rx.setLineDash([4,4]);rx.strokeStyle='rgba(251,191,36,.55)';rx.beginPath();rx.arc(cx,cy,ropt.cpaLim*ppn,0,7);rx.stroke();rx.setLineDash([]);
  // heading line
- const ha=(own.hdg-orient)*D2R;rx.strokeStyle='#e5e7eb';rx.lineWidth=1.2;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(ha)*R,cy-Math.cos(ha)*R);rx.stroke();
+ // view wedge: where the bridge is looking
+ const va=(own.hdg+view.off-orient)*D2R,hf=view.fov/2*D2R;
+ rx.fillStyle='rgba(56,189,248,.12)';rx.strokeStyle='rgba(56,189,248,.8)';rx.lineWidth=1;
+ rx.beginPath();rx.moveTo(cx,cy);rx.arc(cx,cy,R,va-hf-Math.PI/2,va+hf-Math.PI/2);rx.closePath();rx.fill();rx.stroke();
+ rx.setLineDash([3,4]);rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(va)*R,cy-Math.cos(va)*R);rx.stroke();rx.setLineDash([]);
+ rx.save();rx.translate(cx,cy);rx.rotate(va);rx.fillStyle='#38bdf8';rx.beginPath();rx.moveTo(0,-R+1);rx.lineTo(-5,-R+11);rx.lineTo(5,-R+11);rx.closePath();rx.fill();rx.restore();
+ // heading line + bow arrow: where the ship is pointing
+ const ha=(own.hdg-orient)*D2R;rx.strokeStyle='#f8fafc';rx.lineWidth=2;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(ha)*R,cy-Math.cos(ha)*R);rx.stroke();
+ rx.save();rx.translate(cx,cy);rx.rotate(ha);rx.fillStyle='#f8fafc';rx.beginPath();rx.moveTo(0,-R-1);rx.lineTo(-6,-R+13);rx.lineTo(6,-R+13);rx.closePath();rx.fill();rx.restore();
  // sweep
  const dt=Math.min(.1,(now-lastSweepT)/1000||0);lastSweepT=now;
  const prev=sweep;sweep=(sweep+dt*360/2.6)%360;
@@ -642,10 +674,12 @@ function drawRadar(now){
  }
  // own ship vector + symbol
  if(ropt.vec==='true'){const e=rpos(own,orient,ppn,cx,cy,own.x+ov.x*ropt.vecT,own.y+ov.y*ropt.vecT);rx.strokeStyle='#e5e7eb';rx.lineWidth=1.4;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(e.x,e.y);rx.stroke()}
- rx.strokeStyle='#e5e7eb';rx.beginPath();rx.arc(cx,cy,3,0,7);rx.stroke();
+ rx.save();rx.translate(cx,cy);rx.rotate(ha);rx.fillStyle='#f8fafc';rx.beginPath();rx.moveTo(0,-10);rx.lineTo(5,7);rx.lineTo(0,3);rx.lineTo(-5,7);rx.closePath();rx.fill();rx.restore();
  rx.fillStyle='rgba(110,231,183,.8)';rx.textAlign='center';rx.font='10px Inter,system-ui,sans-serif';
  rx.fillText(`${ropt.head?'HEAD-UP':'NORTH-UP'} · ${ropt.range} NM`,cx,cy+R*.62);
  rx.fillText(`${ropt.vec==='true'?'TRUE VECT':ropt.vec==='rel'?'REL VECT':'NO VECT'} ${ropt.vecT} MIN`,cx,cy+R*.62+13);
+ const lr=view.off;rx.fillStyle='#f8fafc';rx.fillText(`HDG ${b3(own.hdg)}°`,cx,cy+R*.62+26);
+ rx.fillStyle='#38bdf8';rx.fillText(`LOOK ${b3(own.hdg+view.off)}°T · ${Math.abs(lr)<.5?'AHEAD':(lr<0?'P':'S')+Math.round(Math.abs(lr))+'°'}`,cx,cy+R*.62+39);
 }
 
 /* ================= UI ================= */
@@ -661,12 +695,12 @@ function updateUI(){
  $('roleH').style.display=cfg.training?'':'none';
  const rows=[...targets].sort((a,b)=>a.range-b.range).filter(t=>t.range<14);
  $('tbody').innerHTML=rows.map(t=>{const dg=t.tcpa>0&&t.tcpa<20&&t.cpa<ropt.cpaLim&&!t.anch;
-  return`<tr data-id="${t.id}" class="${t===sel?'sel':''} ${dg?'danger':''}"><td>T${t.id}</td><td>${b3(t.brg)}</td><td>${f2(t.range)}</td><td>${b3(t.hdg)}</td><td>${f1(t.spd)}</td><td>${f2(t.cpa)}</td><td>${t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)}</td>${cfg.training?`<td class="role">${roleText(t)}</td>`:''}</tr>`}).join('')||'<tr><td colspan="8" style="color:#9ca3af;text-align:left">No targets in range</td></tr>';
+  return`<tr data-id="${t.id}" class="${t===sel?'sel':''} ${dg?'danger':''}"><td>T${t.id}</td><td>${b3(t.brg)}</td><td class="${n180(t.brg-own.hdg)<0?'pt':'sb'}">${relTxt(n180(t.brg-own.hdg))}</td><td>${f2(t.range)}</td><td>${b3(t.hdg)}</td><td>${f1(t.spd)}</td><td>${f2(t.cpa)}</td><td>${t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)}</td>${cfg.training?`<td class="role">${roleText(t)}</td>`:''}</tr>`}).join('')||'<tr><td colspan="9" style="color:#9ca3af;text-align:left">No targets in range</td></tr>';
  const el=$('tinfo');
  if(!sel){el.innerHTML='Click a vessel on the radar, bridge or in the list.';return}
  const t=sel,rel=n180(t.brg-own.hdg),A=t.A||assess(t);
  el.innerHTML=`<b style="font-size:1rem">Target ${t.id}</b>${cfg.training?` <span class="k">– ${nameOf(t)}</span>`:''}<br>
- <span class="k">Bearing</span> ${b3(t.brg)}°T (${b3(rel<0?-rel:rel)}° ${rel<0?'port':'stbd'}) · <span class="k">Range</span> ${f2(t.range)} nm<br>
+ <span class="k">Bearing</span> ${b3(t.brg)}°T (<span class="${rel<0?'pt':'sb'}">${b3(Math.abs(rel))}° ${rel<0?'port':'stbd'}</span>) · <span class="k">Range</span> ${f2(t.range)} nm<br>
  <span class="k">Course</span> ${b3(t.hdg)}° · <span class="k">Speed</span> ${f1(t.spd)} kn<br>
  <span class="k">CPA</span> <b>${f2(t.cpa)} nm</b> · <span class="k">TCPA</span> <b>${t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)+' min'}</b> · <span class="k">Range rate</span> ${f1(t.rrate*60)} kn<br>
  <span class="k">Aspect</span> you see her ${aspect(t)}
@@ -709,8 +743,31 @@ bc.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x;if(Math.abs(dx)>4
 bc.onpointerup=e=>{if(drag&&!drag.moved){const r=bc.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let b=null,bd=1e9;
   for(const t of targets){if(t.sx==null)continue;const d=Math.abs(t.sx-x);if(d<Math.max(16,t.sw)&&Math.abs(y-HZ)<BH*.35&&d<bd){bd=d;b=t}}if(b)sel=b}drag=null};
 bc.onwheel=e=>{e.preventDefault();setFov(view.fov*(e.deltaY>0?1.12:.89))};
+const PANELS={radar:'pRadar',helm:'pHelm',sim:'pSim',tgt:'pTgt',list:'pList',log:'pLog',help:'pHelp'};
+const PKEYS={r:'radar',h:'helm',s:'sim',t:'tgt',g:'list',l:'log','?':'help','/':'help'};
+const PLAB={radar:'R',helm:'H',sim:'S',tgt:'T',list:'G',log:'L',help:'?'};
+function togglePanel(n,show){
+ const el=$(PANELS[n]);const on=show===undefined?el.classList.contains('hid'):show;
+ el.classList.toggle('hid',!on);
+ const bt=document.querySelector(`#bar [data-p="${n}"]`);if(bt)bt.classList.toggle('on',on);
+ resize();
+}
+function hideAll(){for(const n in PANELS)togglePanel(n,false)}
+for(const n in PANELS){const h=$(PANELS[n]).querySelector('h2');h.insertAdjacentHTML('beforeend',`<span class="sp"></span><kbd>${PLAB[n]}</kbd><button class="x" data-x="${n}" title="Hide">×</button>`)}
+document.addEventListener('click',e=>{
+ const x=e.target.closest('[data-x]');if(x)togglePanel(x.dataset.x,false);
+ const p=e.target.closest('#bar [data-p]');if(p)togglePanel(p.dataset.p);
+ if(e.target.closest('button'))e.target.closest('button').blur();
+});
+document.addEventListener('change',e=>{if(e.target.tagName==='SELECT')e.target.blur()});
+$('barPause').onclick=()=>$('pause').click();
+// start with the bridge full-screen plus radar and helm
+['sim','tgt','list','log','help'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
 window.onkeydown=e=>{
  if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&e.target.type!=='checkbox'&&e.target.type!=='range')return;
+ if(e.ctrlKey||e.metaKey||e.altKey)return;
+ const pk=PKEYS[e.key.toLowerCase()];if(pk){togglePanel(pk);e.preventDefault();return}
+ if(e.key==='Escape'){hideAll();return}
  const k=e.key;
  if(k==='ArrowLeft'){own.cmdHdg=n360(own.cmdHdg-(e.shiftKey?10:1))}else if(k==='ArrowRight'){own.cmdHdg=n360(own.cmdHdg+(e.shiftKey?10:1))}
  else if(k==='ArrowUp')own.cmdSpd=clamp(own.cmdSpd+1,0,25);else if(k==='ArrowDown')own.cmdSpd=clamp(own.cmdSpd-1,0,25);
