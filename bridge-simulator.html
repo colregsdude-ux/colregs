@@ -22,7 +22,8 @@ body{padding:0;min-height:0}
 .dock>*{pointer-events:auto;flex:none}
 #dockL{left:.6rem;width:min(310px,46vw)}
 #dockR{right:.6rem;align-items:flex-end}
-.box{background:rgba(14,21,40,.86);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem;width:100%}
+:root{--pa:.86}
+.box{background:rgba(14,21,40,var(--pa));backdrop-filter:blur(calc(var(--pa) * 6px));-webkit-backdrop-filter:blur(calc(var(--pa) * 6px));border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem;width:100%}
 .box h2{display:flex;align-items:center;gap:.4rem;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem;font-weight:600}
 .box h2 .sp{flex:1}
 .box h2 kbd,#bar kbd,.help kbd{background:#1e293b;border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:0 .3rem;font:600 .68rem Inter,sans-serif;color:var(--text)}
@@ -30,7 +31,7 @@ body{padding:0;min-height:0}
 .x:hover{color:#fff}
 #pRadar{width:clamp(250px,min(44vh,34vw),470px)}
 #pTgt{width:min(340px,46vw)}
-#pHelp{background:rgba(14,21,40,.96)}
+#pHelp{background:rgba(14,21,40,min(1,calc(var(--pa) + .1)))}
 #radar{max-height:none;max-width:none;box-shadow:none;width:100%;height:auto;aspect-ratio:1;display:block;border-radius:50%;background:#020b06;cursor:crosshair}
 .ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:.4rem .5rem;margin-top:.5rem;font-size:.74rem;color:var(--muted)}
 .ctl label{display:grid;gap:.15rem}
@@ -91,7 +92,7 @@ td.role{text-align:left;font-size:.7rem}
 </head>
 <body>
 <canvas id="bridge" aria-label="Bridge view"></canvas>
-<div class="hint">Press F11 to full screen · Drag to look around · Wheel to zoom (binoculars) · Click a vessel to select</div>
+<div class="hint">Press F11 for full screen · Drag to look around · Wheel to zoom (binoculars) · Click a vessel to select</div>
 <div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem;display:block">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
 
 <div class="dock" id="dockL">
@@ -113,6 +114,7 @@ td.role{text-align:left;font-size:.7rem}
       <label>View zoom <span id="fovv">70°</span><input type="range" id="fov" min="8" max="110" step="1" value="70"></label>
       <label>Look <span id="lookv">0°</span><input type="range" id="look" min="-180" max="180" step="1" value="0"></label>
       <label>Your ship's bow size <span id="deckv">1.0×</span><input type="range" id="deck" min="0.5" max="3" step="0.1" value="1"></label>
+      <label>Panel transparency <span id="transv">14%</span><input type="range" id="trans" min="0" max="100" step="1" value="14"></label>
       <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
       <label class="chk"><input type="checkbox" id="train" checked> Show rule assessment</label>
     </div>
@@ -838,6 +840,7 @@ addEventListener('resize',()=>{for(const n in WIN){const el=WIN[n].el;if(!el.cla
 $('barPause').onclick=()=>$('pause').click();
 function toggleBar(show){const on=show===undefined?$('bar').classList.contains('hid'):show;$('bar').classList.toggle('hid',!on);$('barShow').classList.toggle('hid',on)}
 $('barMin').onclick=()=>toggleBar(false);$('barShow').onclick=()=>toggleBar(true);
+$('trans').oninput=e=>{const t=+e.target.value;document.documentElement.style.setProperty('--pa',(1-t/100).toFixed(2));$('transv').textContent=t+'%'};
 $('deck').oninput=e=>{deckScale=+e.target.value;$('deckv').textContent=deckScale.toFixed(1)+'×'};
 // start with the bridge full-screen plus radar and helm
 ['sim','tgt','list','log','help'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
