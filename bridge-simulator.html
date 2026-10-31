@@ -91,7 +91,7 @@ td.role{text-align:left;font-size:.7rem}
 </head>
 <body>
 <canvas id="bridge" aria-label="Bridge view"></canvas>
-<div class="hint">Press F11 to full screen · Drag to look around · Wheel to zoom (binoculars) · Click a vessel to select</div>
+<div class="hint">Drag to look around · wheel to zoom (binoculars) · click a vessel to select</div>
 <div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem;display:block">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
 
 <div class="dock" id="dockL">
@@ -705,7 +705,7 @@ function roleText(t){
  return`<span style="color:${m[1]}">${m[0]}</span> R${A.rule}`;
 }
 function updateUI(){
- {const lr=view.off;$('rinfo').innerHTML=`<span>${ropt.head?'HEAD-UP':'NORTH-UP'} · ${ropt.range} NM</span><span>${ropt.vec==='true'?'TRUE VECT':ropt.vec==='rel'?'REL VECT':'NO VECT'} ${ropt.vecT} MIN</span><span class="h">HDG ${b3(own.hdg)}°</span><span class="lk">LOOK ${b3(own.hdg+view.off)}°T · ${Math.abs(lr)<.5?'AHEAD':(lr<0?'P':'S')+Math.round(Math.abs(lr))+'°'}</span>`}
+ {const lr=view.off;const _h=$('rinfo').offsetHeight;$('rinfo').innerHTML=`<span>${ropt.head?'HEAD-UP':'NORTH-UP'} · ${ropt.range} NM</span><span>${ropt.vec==='true'?'TRUE VECT':ropt.vec==='rel'?'REL VECT':'NO VECT'} ${ropt.vecT} MIN</span><span class="h">HDG ${b3(own.hdg)}°</span><span class="lk">LOOK ${b3(own.hdg+view.off)}°T · ${Math.abs(lr)<.5?'AHEAD':(lr<0?'P':'S')+Math.round(Math.abs(lr))+'°'}</span>`;if($('rinfo').offsetHeight!==_h&&typeof WIN!=='undefined'&&WIN.radar.nh)fit('radar')}
  $('hHdg').textContent=b3(own.hdg)+'°';$('hSpd').textContent=f1(own.spd);$('hRot').textContent=Math.round(own.rot);$('cmdSpd').textContent=Math.round(own.cmdSpd);
  $('clock').textContent=hms(simT);$('cq').textContent=closeQ;$('col').textContent=collisions;
  $('roleH').style.display=cfg.training?'':'none';
@@ -793,7 +793,7 @@ $('dockL').remove();$('dockR').remove();
 function fit(n){
  const c=WIN[n],el=c.el,wc=c.wc;if(el.classList.contains('hid'))return;
  const wrap=wc.parentNode,iw=el.clientWidth-20,k=clamp(iw/c.w,.35,3.5);c.k=k;
- if(c.m==='both')el.style.height=Math.round(c.h.offsetHeight+8+12+c.nh*k)+'px';
+ if(c.m==='both'){c.nh=wc.offsetHeight+4;el.style.height=Math.round(c.h.offsetHeight+8+12+c.nh*k)+'px'}
  wc.style.transform=`scale(${k})`;
  if(c.m==='width')wc.style.height=(wrap.clientHeight/k)+'px';
  resize();
