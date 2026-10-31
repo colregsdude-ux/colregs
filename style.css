@@ -1,24 +1,47 @@
-.random-container {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.random-container button {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 0.7rem 1.2rem;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.random-container button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59,130,246,0.4);
-}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--card:#121a2f;--accent:#3b82f6;--text:#e5e7eb;--muted:#9ca3af}
+body{font-family:Inter,system-ui,sans-serif;background:linear-gradient(180deg,#0b1220,#020617);color:var(--text);min-height:100vh}
+body.center{display:grid;place-items:center;padding:1.5rem}
+body.wheelbg{background:radial-gradient(circle at top,#182747,#070d19 55%,#040711)}
+p{color:var(--muted)}
+h1{font-size:clamp(1.6rem,3vw,2.2rem);margin-bottom:.5rem}
+.btn{display:inline-block;border:0;border-radius:10px;background:var(--accent);color:#fff;font:600 .95rem inherit;font-family:inherit;padding:.7rem 1.1rem;text-decoration:none;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(59,130,246,.35)}
+.btn:disabled{opacity:.65;cursor:wait}
+.go{background:#22c55e;color:#07230e}.amber{background:#f59e0b;color:#271302}
+.row{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center}
+.panel{width:min(620px,100%);background:var(--card);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:2rem;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,.35)}
+.panel.big{width:min(960px,100%)}
+.panel>p{margin-bottom:1.25rem}
+.result{min-height:1.6rem;margin:1rem 0 0;font-size:.95rem;color:#c7d2fe}
+/* home */
+.hero{padding:3rem 1.5rem 2rem;text-align:center}
+.hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:700}
+.hero p{font-size:1.05rem}
+.hero nav{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;margin-top:1rem}
+main.wide{padding:2rem 1.5rem 4rem;max-width:1100px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem}
+.card{background:var(--card);border-radius:14px;padding:1.25rem 1.4rem;text-decoration:none;color:var(--text);border:1px solid rgba(255,255,255,.05);transition:transform .15s,box-shadow .15s,border-color .15s}
+.card:hover{transform:translateY(-4px);border-color:rgba(59,130,246,.6);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.card h3{font-size:1.05rem;font-weight:600;margin-bottom:.25rem}
+.card span{font-size:.9rem;color:var(--muted)}
+footer{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:.85rem}
+footer p{margin:.5rem 0}
+/* playlist */
+.video{position:relative;padding-top:56.25%;border-radius:12px;overflow:hidden;background:#000}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.back{display:inline-block;margin-top:1rem;color:#bfdbfe;font-weight:600;text-decoration:none}
+.back:hover{text-decoration:underline}
+/* wheel */
+.sub{text-align:center;margin-bottom:1.1rem}.sub.left{text-align:left;margin-bottom:.4rem}
+.layout{display:grid;gap:1.25rem}
+@media(min-width:900px){.layout{grid-template-columns:520px 1fr;align-items:start}}
+.wheel-wrap{display:grid;justify-items:center;gap:.8rem}
+.pointer{width:0;height:0;border:18px solid transparent;border-top:32px solid #f8fafc;border-bottom:0;margin-bottom:-12px;z-index:2;filter:drop-shadow(0 5px 6px rgba(0,0,0,.35))}
+canvas{width:min(82vw,480px);height:min(82vw,480px);border-radius:50%;background:#0b1327;box-shadow:inset 0 0 0 5px rgba(255,255,255,.14),0 20px 30px rgba(0,0,0,.35)}
+.result-box{display:none;background:rgba(7,13,27,.72);border:1px solid rgba(148,163,184,.28);border-radius:14px;padding:1rem;text-align:left}
+.result-box.show{display:block}
+.result-box h2{font-size:1.2rem;margin-bottom:.65rem;color:#bfdbfe}
+.links{display:grid;gap:.6rem}
+.links a{background:rgba(30,41,59,.95);color:#dbeafe;text-decoration:none;border:1px solid rgba(59,130,246,.35);border-radius:10px;padding:.6rem .75rem}
+.links a:hover{border-color:rgba(147,197,253,.9)}
