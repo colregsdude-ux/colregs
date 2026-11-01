@@ -47,6 +47,23 @@ input[type=range]{padding:0}
 .b:hover{border-color:var(--accent)}
 .b.on{background:var(--accent);border-color:var(--accent)}
 .b.red{background:#7f1d1d}
+.rudBox{margin:.1rem 0 .35rem}
+.rudT{display:flex;justify-content:space-between;align-items:baseline;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem}
+.rudT b{font-size:.82rem;letter-spacing:0;color:#e2f3ff;font-variant-numeric:tabular-nums}
+.rudBar{position:relative;display:flex;height:20px;background:#0b1327;border:1px solid rgba(255,255,255,.14);border-radius:6px;overflow:hidden}
+.rudHalf{position:relative;flex:1;display:flex}
+.rudHalf.p{justify-content:flex-end}
+.rudHalf i{display:block;height:100%;width:0}
+.rudHalf.p i{background:linear-gradient(270deg,#ef4444,#b91c1c)}
+.rudHalf.s i{background:linear-gradient(90deg,#22c55e,#15803d)}
+.rudTick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.28);pointer-events:none}
+.rudTick.c{background:#e2f3ff;width:2px;margin-left:-1px}
+.rudOrd{position:absolute;top:-1px;bottom:-1px;width:3px;margin-left:-1.5px;background:#fbbf24;box-shadow:0 0 5px rgba(251,191,36,.9);pointer-events:none;display:none}
+.rudLab{position:relative;height:.8rem;font-size:.56rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.rudLab span{position:absolute;transform:translateX(-50%)}
+.rb{flex:1;padding:.3rem .1rem;text-align:center;min-width:0}
+.rb.p{border-color:rgba(239,68,68,.55)}.rb.s{border-color:rgba(34,197,94,.55)}.rb.m{border-color:rgba(226,243,255,.5)}
+.rb.p:hover{background:#7f1d1d}.rb.s:hover{background:#14532d}
 .row2{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;font-size:.76rem;color:var(--muted)}
 .row2 input[type=number]{width:70px}
 table{width:100%;border-collapse:collapse;font-size:.74rem;font-variant-numeric:tabular-nums}
@@ -119,8 +136,17 @@ td.role{text-align:left;font-size:.7rem}
 <div class="dock" id="dockL">
   <section class="box" id="pHelm"><h2>Own ship</h2>
     <div class="hud"><div><b id="hHdg">000°</b><span>Heading</span></div><div><b id="hSpd">12.0</b><span>Speed kn</span></div><div><b id="hRot">0</b><span>ROT °/min</span></div></div>
-    <div class="row2">Course <input type="number" id="course" min="0" max="359" value="0"> <button class="b" id="setCourse">Set</button></div>
+    <div class="rudBox"><div class="rudT"><span id="rudMode">Steering</span><b id="rudTxt">MIDSHIPS</b></div>
+      <div class="rudBar" id="rudBar"><div class="rudHalf p"><i id="rudP"></i></div><div class="rudHalf s"><i id="rudS"></i></div>
+        <span class="rudTick" style="left:2.86%"></span><span class="rudTick" style="left:21.4%"></span><span class="rudTick" style="left:35.7%"></span><span class="rudTick" style="left:42.9%"></span><span class="rudTick c" style="left:50%"></span><span class="rudTick" style="left:57.1%"></span><span class="rudTick" style="left:64.3%"></span><span class="rudTick" style="left:78.6%"></span><span class="rudTick" style="left:97.1%"></span>
+        <b class="rudOrd" id="rudOrd"></b></div>
+      <div class="rudLab"><span style="left:2.86%">35</span><span style="left:21.4%">20</span><span style="left:35.7%">10</span><span style="left:50%">0</span><span style="left:64.3%">10</span><span style="left:78.6%">20</span><span style="left:97.1%">35</span></div>
+      <div class="rudT" style="margin:0"><span id="rudOrdT">Order: midships</span><span id="rudErr"></span></div></div>
+    <div class="row2">Steer course <input type="number" id="course" min="0" max="359" value="0"> <button class="b" id="setCourse">Set</button></div>
     <div class="btns" id="helm"><button class="b" data-dc="-10">◀ 10</button><button class="b" data-dc="-5">◀ 5</button><button class="b" data-dc="-1">◀ 1</button><button class="b" data-dc="1">1 ▶</button><button class="b" data-dc="5">5 ▶</button><button class="b" data-dc="10">10 ▶</button></div>
+    <div class="row2" style="margin-top:.3rem">Rudder orders <span style="margin-left:auto;font-size:.66rem">limit when steering <select id="rudLim" style="width:auto"><option value="10">10°</option><option value="20" selected>20°</option><option value="35">35°</option></select></span></div>
+    <div class="btns" id="rud" style="flex-wrap:nowrap"><button class="b rb p" data-r="-35" title="Hard-a-port (35°)">P35</button><button class="b rb p" data-r="-20" title="Port 20">P20</button><button class="b rb p" data-r="-10" title="Port 10">P10</button><button class="b rb p" data-r="-5" title="Port 5">P5</button><button class="b rb m" data-r="0" title="Midships (M)">Mid</button><button class="b rb s" data-r="5" title="Starboard 5">S5</button><button class="b rb s" data-r="10" title="Starboard 10">S10</button><button class="b rb s" data-r="20" title="Starboard 20">S20</button><button class="b rb s" data-r="35" title="Hard-a-starboard (35°)">S35</button></div>
+    <div class="btns"><button class="b" id="steady" title="Steady on the heading you are now swinging through, using midships and counter rudder">Steady as she goes</button></div>
     <div class="row2">Speed <span id="cmdSpd">12</span> kn</div>
     <div class="btns" id="eng"><button class="b" data-ds="-5">−5</button><button class="b" data-ds="-1">−1</button><button class="b" data-ds="1">+1</button><button class="b" data-ds="5">+5</button><button class="b" data-ds="-99">Stop</button></div>
     <div class="row2" style="margin-top:.3rem">Sound signals</div>
@@ -191,7 +217,8 @@ td.role{text-align:left;font-size:.7rem}
 </div>
 
 <section class="box help" id="pHelp"><h2>Controls</h2>
-  <p><kbd>←</kbd><kbd>→</kbd> helm 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · drag a panel's title bar to move it, drag any corner to resize (contents scale) · <kbd>B</kbd> minimise / show the menu bar · <kbd>F</kbd> full screen</p>
+  <p><b>Steering:</b> the ship has a real rudder and a turn that builds and decays. Ordering a <b>course</b> (Set, ◀ ▶ buttons or arrow keys) makes the helmsman put rudder on, ease it, then apply <b>counter rudder</b> to stop the swing on the course. Or give <b>rudder orders</b> yourself (P35…S35, <kbd>,</kbd> <kbd>.</kbd> for 5° port/starboard, <kbd>M</kbd> midships): the rate of turn builds slowly and the ship keeps swinging after you go midships, so you must meet the swing with counter rudder, or press <b>Steady as she goes</b>. The bar shows rudder angle: red to the left is port, green to the right is starboard, and the yellow marker is the ordered angle while the rudder is still moving. Rudder is less effective at low speed.</p>
+  <p><kbd>←</kbd><kbd>→</kbd> steer 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · drag a panel's title bar to move it, drag any corner to resize (contents scale) · <kbd>B</kbd> minimise / show the menu bar · <kbd>F</kbd> full screen</p>
   <p>Panels: <kbd>R</kbd> radar · <kbd>E</kbd> ECPINS · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
   <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
   <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
@@ -310,7 +337,30 @@ const catOf=t=>t.anch?'anch':t.type==='dhow'?(t.motor?'power':'sail'):TYPES[t.ty
 const nameOf=t=>t.anch?TYPES[t.type].name+' – at anchor':t.type==='dhow'?TYPES.dhow.name+(t.motor?(t.sailUp?' – motor-sailing (power-driven)':' – under engine (power-driven)'):' – under sail only'):TYPES[t.type].name+(t.type==='tow'&&t.longTow?' (tow over 200 m)':'');
 
 /* ================= state ================= */
-const own={x:0,y:0,hdg:0,spd:12,cmdHdg:0,cmdSpd:12,rot:0,L:120};
+const own={x:0,y:0,hdg:0,spd:12,cmdHdg:0,cmdSpd:12,rot:0,L:120,rud:0,rudCmd:0,r:0,mode:'steer',rudLim:20};
+/* ---- steering gear & turning ----
+   rudder slews at 2.3°/s (35° in about 15 s). The ship's turn rate r follows the rudder through a first-order
+   (Nomoto) lag, so a rudder angle gives a steady rate of turn only after a delay, and the ship keeps swinging
+   after the rudder is centred. To stop a turn you must centre the rudder and then apply counter rudder. */
+const RUD_MAX=35,RUD_RATE=2.3;
+const steerTo=h=>{own.cmdHdg=n360(h);own.mode='steer'};
+function setRudder(a){if(own.aground)return;own.mode='manual';own.rudCmd=clamp(Math.round(a),-RUD_MAX,RUD_MAX)}
+function stepHelm(dt){
+ const sf=clamp(own.spd/12,0,1.5),Ke=.025*sf,T=Math.min(40,20/Math.max(sf,.5));
+ let rc=own.rudCmd;
+ if(own.mode==='steer'){
+  // helmsman: put the rudder on for the turn, ease it as the rate builds, and counter it to stop the swing on the ordered course
+  const e=n180(own.cmdHdg-own.hdg),lim=own.rudLim;
+  if(Ke<.003)rc=0;
+  else if(Math.abs(e)<.15&&Math.abs(own.r)<.004)rc=0;
+  else{const rlim=Ke*lim,rd=clamp(e*.05,-rlim,rlim);rc=clamp((rd+5*(rd-own.r))/Ke,-lim,lim)}
+  own.rudCmd=rc;
+ }
+ own.rud+=clamp(rc-own.rud,-RUD_RATE*dt,RUD_RATE*dt);
+ own.r+=(Ke*own.rud-own.r)*Math.min(1,dt/T);
+ own.hdg=n360(own.hdg+own.r*dt);own.rot=own.r*60;
+}
+const rudTxt=a=>{const r=Math.round(Math.abs(a));return r<1?'MIDSHIPS':(a<0?'PORT ':'STBD ')+r+'°'};
 let targets=[],nextId=1,simT=0,paused=false,collisions=0,closeQ=0,sel=null,lastSpawn=0,logLines=[];
 const view={off:0,fov:70};
 const cfg={light:'night',vis:10,training:true};
@@ -429,7 +479,7 @@ const tpos=(al,la)=>({x:tss.ox+tss.ux*al+tss.sx*la,y:tss.oy+tss.uy*al+tss.sy*la}
 function setupLoc(S){
  const L=LOCS[curLoc],ol=S.own||{};
  GEO.lat=L.geo.lat;GEO.lon=L.geo.lon;COSL=Math.cos(GEO.lat*D2R);
- own.x=own.y=0;own.aground=false;tss=null;
+ own.x=own.y=0;own.aground=false;tss=null;own.r=own.rud=own.rudCmd=0;own.mode='steer';
  if(L.tss){
   const T=L.tss,c=T.z+T.w/2,ax=T.ax,lane=ol.lane||'R';
   const lat0=lane==='F'?c:lane==='R'?-c:-(T.z+T.w+(T.crossStart||2));
@@ -660,8 +710,7 @@ function renderLog(){const el=$('log');el.innerHTML=logLines.slice(-30).reverse(
 /* ================= simulation step (1 s) ================= */
 function stepSim(dt){
  simT+=dt;
- const oh=own.hdg;
- own.hdg=turnTo(own.hdg,own.cmdHdg,.3*dt);own.rot=n180(own.hdg-oh)/dt*60;
+ stepHelm(dt);
  own.spd+=clamp(own.cmdSpd-own.spd,-.05*dt,.05*dt);
  const ov=vec(own.hdg,own.spd);own.x+=ov.x*dt/60;own.y+=ov.y*dt/60;
  if(LAND&&!own.aground&&landAt(own.x,own.y)){own.aground=true;addLog('AGROUND – you have run onto the shore!','w');showOverlay('You have run aground. The engine has stopped – use Restart to try again.','AGROUND')}
@@ -1317,9 +1366,23 @@ sc.onchange=restart;$('restart').onclick=restart;
 $('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Resume':'Pause'};
 $('ovOk').onclick=()=>{$('overlay').classList.remove('show');paused=false;$('pause').textContent='Pause'};
 $('mute').onclick=()=>{muted=!muted;$('mute').textContent='Sound: '+(muted?'off':'on')};
-$('helm').onclick=e=>{const d=e.target.dataset.dc;if(d)own.cmdHdg=n360(own.cmdHdg+ +d);$('course').value=Math.round(own.cmdHdg)};
-$('setCourse').onclick=()=>{own.cmdHdg=n360(+$('course').value||0)};
-$('course').onkeydown=e=>{if(e.key==='Enter')own.cmdHdg=n360(+$('course').value||0)};
+$('helm').onclick=e=>{const d=e.target.dataset.dc;if(d){steerTo((own.mode==='steer'?own.cmdHdg:own.hdg)+ +d);$('course').value=Math.round(own.cmdHdg)}};
+$('setCourse').onclick=()=>steerTo(+$('course').value||0);
+$('course').onkeydown=e=>{if(e.key==='Enter')steerTo(+$('course').value||0)};
+$('rud').onclick=e=>{const b=e.target.closest('[data-r]');if(b)setRudder(+b.dataset.r)};
+$('steady').onclick=()=>{steerTo(own.hdg+own.r*20);$('course').value=Math.round(own.cmdHdg)};
+$('rudLim').onchange=e=>own.rudLim=+e.target.value;
+let rudS='';
+function drawRudder(){
+ const a=own.rud,o=own.rudCmd,k=Math.abs(a)/RUD_MAX*100;
+ const key=[a.toFixed(1),o.toFixed(1),own.mode,Math.round(own.cmdHdg),Math.round(own.hdg*10)].join('|');if(key===rudS)return;rudS=key;
+ $('rudP').style.width=a<0?k+'%':'0';$('rudS').style.width=a>0?k+'%':'0';
+ const t=$('rudTxt');t.textContent=rudTxt(a);t.style.color=Math.round(Math.abs(a))<1?'#e2f3ff':a<0?'#fca5a5':'#86efac';
+ const ord=$('rudOrd');ord.style.display=Math.abs(o-a)>.4?'block':'none';ord.style.left=(50+o/RUD_MAX*50)+'%';
+ $('rudMode').textContent=own.mode==='steer'?'Steering '+b3(own.cmdHdg)+'°':'Manual rudder';
+ $('rudOrdT').textContent='Order: '+rudTxt(o).toLowerCase();
+ const e=n180(own.cmdHdg-own.hdg);$('rudErr').textContent=own.mode==='steer'&&Math.abs(e)>=.5?(e<0?'to port ':'to stbd ')+Math.abs(Math.round(e))+'°':'';
+}
 $('eng').onclick=e=>{const d=e.target.dataset.ds;if(d)own.cmdSpd=clamp(own.cmdSpd+ +d,0,25)};
 $('horn').onclick=e=>{const k=e.target.dataset.h;if(k)ownSignal(k)};
 $('ts').onchange=()=>{};
@@ -1446,7 +1509,9 @@ window.onkeydown=e=>{
  if(e.key.toLowerCase()==='i'){interrogate();e.preventDefault();return}
  if(e.key==='Escape'){hideAll();return}
  const k=e.key;
- if(k==='ArrowLeft'){own.cmdHdg=n360(own.cmdHdg-(e.shiftKey?10:1))}else if(k==='ArrowRight'){own.cmdHdg=n360(own.cmdHdg+(e.shiftKey?10:1))}
+ const base=own.mode==='steer'?own.cmdHdg:own.hdg;
+ if(k==='ArrowLeft'){steerTo(base-(e.shiftKey?10:1))}else if(k==='ArrowRight'){steerTo(base+(e.shiftKey?10:1))}
+ else if(k===','){setRudder((own.mode==='manual'?own.rudCmd:own.rud)-5)}else if(k==='.'){setRudder((own.mode==='manual'?own.rudCmd:own.rud)+5)}else if(k==='m'||k==='M')setRudder(0)
  else if(k==='ArrowUp')own.cmdSpd=clamp(own.cmdSpd+1,0,25);else if(k==='ArrowDown')own.cmdSpd=clamp(own.cmdSpd-1,0,25);
  else if(k==='a'||k==='A')setLook(view.off-5);else if(k==='d'||k==='D')setLook(view.off+5);else if(k==='c'||k==='C')setLook(0);
  else if(k===' '){paused=!paused;$('pause').textContent=paused?'Resume':'Pause'}else return;
@@ -1458,7 +1523,7 @@ let last=performance.now(),acc=0,uiT=0;
 function frame(now){
  const dt=Math.min(.1,(now-last)/1000);last=now;
  if(!paused){acc+=dt*(+$('ts').value);let n=0;while(acc>=1&&n<400){stepSim(1);acc-=1;n++;if(paused)break}if(n>=400)acc=0}
- ecpStep(now);drawBridge(now);drawRadar(now);drawEcp(now);
+ ecpStep(now);drawBridge(now);drawRadar(now);drawEcp(now);drawRudder();
  if(now-uiT>250){uiT=now;updateUI();updateEcp()}
  requestAnimationFrame(frame);
 }
