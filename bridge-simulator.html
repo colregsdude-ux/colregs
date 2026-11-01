@@ -22,7 +22,7 @@ body{padding:0;min-height:0}
 .dock>*{pointer-events:auto;flex:none}
 #dockL{left:.6rem;width:min(310px,46vw)}
 #dockR{right:.6rem;align-items:flex-end}
-:root{--pa:.86}
+:root{--pa:0}
 .box{background:rgba(14,21,40,var(--pa));backdrop-filter:blur(calc(var(--pa) * 6px));-webkit-backdrop-filter:blur(calc(var(--pa) * 6px));border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem;width:100%}
 .box h2{display:flex;align-items:center;gap:.4rem;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem;font-weight:600}
 .box h2 .sp{flex:1}
@@ -180,7 +180,7 @@ td.role{text-align:left;font-size:.7rem}
       <label>View zoom <span id="fovv">70°</span><input type="range" id="fov" min="8" max="110" step="1" value="70"></label>
       <label>Look <span id="lookv">0°</span><input type="range" id="look" min="-180" max="180" step="1" value="0"></label>
       <label>Your ship's bow size <span id="deckv">1.0×</span><input type="range" id="deck" min="0.5" max="3" step="0.1" value="1"></label>
-      <label>Panel transparency <span id="transv">14%</span><input type="range" id="trans" min="0" max="100" step="1" value="14"></label>
+      <label>Panel transparency <span id="transv">100%</span><input type="range" id="trans" min="0" max="100" step="1" value="100"></label>
       <label class="chk" title="Off = every light in its arc is shown out to the visibility setting"><input type="checkbox" id="rng"> Realistic light ranges (Rule 22)</label>
       <label class="chk" title="At night, show the dark shadowed outline of nearby vessels as well as their lights. Off = lights only"><input type="checkbox" id="nhull" checked> Night ship silhouettes</label>
       <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
