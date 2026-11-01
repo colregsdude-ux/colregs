@@ -992,7 +992,8 @@ function drawVessel(t,C,vis,day,dusk,night){
   // day shapes
   if(!night){
    for(const s of shapesFor(t)){
-    const p=W(s.s,0,s.z),px=Math.max(3,s.d/(range*1852)*PXR*2.2);
+    const p=W(s.s,0,s.z),px=s.d*Math.max(2.2,L*.02)/(range*1852)*PXR; // fixed size relative to the vessel, no minimum pixel size
+    if(px<.7)continue;
     bx.fillStyle=dusk?'#0a0a0e':'#050505';
     const x=p.x,y=p.y;bx.beginPath();
     if(s.sh==='ball')bx.arc(x,y,px/2,0,7);
