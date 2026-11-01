@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>/* touch devices (phone/tablet) get the mobile layout; add ?ui=mobile or ?ui=desktop to force one */(function(){var u=new URLSearchParams(location.search).get("ui"),m=window.matchMedia("(pointer:coarse)");document.documentElement.classList.toggle("mobile",u==="mobile"?true:u==="desktop"?false:m.matches)})()</script>
+<title>Bridge &amp; Radar Simulator | TheRulesGuide.com</title>
+<link rel="icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<style>
+html,body{height:100%;overflow:hidden}
+body{padding:0;min-height:0}
+#bridge{position:fixed;inset:0;width:100vw;height:100dvh;border-radius:0;box-shadow:none;max-width:none;max-height:none;background:#000;display:block;cursor:grab;touch-action:none}
+#bridge:active{cursor:grabbing}
+.hint{position:fixed;left:.6rem;bottom:2.2rem;font-size:.68rem;color:#cbd5e1;background:#0008;padding:.15rem .4rem;border-radius:6px;line-height:1.3;pointer-events:none;z-index:5}
+@media(max-width:700px){.hint{display:none}}
+.hid{display:none!important}
+.dock{position:fixed;top:96px;bottom:68px;display:flex;flex-direction:column;gap:.55rem;overflow-y:auto;overflow-x:hidden;pointer-events:none;scrollbar-width:none;z-index:10}
+.dock::-webkit-scrollbar{display:none}
+.dock>*{pointer-events:auto;flex:none}
+#dockL{left:.6rem;width:min(310px,46vw)}
+#dockR{right:.6rem;align-items:flex-end}
+:root{--pa:.86}
+.box{background:rgba(14,21,40,var(--pa));backdrop-filter:blur(calc(var(--pa) * 6px));-webkit-backdrop-filter:blur(calc(var(--pa) * 6px));border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.6rem;width:100%}
+.box h2{display:flex;align-items:center;gap:.4rem;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem;font-weight:600}
+.box h2 .sp{flex:1}
+.box h2 kbd,#bar kbd,.help kbd{background:#1e293b;border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:0 .3rem;font:600 .68rem Inter,sans-serif;color:var(--text)}
+.x{background:none;border:0;color:var(--muted);font-size:1.1rem;line-height:1;cursor:pointer;padding:0 .2rem}
+.x:hover{color:#fff}
+#pRadar{width:clamp(250px,min(44vh,34vw),470px)}
+#pTgt{width:min(340px,46vw)}
+#pHelp{background:rgba(14,21,40,min(1,calc(var(--pa) + .1)))}
+#radar{max-height:none;max-width:none;box-shadow:none;width:100%;height:auto;aspect-ratio:1;display:block;border-radius:50%;background:#020b06;cursor:crosshair}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:.4rem .5rem;margin-top:.5rem;font-size:.74rem;color:var(--muted)}
+.ctl label{display:grid;gap:.15rem}
+select,input[type=number],input[type=range]{width:100%;background:#0b1327;color:var(--text);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:.25rem .35rem;font:inherit;font-size:.8rem}
+input[type=range]{padding:0}
+.chk{display:flex!important;align-items:center;gap:.4rem;grid-template-columns:none}
+.chk input{width:auto}
+.hud{display:flex;gap:1rem;flex-wrap:wrap;font-variant-numeric:tabular-nums;margin-bottom:.4rem}
+.hud b{display:block;font-size:1.2rem;color:#e2f3ff}
+.hud span{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.btns{display:flex;flex-wrap:wrap;gap:.3rem;margin:.25rem 0}
+.b{display:inline-block;text-decoration:none;background:#1e293b;color:var(--text);border:1px solid rgba(255,255,255,.12);border-radius:7px;padding:.3rem .55rem;font:600 .78rem Inter,sans-serif;cursor:pointer;white-space:nowrap}
+.b:hover{border-color:var(--accent)}
+.b.on{background:var(--accent);border-color:var(--accent)}
+.b.red{background:#7f1d1d}
+.rudBox{margin:.1rem 0 .35rem}
+.rudT{display:flex;justify-content:space-between;align-items:baseline;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem}
+.rudT b{font-size:.82rem;letter-spacing:0;color:#e2f3ff;font-variant-numeric:tabular-nums}
+.rudBar{position:relative;display:flex;height:20px;background:#0b1327;border:1px solid rgba(255,255,255,.14);border-radius:6px;overflow:hidden}
+.rudHalf{position:relative;flex:1;display:flex}
+.rudHalf.p{justify-content:flex-end}
+.rudHalf i{display:block;height:100%;width:0}
+.rudHalf.p i{background:linear-gradient(270deg,#ef4444,#b91c1c)}
+.rudHalf.s i{background:linear-gradient(90deg,#22c55e,#15803d)}
+.rudTick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.28);pointer-events:none}
+.rudTick.c{background:#e2f3ff;width:2px;margin-left:-1px}
+.rudOrd{position:absolute;top:-1px;bottom:-1px;width:3px;margin-left:-1.5px;background:#fbbf24;box-shadow:0 0 5px rgba(251,191,36,.9);pointer-events:none;display:none}
+.rudLab{position:relative;height:.8rem;font-size:.56rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.rudLab span{position:absolute;transform:translateX(-50%)}
+.rb{flex:1;padding:.3rem .1rem;text-align:center;min-width:0}
+.rb.p{border-color:rgba(239,68,68,.55)}.rb.s{border-color:rgba(34,197,94,.55)}.rb.m{border-color:rgba(226,243,255,.5)}
+.rb.p:hover{background:#7f1d1d}.rb.s:hover{background:#14532d}
+.row2{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;font-size:.76rem;color:var(--muted)}
+.row2 input[type=number]{width:70px}
+table{width:100%;border-collapse:collapse;font-size:.74rem;font-variant-numeric:tabular-nums}
+th{color:var(--muted);font-weight:600;text-align:right;padding:.2rem .3rem;border-bottom:1px solid rgba(255,255,255,.1)}
+td{text-align:right;padding:.22rem .3rem;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer}
+th:first-child,td:first-child{text-align:left}
+tr.sel td{background:rgba(59,130,246,.22)}
+tr.danger td{color:#fca5a5}
+td.role{text-align:left;font-size:.7rem}
+.pt{color:#f87171;font-weight:600}.sb{color:#4ade80;font-weight:600}
+#tinfo{font-size:.8rem;line-height:1.45}
+#tinfo .k{color:var(--muted)}
+#tinfo .rule{margin-top:.4rem;padding:.4rem .5rem;border-radius:8px;background:#0b1327;border-left:3px solid var(--accent);font-size:.76rem}
+#log{font-size:.72rem;height:9rem;overflow:auto;line-height:1.4;color:#cbd5e1}
+#log div{border-bottom:1px solid rgba(255,255,255,.04);padding:.1rem 0}
+#log .w{color:#fca5a5}#log .s{color:#fde68a}
+#overlay{position:fixed;inset:0;display:none;place-items:center;background:#000a;color:#fff;text-align:center;line-height:1.4;z-index:9000}
+#overlay.show{display:grid}
+#overlay div{background:#7f1d1d;border:2px solid #fca5a5;border-radius:14px;padding:1rem 1.5rem}
+#bar{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;max-width:96vw;padding:.3rem;background:rgba(8,12,20,.82);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:12px;z-index:5000}
+#bar .b{display:inline-flex;align-items:center;gap:.35rem}
+#bar .sep{width:1px;background:rgba(255,255,255,.15);margin:0 .15rem}
+#bar #centre{background:#166534;border-color:#22c55e}
+.help{font-size:.78rem;color:var(--muted);line-height:1.65}
+.help p{color:var(--muted);margin:.35rem 0}
+#barShow{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:5000}
+#rinfo{margin-top:.5rem;display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem;font:600 .74rem Inter,sans-serif;font-variant-numeric:tabular-nums;color:#6ee7b7}
+#rinfo .h{color:#f8fafc}#rinfo .lk{color:#38bdf8}
+/* ECPINS */
+.ecp{display:grid;grid-template-columns:380px 1fr;gap:.7rem}
+.ecpL{min-width:0}
+#ecp{width:100%;height:auto;aspect-ratio:1;display:block;border-radius:6px;background:#071426;border:1px solid rgba(125,211,252,.25);cursor:grab;touch-action:none}
+.ecpR{position:relative;min-width:0}
+.ecpR .in{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding-right:.3rem}
+#eOwn{margin-top:.5rem;min-height:2.6rem;display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem;font:600 .72rem Inter,sans-serif;font-variant-numeric:tabular-nums;color:#7dd3fc}
+#eOwn .h{color:#f8fafc}
+#eHead{font-size:.8rem;margin-bottom:.4rem;min-height:1.4rem}
+#eInt{width:100%;display:flex;justify-content:center;align-items:center;gap:.4rem;background:#0e7490;border-color:#22d3ee}
+#eInt:disabled{opacity:.55;cursor:default;background:#1e293b;border-color:rgba(255,255,255,.12)}
+#eInt kbd{background:#0b1327;border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:0 .3rem;font:600 .68rem Inter,sans-serif;color:var(--text)}
+.ecpR .k{color:var(--muted)}
+.ecpR .er{display:flex;justify-content:space-between;gap:.6rem;font-size:.72rem;line-height:1.4;border-bottom:1px solid rgba(255,255,255,.04);font-variant-numeric:tabular-nums}
+.ecpR .er .k{white-space:nowrap}
+.ecpR .er .v{text-align:right}
+.ecpR .sh{margin:.5rem 0 .15rem;font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;color:#7dd3fc;font-weight:600}
+.ecpR .sh .k{text-transform:none;letter-spacing:0;font-weight:400}
+.ecpR .bad{color:#f87171;font-weight:700}
+.ecpR .hi{color:#e2f3ff;font-weight:700}
+.ecpR .note{font-size:.74rem;color:var(--muted);line-height:1.45;margin-top:.5rem;padding:.4rem .5rem;border-radius:8px;background:#0b1327;border-left:3px solid #7dd3fc}
+/* floating windows */
+.win{position:fixed;display:flex;flex-direction:column;padding:0;overflow:hidden;max-height:none;transform:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.win>h2{padding:.5rem 1.4rem .4rem .6rem;margin:0;cursor:move;user-select:none;-webkit-user-select:none;touch-action:none;flex:none;border-bottom:1px solid rgba(255,255,255,.06)}
+.win>h2:hover{color:#e5e7eb}
+.wrap{position:relative;flex:1;min-height:0;margin:.5rem 10px 10px;overflow:hidden}
+.wc{position:absolute;left:0;top:0;transform-origin:0 0}
+.wc.fl{display:flex;flex-direction:column;overflow:auto}
+.wc.fl #log{height:auto;flex:1;min-height:0}
+.sc{flex:1;min-height:0;overflow:auto}
+.rz{position:absolute;width:12px;height:12px;z-index:5;touch-action:none}
+.rz[data-c=nw]{left:0;top:0;cursor:nwse-resize}.rz[data-c=se]{right:0;bottom:0;cursor:nwse-resize;width:16px;height:16px}
+.rz[data-c=ne]{right:0;top:0;cursor:nesw-resize}.rz[data-c=sw]{left:0;bottom:0;cursor:nesw-resize}
+.rz[data-c=se]::after{content:'';position:absolute;right:3px;bottom:3px;width:7px;height:7px;border-right:2px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(255,255,255,.4)}
+/* ECPINS CPA warnings */
+@keyframes almFlash{0%,49%{background:#b91c1c;border-color:#fca5a5}50%,100%{background:#1e293b;border-color:rgba(255,255,255,.12)}}
+.b.alarm{animation:almFlash .9s infinite;color:#fff}
+.b .cnt{display:inline-block;min-width:1.1rem;text-align:center;background:#fca5a5;color:#450a0a;border-radius:9px;padding:0 .3rem;font-size:.68rem}
+#wLim{font-size:.68rem;color:var(--muted);margin-bottom:.4rem}
+#wList{min-height:170px}
+.wc.fl #wList{flex:1;min-height:170px;overflow:auto}
+.wrow{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem .5rem;margin-bottom:.35rem;border-radius:8px;background:#0b1327;border-left:3px solid #f87171;font-size:.74rem;cursor:pointer}
+.wrow.ack{border-left-color:#fbbf24}
+.wrow .t{font-weight:700;color:#f8fafc;font-size:.85rem}
+.wrow .d{color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.4}
+.wrow .st{color:#fbbf24}
+.wrow .b{flex:none}
+.wrow .b.red{background:#b91c1c;border-color:#fca5a5;color:#fff;animation:almFlash .9s infinite}
+.wrow .okk{flex:none;color:#86efac;font-weight:600;font-size:.72rem}
+#wEmpty{color:var(--muted);font-size:.76rem;padding:.3rem .1rem}
+
+/* ================= phone / tablet layout (html.mobile only – desktop is untouched) ================= */
+#mbar,#mMenu,#qh,#selChip{display:none}
+.mobOnly{display:none}
+html.mobile{--mbh:62px;--sab:env(safe-area-inset-bottom,0px);--sat:env(safe-area-inset-top,0px);font-size:112.5%}
+html.mobile #bar,html.mobile #barShow,html.mobile .hint{display:none!important}
+html.mobile .mobOnly{display:block}
+html.mobile #bridge{-webkit-touch-callout:none}
+html.mobile .b,html.mobile select,html.mobile input[type=number]{min-height:44px;font-size:.95rem;touch-action:manipulation}
+html.mobile .b{padding:.4rem .85rem}
+html.mobile input[type=range]{height:36px}
+html.mobile input[type=checkbox]{width:24px;height:24px}
+html.mobile .chk{min-height:42px}
+html.mobile .ctl{grid-template-columns:repeat(2,1fr);gap:.7rem .8rem;font-size:.8rem}
+html.mobile .btns{gap:.4rem;margin:.4rem 0}
+html.mobile #helm,html.mobile #horn{display:grid;grid-template-columns:repeat(3,1fr)}
+html.mobile #eng{display:grid;grid-template-columns:repeat(5,1fr)}
+html.mobile #eng .b{padding:.4rem .1rem}
+html.mobile #rud{flex-wrap:wrap!important}
+html.mobile #rud .b{flex:1 1 17%;padding:.4rem .2rem}
+html.mobile .hud b{font-size:1.5rem}
+html.mobile .x{font-size:1.9rem;min-width:48px;min-height:48px}
+html.mobile .win>h2 kbd{display:none}
+html.mobile .win>h2{cursor:default;touch-action:auto;padding:.2rem .3rem .2rem 1rem;min-height:50px;font-size:.88rem}
+/* panels become one-at-a-time sheets */
+html.mobile .win{left:max(0px,calc(50% - 330px))!important;right:auto!important;top:auto!important;bottom:calc(var(--mbh) + var(--sab))!important;width:min(100%,660px)!important;height:auto!important;max-height:72dvh;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.55);z-index:4000!important;background:rgba(14,21,40,.97)}
+html.mobile .wrap{position:relative;flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;margin:.3rem .9rem .9rem}
+html.mobile .wc,html.mobile .wc.fl{position:static!important;display:block!important;width:100%!important;height:auto!important;transform:none!important}
+html.mobile .wc.fl #log{height:auto;max-height:none}
+html.mobile .sc{overflow-x:auto}
+html.mobile .rz{display:none!important}
+html.mobile #radar,html.mobile #ecp{width:min(100%,56dvh);margin:0 auto}
+html.mobile .ecp{grid-template-columns:1fr}
+html.mobile .ecpR{position:static}
+html.mobile .ecpR .in{position:static;inset:auto;overflow:visible;padding:0}
+html.mobile #eInt{margin-top:.5rem;min-height:48px}
+html.mobile #eInt kbd{display:none}
+html.mobile .wrow{padding:.6rem .7rem;font-size:.82rem}
+html.mobile .wrow .b{min-width:130px}
+@media (orientation:landscape){
+ html.mobile .win{left:auto!important;right:0!important;top:var(--sat)!important;bottom:calc(var(--mbh) + var(--sab))!important;width:min(58vw,560px)!important;max-height:none;border-radius:18px 0 0 18px;box-shadow:-8px 0 30px rgba(0,0,0,.55)}
+ html.mobile{--mbh:54px}
+ html.mobile #radar,html.mobile #ecp{width:min(100%,78dvh)}
+}
+/* bottom tab bar */
+html.mobile #mbar{display:flex;position:fixed;left:0;right:0;bottom:0;height:calc(var(--mbh) + var(--sab));padding-bottom:var(--sab);background:#080c14;border-top:1px solid rgba(255,255,255,.16);z-index:5000}
+#mbar button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:0;border-top:3px solid transparent;color:#cbd5e1;font:600 .66rem Inter,sans-serif;position:relative;touch-action:manipulation;cursor:pointer}
+#mbar button i{font-style:normal;font-size:1.4rem;line-height:1}
+#mbar button.on{color:#fff;background:rgba(56,189,248,.14);border-top-color:#38bdf8}
+#mbar button.alarm{animation:almFlash .9s infinite;color:#fff}
+#mbar .cnt{position:absolute;top:3px;left:calc(50% + 8px);min-width:1.1rem;text-align:center;background:#fca5a5;color:#450a0a;border-radius:9px;padding:0 .3rem;font:700 .68rem Inter,sans-serif;font-style:normal}
+html.mobile #mMenu{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;position:fixed;right:.6rem;bottom:calc(var(--mbh) + var(--sab) + .5rem);width:min(360px,calc(100vw - 1.2rem));padding:.6rem;background:rgba(14,21,40,.98);border:1px solid rgba(255,255,255,.16);border-radius:16px;z-index:6000;box-shadow:0 10px 30px rgba(0,0,0,.55)}
+html.mobile #mMenu.hid{display:none!important}
+#mMenu button,#mMenu a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:68px;background:#1e293b;color:var(--text);border:1px solid rgba(255,255,255,.12);border-radius:12px;font:600 .72rem Inter,sans-serif;text-decoration:none;cursor:pointer;touch-action:manipulation}
+#mMenu i{font-style:normal;font-size:1.4rem;line-height:1}
+/* quick steering strip */
+html.mobile #qh{display:flex;position:fixed;left:.5rem;right:.5rem;bottom:calc(var(--mbh) + var(--sab) + .5rem);gap:.3rem;align-items:stretch;z-index:90;padding:.3rem;background:rgba(8,12,20,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:14px}
+html.mobile.sheet #qh{display:none}
+#qh button{flex:1 1 0;min-width:0;min-height:50px;font:700 .85rem Inter,sans-serif;background:#1e293b;color:var(--text);border:1px solid rgba(255,255,255,.14);border-radius:10px;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;cursor:pointer}
+#qh button:active{background:var(--accent)}
+#qh button small{font-size:.55rem;color:var(--muted);font-weight:600;letter-spacing:.05em}
+#qh .qc{flex:1.7 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;line-height:1.15}
+#qh .qc b{font-size:1.2rem;color:#e2f3ff}
+#qh .qc span{font-size:.68rem;color:var(--muted)}
+#qh .qs{width:1px;background:rgba(255,255,255,.18);margin:0 .15rem;flex:none}
+/* selected-target chip */
+html.mobile #selChip{display:block;position:fixed;top:calc(70px + var(--sat));left:50%;transform:translateX(-50%);z-index:90;max-width:calc(100vw - 1rem);background:rgba(8,12,20,.88);border:1px solid rgba(255,255,255,.22);color:var(--text);border-radius:22px;padding:.4rem .95rem;min-height:42px;font:600 .78rem Inter,sans-serif;white-space:nowrap;font-variant-numeric:tabular-nums}
+html.mobile #selChip.bad{border-color:#f87171;color:#fecaca}
+html.mobile.sheet #selChip{display:none}
+</style>
+</head>
+<body>
+<canvas id="bridge" aria-label="Bridge view"></canvas>
+<div class="hint">Drag to look around · wheel to zoom (binoculars) · click a vessel to select</div>
+<div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem;display:block" id="ovTitle">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
+
+<div class="dock" id="dockL">
+  <section class="box" id="pHelm"><h2>Own ship</h2>
+    <div class="hud"><div><b id="hHdg">000°</b><span>Heading</span></div><div><b id="hSpd">12.0</b><span>Speed kn</span></div><div><b id="hRot">0</b><span>ROT °/min</span></div></div>
+    <div class="rudBox"><div class="rudT"><span id="rudMode">Steering</span><b id="rudTxt">MIDSHIPS</b></div>
+      <div class="rudBar" id="rudBar"><div class="rudHalf p"><i id="rudP"></i></div><div class="rudHalf s"><i id="rudS"></i></div>
+        <span class="rudTick" style="left:2.86%"></span><span class="rudTick" style="left:21.4%"></span><span class="rudTick" style="left:35.7%"></span><span class="rudTick" style="left:42.9%"></span><span class="rudTick c" style="left:50%"></span><span class="rudTick" style="left:57.1%"></span><span class="rudTick" style="left:64.3%"></span><span class="rudTick" style="left:78.6%"></span><span class="rudTick" style="left:97.1%"></span>
+        <b class="rudOrd" id="rudOrd"></b></div>
+      <div class="rudLab"><span style="left:2.86%">35</span><span style="left:21.4%">20</span><span style="left:35.7%">10</span><span style="left:50%">0</span><span style="left:64.3%">10</span><span style="left:78.6%">20</span><span style="left:97.1%">35</span></div>
+      <div class="rudT" style="margin:0"><span id="rudOrdT">Order: midships</span><span id="rudErr"></span></div></div>
+    <div class="row2">Steer course <input type="number" id="course" min="0" max="359" value="0"> <button class="b" id="setCourse">Set</button></div>
+    <div class="btns" id="helm"><button class="b" data-dc="-10">◀ 10</button><button class="b" data-dc="-5">◀ 5</button><button class="b" data-dc="-1">◀ 1</button><button class="b" data-dc="1">1 ▶</button><button class="b" data-dc="5">5 ▶</button><button class="b" data-dc="10">10 ▶</button></div>
+    <div class="row2" style="margin-top:.3rem">Rudder orders <span style="margin-left:auto;font-size:.66rem">limit when steering <select id="rudLim" style="width:auto"><option value="10">10°</option><option value="20" selected>20°</option><option value="35">35°</option></select></span></div>
+    <div class="btns" id="rud" style="flex-wrap:nowrap"><button class="b rb p" data-r="-35" title="Hard-a-port (35°)">P35</button><button class="b rb p" data-r="-20" title="Port 20">P20</button><button class="b rb p" data-r="-10" title="Port 10">P10</button><button class="b rb p" data-r="-5" title="Port 5">P5</button><button class="b rb m" data-r="0" title="Midships (M)">Mid</button><button class="b rb s" data-r="5" title="Starboard 5">S5</button><button class="b rb s" data-r="10" title="Starboard 10">S10</button><button class="b rb s" data-r="20" title="Starboard 20">S20</button><button class="b rb s" data-r="35" title="Hard-a-starboard (35°)">S35</button></div>
+    <div class="btns"><button class="b" id="steady" title="Steady on the heading you are now swinging through, using midships and counter rudder">Steady as she goes</button></div>
+    <div class="row2">Speed <span id="cmdSpd">12</span> kn</div>
+    <div class="btns" id="eng"><button class="b" data-ds="-5">−5</button><button class="b" data-ds="-1">−1</button><button class="b" data-ds="1">+1</button><button class="b" data-ds="5">+5</button><button class="b" data-ds="-99">Stop</button></div>
+    <div class="row2" style="margin-top:.3rem">Sound signals</div>
+    <div class="btns" id="horn"><button class="b" data-h="1">1 short</button><button class="b" data-h="2">2 short</button><button class="b" data-h="3">3 short</button><button class="b red" data-h="5">5 short</button><button class="b" data-h="p">1 prolonged</button></div>
+    <div id="tssBox" class="hid" style="margin-top:.45rem;font-size:.72rem;line-height:1.4;padding:.35rem .5rem;border-radius:8px;background:#0b1327;border-left:3px solid #c026d3"></div>
+  </section>
+  <section class="box" id="pSim"><h2>Simulation</h2>
+    <div class="ctl" style="margin-top:0">
+      <label style="grid-column:1/-1">Location<select id="loc"></select></label>
+      <label style="grid-column:1/-1">Scenario<select id="scen"></select></label>
+      <label>Time speed<select id="ts"><option>1</option><option>2</option><option>5</option><option selected>10</option><option>20</option><option>30</option><option>60</option></select></label>
+      <label>Lighting<select id="light"><option value="night">Night</option><option value="dusk">Dusk</option><option value="day">Day</option></select></label>
+      <label>Visibility <span id="visv">10 nm</span><input type="range" id="vis" min="0.5" max="10" step="0.5" value="10"></label>
+      <label>View zoom <span id="fovv">70°</span><input type="range" id="fov" min="8" max="110" step="1" value="70"></label>
+      <label>Look <span id="lookv">0°</span><input type="range" id="look" min="-180" max="180" step="1" value="0"></label>
+      <label>Your ship's bow size <span id="deckv">1.0×</span><input type="range" id="deck" min="0.5" max="3" step="0.1" value="1"></label>
+      <label>Panel transparency <span id="transv">14%</span><input type="range" id="trans" min="0" max="100" step="1" value="14"></label>
+      <label class="chk" title="Off = every light in its arc is shown out to the visibility setting"><input type="checkbox" id="rng" checked> Realistic light ranges (Rule 22)</label>
+      <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
+      <label class="chk"><input type="checkbox" id="train" checked> Show rule assessment</label>
+    </div>
+    <div class="btns" style="margin-top:.5rem"><button class="b" id="pause">Pause</button><button class="b" id="restart">Restart</button><button class="b" id="mute">Sound: on</button><button class="b" id="almBtn" title="Enable or disable the ECPINS CPA alarms and the Warnings menu (3)">Alarms: on</button></div>
+    <div class="row2" style="margin-top:.3rem">Close-quarters: <b id="cq">0</b> · Collisions: <b id="col">0</b> · Time <b id="clock">00:00:00</b></div>
+  </section>
+  <section class="box" id="pLog"><h2>Event log</h2><div id="log"></div></section>
+</div>
+
+<div class="dock" id="dockR">
+  <section class="box" id="pRadar"><h2>Radar</h2>
+    <canvas id="radar" aria-label="Radar display"></canvas>
+    <div class="ctl">
+      <label>Range<select id="rrange"><option>3</option><option selected>6</option><option>12</option></select></label>
+      <label>Orientation<select id="orient"><option value="head">Head-up</option><option value="north">North-up</option></select></label>
+      <label>Vectors<select id="vec"><option value="true">True</option><option value="rel">Relative</option><option value="off">Off</option></select></label>
+      <label>Vector length<select id="vecT"><option value="3">3 min</option><option value="6" selected>6 min</option><option value="12">12 min</option></select></label>
+      <label>CPA limit<select id="cpaLim"><option>0.5</option><option selected>1</option><option>2</option></select></label>
+      <label class="chk"><input type="checkbox" id="trails" checked> Trails</label>
+    </div>
+    <div id="rinfo"></div>
+  </section>
+  <section class="box" id="pEcp"><h2>ECPINS</h2>
+    <div class="ecp">
+      <div class="ecpL">
+        <canvas id="ecp" aria-label="ECPINS chart display"></canvas>
+        <div class="ctl">
+          <label>Range nm<select id="eRange"><option>1.5</option><option>3</option><option selected>6</option><option>12</option><option>24</option><option>48</option></select></label>
+          <label>Orientation<select id="eOri"><option value="north">North-up</option><option value="head">Head-up</option></select></label>
+          <label>Vector<select id="eVec"><option value="0">Off</option><option value="3">3 min</option><option value="6" selected>6 min</option><option value="12">12 min</option></select></label>
+          <label>CPA limit nm<select id="eCpa"><option>0.5</option><option selected>1</option><option>2</option></select></label>
+          <label>TCPA limit min<select id="eTcpa"><option>6</option><option>12</option><option selected>20</option></select></label>
+          <label class="chk"><input type="checkbox" id="eTrk" checked> Past tracks</label>
+        </div>
+        <div class="btns" style="margin-top:.4rem"><button class="b" id="eCen" title="Put the ship back in the middle of the chart">⌖ Re-centre</button><button class="b on" id="eFol" title="Chart moves with the ship, keeping the ship where it is on screen">⚓ Snap to ship: on</button></div>
+        <div style="font-size:.64rem;color:var(--muted);margin-top:.1rem">Drag to pan · wheel to zoom · click a target to select</div>
+        <div id="eOwn"></div>
+      </div>
+      <div class="ecpR"><div class="in">
+        <div id="eHead"></div>
+        <button class="b" id="eInt" disabled>Interrogate <kbd>I</kbd></button>
+        <div id="eData"></div>
+      </div></div>
+    </div>
+  </section>
+  <section class="box" id="pWarn"><h2>Warnings</h2>
+    <div id="wLim"></div>
+    <div id="wList"></div>
+  </section>
+  <section class="box" id="pTgt"><h2>Selected target</h2><div id="tinfo">Click a vessel on the radar, bridge or in the list.</div></section>
+  <section class="box" id="pList"><h2>Tracked targets</h2>
+    <table><thead><tr><th>ID</th><th>Brg °T</th><th>Rel</th><th>Rng nm</th><th>Crs °</th><th>Spd kn</th><th>CPA nm</th><th>TCPA min</th><th id="roleH" style="text-align:left">Your role</th></tr></thead><tbody id="tbody"></tbody></table>
+  </section>
+</div>
+
+<section class="box help" id="pHelp"><h2>Controls</h2>
+  <p class="mobOnly"><b>Touch controls:</b> drag the bridge view to look around and <b>pinch</b> to zoom (the bridge view and ECPINS). Tap a vessel to select it; the chip at the top shows its range, CPA and TCPA and opens the full details. Use the bottom bar to open one panel at a time (Helm, Radar, ECPINS, Alarms) and <b>More</b> for settings, targets, the log and pause. The strip above the bar steers (◀10 ◀1 1▶ 10▶ degrees) and changes speed.</p>
+  <p><b>Steering:</b> the ship has a real rudder and a turn that builds and decays. Ordering a <b>course</b> (Set, ◀ ▶ buttons or arrow keys) makes the helmsman put rudder on, ease it, then apply <b>counter rudder</b> to stop the swing on the course. Or give <b>rudder orders</b> yourself (P35…S35, <kbd>,</kbd> <kbd>.</kbd> for 5° port/starboard, <kbd>M</kbd> midships): the rate of turn builds slowly and the ship keeps swinging after you go midships, so you must meet the swing with counter rudder, or press <b>Steady as she goes</b>. The bar shows rudder angle: red to the left is port, green to the right is starboard, and the yellow marker is the ordered angle while the rudder is still moving. Rudder is less effective at low speed.</p>
+  <p><kbd>←</kbd><kbd>→</kbd> steer 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · drag a panel's title bar to move it, drag any corner to resize (contents scale) · <kbd>B</kbd> minimise / show the menu bar · <kbd>F</kbd> full screen</p>
+  <p>Panels: <kbd>R</kbd> radar · <kbd>E</kbd> ECPINS · <kbd>3</kbd> warnings · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
+  <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
+  <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
+  <p><b>ECPINS:</b> a chart-style display of AIS targets (open sea has no chart data; the Channel and Malacca show approximate coastlines, banks, ports and the TSS). <b>Drag</b> the chart to pan, use the <b>wheel</b> to zoom, <b>Re-centre</b> to put your ship in the middle again, and <b>Snap to ship</b> to make the chart move with the ship while keeping it wherever you have placed it on screen (turn it off to hold the chart still). Small hollow triangles are sleeping targets; selecting one activates it, showing its vector, past track and the predicted closest point of approach. Press <b>Interrogate</b> (<kbd>I</kbd>) to request its AIS static and voyage data (name, MMSI, IMO, call sign, ship type, navigational status, size, draught, destination, ETA) alongside its CPA, TCPA, BCR/BCT and bearing at CPA. Flashing red targets break the CPA/TCPA limits. When a target is predicted to pass inside the ECPINS CPA limit (within the TCPA limit) the <b>Warnings</b> panel (<kbd>3</kbd>) opens and an audible alarm beeps until you click <b>Acknowledge</b> for that vessel; each vessel must be acknowledged separately. The <b>Alarms</b> button in the Sim panel (<kbd>S</kbd>) turns the alarms and the Warnings menu on or off. Pausing or turning Sound off silences the beeping, but the warning stays until acknowledged.</p>
+  <p><b>Locations:</b> choose a Location in the Simulation panel (<kbd>S</kbd>). <b>Open sea</b> is the free-roaming sandbox. <b>English Channel</b> is the Dover Strait TSS on an approximate real coastline (SW-bound lane on the English side, NE-bound on the French side, ferries crossing, Goodwin Sands, Dover, Calais…). <b>Strait of Malacca</b> is the strait off Port Dickson / Cape Rachado and Rupat Island, with a dense TSS and deep-draught tankers, tugs with tows, anchored ships, unlit fishing boats and <b>dhows that may not follow the Rules</b> (no or dim lights, no AIS, weak radar echo, erratic courses, failing to give way). Land shows on the bridge horizon, the radar and ECPINS (running aground stops the engine). With rule assessment on, your own Rule 10 status appears under Own ship. Coastlines are approximate, not for navigation.</p>
+  <p>Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and the visibility setting; the radar always sees out to its range.</p>
+</section>
+
+<nav id="bar" aria-label="Panels">
+  <a class="b" href="index.html" title="Back to home">⌂ Home</a>
+  <button class="b" id="centre" title="Look straight ahead along the ship's heading (C)">⌖ Look ahead <kbd>C</kbd></button>
+  <button class="b" id="barPause" title="Pause / resume (Space)">⏯ <kbd>Space</kbd></button>
+  <span class="sep"></span>
+  <button class="b" data-p="radar">Radar <kbd>R</kbd></button>
+  <button class="b" data-p="ecp">ECPINS <kbd>E</kbd></button>
+  <button class="b" data-p="warn" id="barWarn">⚠ Warnings <kbd>3</kbd></button>
+  <button class="b" data-p="helm">Helm <kbd>H</kbd></button>
+  <button class="b" data-p="sim">Sim <kbd>S</kbd></button>
+  <button class="b" data-p="tgt">Target <kbd>T</kbd></button>
+  <button class="b" data-p="list">Targets <kbd>G</kbd></button>
+  <button class="b" data-p="log">Log <kbd>L</kbd></button>
+  <button class="b" data-p="help">Help <kbd>?</kbd></button>
+  <button class="b" id="barFs" title="Full screen (F)">⛶ Full screen <kbd>F</kbd></button>
+  <span class="sep"></span>
+  <button class="b" id="barMin" title="Minimise this bar (B)">▾ <kbd>B</kbd></button>
+</nav>
+<button class="b hid" id="barShow" title="Show the menu bar (B)">▴ Menu <kbd>B</kbd></button>
+
+<div id="selChip" class="hid" role="button" tabindex="0" aria-label="Selected target – tap for details"></div>
+<div id="qh" aria-label="Quick steering">
+  <button data-dc="-10" aria-label="Port 10 degrees">◀10</button><button data-dc="-1" aria-label="Port 1 degree">◀1</button>
+  <div class="qc" id="qC"></div>
+  <button data-dc="1" aria-label="Starboard 1 degree">1▶</button><button data-dc="10" aria-label="Starboard 10 degrees">10▶</button>
+  <span class="qs"></span>
+  <button data-ds="-1" aria-label="Slower"><small>SPD</small>−</button><button data-ds="1" aria-label="Faster"><small>SPD</small>+</button>
+</div>
+<div id="mMenu" class="hid">
+  <button data-m="sim"><i>⚙️</i>Settings</button><button data-m="tgt"><i>🎯</i>Target</button><button data-m="list"><i>📋</i>Targets</button>
+  <button data-m="log"><i>📜</i>Log</button><button data-m="help"><i>❓</i>Help</button><button data-a="pause"><i>⏯</i><span id="mPauseT">Pause</span></button>
+  <button data-a="look"><i>⌖</i>Look ahead</button><button data-a="fs" id="mFs"><i>⛶</i>Full screen</button><a href="index.html"><i>⌂</i>Home</a>
+</div>
+<nav id="mbar" aria-label="Main controls">
+  <button data-m="helm"><i>🧭</i><span>Helm</span></button>
+  <button data-m="radar"><i>📡</i><span>Radar</span></button>
+  <button data-m="ecp"><i>🗺️</i><span>ECPINS</span></button>
+  <button data-m="warn" id="mWarn"><i>⚠️</i><span>Alarms</span></button>
+  <button id="mMore"><i>⋯</i><span>More</span></button>
+</nav>
+
+<script>
+'use strict';
+/* ================= helpers ================= */
+const D2R=Math.PI/180,R2D=180/Math.PI,$=id=>document.getElementById(id);
+const n360=a=>((a%360)+360)%360,n180=a=>{a=n360(a);return a>180?a-360:a};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
+const vec=(h,s)=>({x:Math.sin(h*D2R)*s/60,y:Math.cos(h*D2R)*s/60}); // nm per minute
+const turnTo=(c,t,m)=>{const d=n180(t-c);return Math.abs(d)<=m?n360(t):n360(c+Math.sign(d)*m)};
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const pad=n=>String(n).padStart(2,'0'),hms=s=>pad(Math.floor(s/3600))+':'+pad(Math.floor(s/60)%60)+':'+pad(Math.floor(s%60));
+const f1=v=>v.toFixed(1),f2=v=>v.toFixed(2),b3=v=>pad(Math.round(n360(v))%360).padStart(3,'0');
+const isMob=()=>document.documentElement.classList.contains('mobile'); // set in <head> for touch devices
+try{window.matchMedia('(pointer:coarse)').addEventListener('change',()=>{const u=new URLSearchParams(location.search).get('ui');if(!u)location.reload()})}catch(_){}
+
+/* ================= vessel types ================= */
+// s = metres forward of centre, x = metres to starboard, z = height above waterline
+const TYPES={
+ pdS:{name:'Power-driven vessel (under 50 m)',cat:'power',kind:'pd',L:38,B:9,fb:2.5,hull:'#33485e',rot:.6,
+  boxes:[{a0:.1,a1:.5,w:.7,h:4.5,c:'#e5e7eb'},{a0:.2,a1:.38,w:.4,h:3,b:4.5,c:'#cbd5e1'}],masts:[{a:.3,top:12}],zm:11,zs:6,zt:4},
+ pdL:{name:'Power-driven vessel (50 m or more)',cat:'power',kind:'pd',L:150,B:24,fb:8,hull:'#8b2e2e',rot:.25,
+  boxes:[{a0:.03,a1:.2,w:.85,h:20,c:'#f1f5f9'},{a0:.32,a1:.55,w:.95,h:7,c:'#2b6cb0'},{a0:.57,a1:.82,w:.95,h:7,c:'#c2410c'}],masts:[{a:.8,top:19},{a:.1,top:31}],zm:19,za:30,zs:14,zt:10},
+ tow:{name:'Vessel towing',cat:'power',kind:'tow',L:32,B:9,fb:2.2,hull:'#7c2d12',rot:.5,
+  boxes:[{a0:.15,a1:.55,w:.7,h:5,c:'#fde68a'}],masts:[{a:.4,top:14}],zm:11,zs:5,zt:4.5},
+ sail:{name:'Sailing vessel',cat:'sail',kind:'sail',L:15,B:4.2,fb:1,hull:'#f1f5f9',rot:1,
+  boxes:[{a0:.35,a1:.62,w:.6,h:1,c:'#cbd5e1'}],masts:[{a:.45,top:20}],zm:2,zs:2,zt:2},
+ trawl:{name:'Fishing vessel – trawling',cat:'fish',kind:'trawl',L:42,B:9,fb:3,hull:'#0f766e',rot:.5,
+  boxes:[{a0:.62,a1:.84,w:.7,h:5,c:'#f8fafc'},{a0:.04,a1:.14,w:.9,h:7,c:'#e2e8f0'}],masts:[{a:.7,top:17}],zm:17,zs:6,zt:5},
+ fish:{name:'Fishing vessel – other than trawling',cat:'fish',kind:'fish',L:30,B:7.5,fb:2.5,hull:'#b45309',rot:.55,
+  boxes:[{a0:.6,a1:.85,w:.7,h:4.5,c:'#f8fafc'}],masts:[{a:.7,top:15}],zm:14,zs:5,zt:4},
+ ram:{name:'Vessel restricted in her ability to manoeuvre',cat:'ram',kind:'ram',L:90,B:18,fb:5,hull:'#374151',rot:.25,
+  boxes:[{a0:.35,a1:.5,w:.8,h:10,c:'#e2e8f0'},{a0:.6,a1:.9,w:.3,h:14,c:'#ca8a04'}],masts:[{a:.43,top:28}],zm:17,za:22,zs:9,zt:7},
+ nuc:{name:'Vessel not under command',cat:'nuc',kind:'nuc',L:70,B:12,fb:4,hull:'#6b7280',rot:.3,
+  boxes:[{a0:.1,a1:.3,w:.8,h:8,c:'#e5e7eb'}],masts:[{a:.5,top:20}],zm:14,zs:7,zt:6},
+ cbd:{name:'Vessel constrained by her draught',cat:'cbd',kind:'cbd',L:190,B:32,fb:6,hull:'#1f2937',rot:.18,
+  boxes:[{a0:.03,a1:.16,w:.8,h:19,c:'#e5e7eb'},{a0:.3,a1:.78,w:.5,h:1.5,c:'#475569'}],masts:[{a:.8,top:30}],zm:17,za:26,zs:12,zt:9},
+ pilot:{name:'Pilot vessel on duty',cat:'power',kind:'pilot',L:18,B:5,fb:1.6,hull:'#f97316',rot:.9,
+  boxes:[{a0:.25,a1:.6,w:.7,h:2.6,c:'#fff7ed'}],masts:[{a:.45,top:10}],zm:7,zs:3.5,zt:3},
+ ferry:{name:'Passenger / Ro-Ro ferry',cat:'power',kind:'pd',L:140,B:26,fb:8,hull:'#e2e8f0',rot:.3,
+  boxes:[{a0:.08,a1:.72,w:.9,h:9,c:'#f8fafc'},{a0:.2,a1:.55,w:.7,h:7,b:9,c:'#2b6cb0'},{a0:.12,a1:.2,w:.8,h:5,b:16,c:'#f1f5f9'}],masts:[{a:.8,top:28},{a:.12,top:34}],zm:28,za:34,zs:14,zt:10},
+ dhow:{name:'Dhow (traditional wooden vessel)',cat:'sail',kind:'dhow',L:24,B:6,fb:1.8,hull:'#7c5a35',rot:.8,
+  boxes:[{a0:.05,a1:.28,w:.6,h:2,c:'#a16207'}],masts:[{a:.42,top:15}],zm:4.5,zs:2.5,zt:2.8}
+};
+const RANK={nuc:1,ram:2,cbd:2.5,fish:3,sail:4,power:5,anch:0};
+
+function lightsFor(t){
+ const sp=TYPES[t.type],L=sp.L,B=sp.B,big=L>=50,o=[];
+ const add=(c,k,s,z,x=0,way=false,r)=>o.push({c,k,s,z,x,way,r});
+ if(t.anch){add('white','all',.38*L,sp.zm,0);if(big)add('white','all',-.38*L,sp.zm-5,0);return o}
+ if(t.lightMode==='none')return[];
+ if(t.lightMode==='dim'){add('white','all',0,sp.zm||2,0,false,1.2);return o}
+ const sides=(s,z,way)=>{add('green','sbd',s,z,B*.42,way);add('red','prt',s,z,-B*.42,way)};
+ const stern=(z,way,s=-L/2+1)=>add('white','stern',s,z,0,way);
+ const pd=(way)=>{
+  if(big){add('white','mast',.3*L,sp.zm,0,way);add('white','mast',-.4*L,sp.za||sp.zm+9,0,way)}
+  else add('white','mast',-.2*L,sp.zm,0,way);
+  sides(big?-.3*L:.2*L,sp.zs,way);stern(sp.zt,way);
+ };
+ switch(sp.kind){
+  case 'pd':pd(false);break;
+  case 'pilot':add('white','all',-.05*L,sp.zm+2);add('red','all',-.05*L,sp.zm);pd(false);break;
+  case 'sail':sides(.3*L,sp.zs);stern(sp.zt);break;
+  case 'dhow':if(t.motor)pd(false);else{sides(.2*L,sp.zs);stern(sp.zt)}break;
+  case 'tow':{
+   const n=t.longTow?3:2;for(let i=0;i<n;i++)add('white','mast',-.1*L,sp.zm+i*2.2);
+   sides(.2*L,sp.zs);stern(sp.zt);add('yellow','stern',-L/2+1,sp.zt+2.5);
+   const e=t.towLen,s1=-L/2-25,s2=s1-e;           // towed vessel lights
+   add('green','sbd',s1,2.5,3);add('red','prt',s1,2.5,-3);add('green','sbd',s2+3,2.5,3);add('red','prt',s2+3,2.5,-3);add('white','stern',s2+1,2.2);
+   break}
+  case 'trawl':add('green','all',.2*L,sp.zm-3);add('white','all',.2*L,sp.zm-5);add('white','mast',-.2*L,sp.zm,0,true);sides(.35*L,sp.zs,true);stern(sp.zt,true);break;
+  case 'fish':add('red','all',.2*L,sp.zm-3);add('white','all',.2*L,sp.zm-5);sides(.35*L,sp.zs,true);stern(sp.zt,true);break;
+  case 'ram':add('red','all',-.07*L,sp.za+5);add('white','all',-.07*L,sp.za+2);add('red','all',-.07*L,sp.za-1);
+   add('white','mast',.3*L,sp.zm-6,0,true);add('white','mast',-.3*L,sp.zm,0,true);sides(.1*L,sp.zs,true);stern(sp.zt,true);break;
+  case 'nuc':add('red','all',0,sp.zm+3);add('red','all',0,sp.zm);sides(.3*L,sp.zs,true);stern(sp.zt,true);break;
+  case 'cbd':add('red','all',.3*L,sp.za+6);add('red','all',.3*L,sp.za+3);add('red','all',.3*L,sp.za);pd(false);break;
+ }
+ return o;
+}
+function shapesFor(t){
+ const sp=TYPES[t.type],L=sp.L;
+ if(t.anch)return[{sh:'ball',s:.38*L,z:sp.zm,d:1}];
+ switch(sp.kind){
+  case 'nuc':return[{sh:'ball',s:0,z:sp.zm+3,d:1},{sh:'ball',s:0,z:sp.zm,d:1}];
+  case 'ram':return[{sh:'ball',s:-.07*L,z:sp.za+5,d:1},{sh:'diamond',s:-.07*L,z:sp.za+2,d:1},{sh:'ball',s:-.07*L,z:sp.za-1,d:1}];
+  case 'cbd':return[{sh:'cyl',s:.3*L,z:sp.za+3,d:1}];
+  case 'trawl':case 'fish':return[{sh:'basket',s:.2*L,z:sp.zm-2,d:1}];
+  case 'tow':return t.longTow?[{sh:'diamond',s:-.1*L,z:sp.zm+4,d:1}]:[];
+ }
+ return[];
+}
+const catOf=t=>t.anch?'anch':t.type==='dhow'?(t.motor?'power':'sail'):TYPES[t.type].cat;
+const nameOf=t=>t.anch?TYPES[t.type].name+' – at anchor':t.type==='dhow'?TYPES.dhow.name+(t.motor?(t.sailUp?' – motor-sailing (power-driven)':' – under engine (power-driven)'):' – under sail only'):TYPES[t.type].name+(t.type==='tow'&&t.longTow?' (tow over 200 m)':'');
+
+/* ================= state ================= */
+const own={x:0,y:0,hdg:0,spd:12,cmdHdg:0,cmdSpd:12,rot:0,L:120,rud:0,rudCmd:0,r:0,mode:'steer',rudLim:20};
+/* ---- steering gear & turning ----
+   rudder slews at 2.3°/s (35° in about 15 s). The ship's turn rate r follows the rudder through a first-order
+   (Nomoto) lag, so a rudder angle gives a steady rate of turn only after a delay, and the ship keeps swinging
+   after the rudder is centred. To stop a turn you must centre the rudder and then apply counter rudder. */
+const RUD_MAX=35,RUD_RATE=2.3;
+const steerTo=h=>{own.cmdHdg=n360(h);own.mode='steer'};
+function setRudder(a){if(own.aground)return;own.mode='manual';own.rudCmd=clamp(Math.round(a),-RUD_MAX,RUD_MAX)}
+function stepHelm(dt){
+ const sf=clamp(own.spd/12,0,1.5),Ke=.025*sf,T=Math.min(40,20/Math.max(sf,.5));
+ let rc=own.rudCmd;
+ if(own.mode==='steer'){
+  // helmsman: put the rudder on for the turn, ease it as the rate builds, and counter it to stop the swing on the ordered course
+  const e=n180(own.cmdHdg-own.hdg),lim=own.rudLim;
+  if(Ke<.003)rc=0;
+  else if(Math.abs(e)<.15&&Math.abs(own.r)<.004)rc=0;
+  else{const rlim=Ke*lim,rd=clamp(e*.05,-rlim,rlim);rc=clamp((rd+5*(rd-own.r))/Ke,-lim,lim)}
+  own.rudCmd=rc;
+ }
+ own.rud+=clamp(rc-own.rud,-RUD_RATE*dt,RUD_RATE*dt);
+ own.r+=(Ke*own.rud-own.r)*Math.min(1,dt/T);
+ own.hdg=n360(own.hdg+own.r*dt);own.rot=own.r*60;
+}
+const rudTxt=a=>{const r=Math.round(Math.abs(a));return r<1?'MIDSHIPS':(a<0?'PORT ':'STBD ')+r+'°'};
+let targets=[],nextId=1,simT=0,paused=false,collisions=0,closeQ=0,sel=null,lastSpawn=0,logLines=[];
+const view={off:0,fov:70};
+const cfg={light:'night',vis:10,training:true};
+const RISK_CPA=1.0;
+let curLoc='sea',curS=null,tss=null,ownTssKey=null,LAND=null;
+
+const SCEN={
+ mixed:{label:'Mixed traffic (continuous)',start:['cross_stbd','cross_port','overtaking_us','sail','trawl'],cont:true},
+ xgive:{label:'Crossing – you are give-way (target on your starboard)',start:['cross_stbd'],cont:false},
+ xstand:{label:'Crossing – you are stand-on (target on your port)',start:['cross_port'],cont:false},
+ xfail:{label:'Crossing – give-way vessel fails to act',start:['cross_port_fail'],cont:false},
+ head:{label:'Head-on situation (Rule 14)',start:['head_on'],cont:false},
+ overtaken:{label:'Being overtaken (you stand on)',start:['overtaking_us'],cont:false},
+ overtake:{label:'You overtake a slower vessel (you give way)',start:['overtake_them'],cont:false},
+ sail:{label:'Sailing vessels & fishing vessels (Rule 18)',start:['sail','sail','trawl','fish'],cont:false},
+ restricted:{label:'Restricted vessels: RAM, NUC, CBD, anchored',start:['ram','nuc','cbd','anch','anch'],cont:false},
+ towing:{label:'Towing vessels & pilot vessel',start:['tow','tow_long','pilot'],cont:false},
+ busy:{label:'Busy waters (everything)',start:['cross_stbd','cross_port','head_on','overtaking_us','sail','trawl','cbd','anch','tow'],cont:true}
+};
+const KINDS=[['cross_stbd',3],['cross_port',3],['head_on',1.2],['overtaking_us',1],['overtake_them',1],['sail',1.6],['trawl',1],['fish',.6],['ram',.6],['nuc',.3],['cbd',.7],['anch',.6],['tow',1],['pilot',.7]];
+const LOCS={
+ sea:{label:'Open sea',geo:{lat:50,lon:-1},tss:null},
+ channel:{label:'English Channel – Dover Strait (TSS)',geo:{lat:51.0,lon:1.47},
+  tss:{name:'Dover Strait TSS (approx.)',ax:50,z:1.0,w:2.5,len:45,along0:8,crossStart:4.5,inshore:4,laneNames:{F:'NE-bound',R:'SW-bound'}},
+  land:[
+   {name:'England',h:45,pts:[[50.77,-1.10],[50.72,-0.79],[50.78,-0.67],[50.80,-0.54],[50.81,-0.37],[50.82,-0.14],[50.78,0.06],[50.76,0.12],[50.735,0.25],[50.765,0.29],[50.84,0.47],[50.855,0.58],[50.87,0.66],[50.93,0.80],[50.91,0.98],[51.03,1.00],[51.06,1.09],[51.08,1.19],[51.10,1.25],[51.12,1.32],[51.14,1.37],[51.22,1.41],[51.29,1.41],[51.33,1.39],[51.33,1.43],[51.36,1.45],[51.375,1.445],[51.39,1.38],[51.38,1.30],[51.38,1.20],[51.375,1.12],[51.365,1.03],[51.45,0.85],[51.50,0.75],[52.30,0.75],[52.30,-1.10]]},
+   {name:'France / Belgium',h:40,pts:[[49.30,-1.00],[49.36,-0.20],[49.45,0.05],[49.51,0.07],[49.71,0.20],[49.77,0.36],[49.87,0.71],[49.93,1.08],[50.07,1.37],[50.11,1.45],[50.21,1.57],[50.23,1.62],[50.40,1.55],[50.52,1.58],[50.64,1.57],[50.73,1.59],[50.80,1.58],[50.87,1.58],[50.89,1.66],[50.93,1.71],[50.95,1.77],[50.97,1.85],[51.00,2.10],[51.05,2.37],[51.08,2.52],[51.10,2.58],[51.12,2.65],[51.15,2.73],[51.23,2.92],[51.31,3.13],[51.34,3.20],[51.37,3.30],[51.38,3.38],[51.40,3.55],[51.44,3.58],[51.70,3.70],[51.70,4.30],[49.20,4.30]]}
+  ],
+  banks:[
+   {name:'GOODWIN SANDS',pts:[[51.15,1.50],[51.18,1.57],[51.27,1.61],[51.32,1.58],[51.30,1.53],[51.22,1.50]]},
+   {name:'VARNE',pts:[[50.95,1.29],[50.99,1.37],[51.02,1.43],[51.01,1.45],[50.97,1.38],[50.93,1.30]]},
+   {name:'SANDETTIE BANK',pts:[[51.10,1.70],[51.20,1.88],[51.25,1.95],[51.22,1.97],[51.12,1.80]]}
+  ],
+  places:[['DOVER',51.12,1.32,'port'],['FOLKESTONE',51.08,1.19,'port'],['RAMSGATE',51.33,1.42,'port'],['CALAIS',50.97,1.85,'port'],['BOULOGNE',50.73,1.59,'port'],['DUNKERQUE',51.05,2.37,'port'],['OOSTENDE',51.23,2.92,'port'],['DIEPPE',49.93,1.08,'port'],['HASTINGS',50.855,0.58,'town'],['LE TOUQUET',50.52,1.59,'town'],['DUNGENESS',50.91,0.98,'light'],['S. FORELAND',51.14,1.37,'light'],['N. FORELAND',51.375,1.445,'light'],['CAP GRIS-NEZ',50.87,1.58,'light'],['ENGLAND',51.15,0.70,'region'],['FRANCE',50.35,1.95,'region'],['BELGIUM',51.00,3.20,'region']],
+  lane:[['pdL',6],['pdS',3],['cbd',.6],['tow',.6]],
+  kinds:[['ln_any',9],['ferry_x',2.6],['sail_x',1.2],['fish_lane',.7],['tow_lane',.6],['pilot',.4],['anch_out',.4],['ln_wrong',.12]],
+  max:11,p:.6,
+  ferryDest:['DOVER','CALAIS','DUNKERQUE'],ferryNames:['CHANNEL SPIRIT','SEAWAYS EXPRESS','COTE OPALE','WHITE CLIFFS','NORTHERN LINK'],
+  lports:['DOVER','FOLKESTONE','CALAIS','RAMSGATE','BOULOGNE','DIEPPE','NEWHAVEN','DUNKERQUE']},
+ malacca:{label:'Strait of Malacca – off Cape Rachado (TSS)',geo:{lat:2.45,lon:101.50},
+  tss:{name:'Malacca Strait TSS (approx.)',ax:315,z:.5,w:2,len:45,along0:15,crossStart:4,inshore:6,laneNames:{F:'NW-bound',R:'SE-bound'}},
+  land:[
+   {name:'Malaysia',h:24,pts:[[4.30,100.60],[3.85,100.70],[3.70,100.88],[3.50,101.05],[3.33,101.24],[3.20,101.30],[3.00,101.35],[2.88,101.30],[2.80,101.38],[2.75,101.43],[2.62,101.58],[2.63,101.70],[2.52,101.80],[2.415,101.85],[2.37,101.97],[2.22,102.13],[2.19,102.25],[2.10,102.38],[2.05,102.55],[1.83,102.88],[1.50,103.30],[1.27,103.50],[1.30,104.60],[4.30,104.60]]},
+   {name:'Sumatra',h:9,pts:[[3.80,98.60],[3.45,99.20],[2.98,99.80],[2.60,100.30],[2.15,100.80],[2.10,100.95],[2.05,101.15],[2.07,101.43],[1.95,101.65],[1.80,101.90],[1.65,102.05],[1.60,102.25],[1.55,102.55],[1.40,102.85],[1.20,103.10],[1.05,103.35],[0.50,103.60],[0.50,98.00],[3.80,98.00]]}
+  ],
+  banks:[{name:'ONE FATHOM BANK',pts:[[2.90,100.85],[3.05,101.05],[3.12,101.15],[3.00,101.20],[2.88,101.00]]}],
+  places:[['PORT KLANG',3.00,101.35,'port'],['PORT DICKSON',2.52,101.80,'port'],['TG. TUAN (CAPE RACHADO)',2.415,101.85,'light'],['MELAKA',2.19,102.25,'port'],['MUAR',2.05,102.55,'town'],['PULAU RUPAT',1.93,101.58,'town'],['BAGANSIAPIAPI',2.15,100.80,'town'],['TG. BALAI',2.98,99.80,'town'],['MALAYSIA',2.75,102.15,'region'],['SUMATRA',2.40,100.05,'region']],
+  lane:[['pdL',5],['cbd',2.2],['pdS',2.2],['tow',1]],
+  kinds:[['ln_any',8],['dhow',1.7],['dhow_z',.6],['fish_my',2.2],['tow_lane',.9],['ferry_x',.6],['anch_out',.9],['ln_wrong',.15],['sail_x',.3]],
+  max:12,p:.6,
+  flags:[['563','Singapore','9V'],['564','Singapore','9V'],['533','Malaysia','9M'],['525','Indonesia','YB'],['477','Hong Kong','VR'],['412','China','BY'],['538','Marshall Islands','V7'],['636','Liberia','A8'],['351','Panama','H3']],
+  localIdx:[0,2,3],
+  ports:['SINGAPORE','PORT KLANG','TANJUNG PELEPAS','COLOMBO','BELAWAN','PENANG','JEDDAH','FUJAIRAH','HONG KONG','SHANGHAI','MUMBAI','FOR ORDERS'],
+  lports:['PORT DICKSON','DUMAI','MALACCA','BATAM','PORT KLANG','BELAWAN'],
+  fishNames:['BINTANG LAUT','NELAYAN JAYA','SRI PANTAI','MUTIARA 7','BAHTERA','LAUT TIMUR','KM RAJAWALI','PERAIRAN 12'],
+  ferryDest:['DUMAI','PORT DICKSON','MALACCA','TANJUNG BALAI'],ferryNames:['SRI SELAT','SELAT EXPRESS','BAHARI JAYA','PERMATA']}
+};
+Object.assign(SCEN,{
+ ch_lane:{loc:'channel',label:'SW-bound lane – busy lane traffic (Rule 10)',own:{lane:'R',spd:13},start:['ln_over','ln_slow','ln_opp','ln_opp','ln_opp','ferry_x','sail_x'],cont:true},
+ ch_ne:{loc:'channel',label:'NE-bound lane – ferries crossing ahead',own:{lane:'F',spd:14},start:['ln_opp','ln_opp','ln_over','ferry_x','ferry_x','ln_slow'],cont:true},
+ ch_cross:{loc:'channel',label:'You are a ferry crossing the TSS (Rule 10(c))',own:{lane:'cross',spd:18},start:['ln_any','ln_any','ln_any','ln_any','ln_any','sail_x'],cont:true},
+ ch_small:{loc:'channel',label:'Yachts, fishing vessels & tows in the lanes (10(i)/(j))',own:{lane:'R',spd:13},start:['sail_x','sail_x','fish_lane','fish_lane','tow_lane','ln_opp'],cont:false},
+ ch_wrong:{loc:'channel',label:'Vessel proceeding against the traffic flow',own:{lane:'R',spd:13},start:['ln_wrong','ln_opp','ln_over'],cont:false},
+ ml_busy:{loc:'malacca',label:'SE-bound lane – dense traffic, tows, anchored ships',own:{lane:'R',spd:12},start:['ln_over','ln_slow','ln_opp','ln_opp','ln_opp','tow_lane','anch_out','fish_my','dhow'],cont:true},
+ ml_dhows:{loc:'malacca',label:'Dhows crossing & in the separation zone (non-conforming)',own:{lane:'R',spd:12},start:['dhow','dhow','dhow','dhow_z','ln_opp','ln_over'],cont:true,kinds:[['dhow',4],['dhow_z',1.2],['ln_any',4],['fish_my',1]]},
+ ml_fish:{loc:'malacca',label:'Fishing fleet & unlit small craft (try Night)',own:{lane:'R',spd:11},start:['fish_my','fish_my','fish_my','fish_my','dhow','dhow','ln_opp'],cont:true,kinds:[['fish_my',4],['dhow',2],['ln_any',3]]},
+ ml_cross:{loc:'malacca',label:'You are a ferry crossing the strait',own:{lane:'cross',spd:16},start:['ln_any','ln_any','ln_any','ln_any','dhow','dhow','fish_my'],cont:true}
+});
+
+/* ================= spawning ================= */
+function mk(type,o){
+ const sp=TYPES[type];
+ const t=Object.assign({id:nextId++,type,x:0,y:0,hdg:0,cmd:0,base:0,spd:0,cmdSpd:0,L:sp.L,complies:true,acting:false,emerg:false,dir:1,
+  trail:[],lastTrail:-999,anch:false,minR:99,passed:false,actRange:rnd(3.4,5.2),lastSig:-999,echo:null,range:99,brg:0,cpa:99,tcpa:Infinity,rrate:0,risk:false,towLen:90,longTow:false},o);
+ t.base=t.cmd=t.hdg;t.cmdSpd=t.spd;return t;
+}
+function intercept(hdg,spd,D,lat){
+ const ov=vec(own.hdg,Math.max(own.spd,4)),tv=vec(hdg,spd),rx=Math.cos(own.hdg*D2R),ry=-Math.sin(own.hdg*D2R);
+ let best=null,bd=1e9;
+ for(let T=4;T<=110;T+=.5){
+  const mx=own.x+ov.x*T+rx*lat,my=own.y+ov.y*T+ry*lat,x=mx-tv.x*T,y=my-tv.y*T,d=Math.hypot(x-own.x,y-own.y);
+  if(Math.abs(d-D)<bd){bd=Math.abs(d-D);best={x,y}}
+ }
+ return best;
+}
+function ahead(D,lat){const fx=Math.sin(own.hdg*D2R),fy=Math.cos(own.hdg*D2R);return{x:own.x+fx*D+Math.cos(own.hdg*D2R)*lat,y:own.y+fy*D-Math.sin(own.hdg*D2R)*lat}}
+function build(kind){
+ const oc=own.hdg,os=Math.max(own.spd,6),pd=()=>pick(['pdS','pdL']);let t,p,h,s;
+ switch(kind){
+  case 'cross_stbd':case 'cross_port':case 'cross_port_fail':{
+   const sgn=kind==='cross_stbd'?-1:1;h=n360(oc+sgn*rnd(55,115));s=rnd(9,17);p=intercept(h,s,rnd(7,9.5),rnd(-.15,.15));
+   t=mk(pd(),{x:p.x,y:p.y,hdg:h,spd:s,complies:kind!=='cross_port_fail'});break}
+  case 'head_on':h=n360(oc+180+rnd(-4,4));s=rnd(9,16);p=intercept(h,s,rnd(8,10),rnd(-.1,.1));t=mk(pd(),{x:p.x,y:p.y,hdg:h,spd:s});break;
+  case 'overtaking_us':{h=n360(oc+rnd(-4,4));s=Math.max(own.spd+rnd(4,8),12);const d=rnd(5,6.5),lat=rnd(-.12,.12);
+   t=mk(pd(),{x:own.x-Math.sin(oc*D2R)*d+Math.cos(oc*D2R)*lat,y:own.y-Math.cos(oc*D2R)*d-Math.sin(oc*D2R)*lat,hdg:h,spd:s});break}
+  case 'overtake_them':{h=n360(oc+rnd(-3,3));s=Math.max(3,os-rnd(4,6));p=ahead(rnd(5,6.5),rnd(-.1,.1));t=mk(pick(['tow','pdS']),{x:p.x,y:p.y,hdg:h,spd:s,towLen:rnd(70,140)});break}
+  case 'sail':{h=n360(oc+pick([-1,1])*rnd(55,125));s=rnd(4,7);p=intercept(h,s,rnd(6,8),rnd(-.3,.3));
+   t=mk('sail',{x:p.x,y:p.y,hdg:h,spd:s});if(Math.random()<.5)t.tack={d:pick([-1,1])*rnd(70,90),n:rnd(500,900)};break}
+  case 'trawl':case 'fish':{h=rnd(0,360);p=ahead(rnd(5,8),rnd(-3,3));t=mk(kind,{x:p.x,y:p.y,hdg:h,spd:kind==='trawl'?rnd(2,4):rnd(.5,3)});t.wander=true;t.b0=h;t.nextW=simT+rnd(60,200);break}
+  case 'ram':{h=rnd(0,360);p=ahead(rnd(6,8),rnd(-.6,.6));t=mk('ram',{x:p.x,y:p.y,hdg:h,spd:pick([0,2.5,3])});break}
+  case 'nuc':{h=rnd(0,360);p=ahead(rnd(5,7.5),rnd(-.6,.6));t=mk('nuc',{x:p.x,y:p.y,hdg:h,spd:pick([0,0,1.3])});break}
+  case 'cbd':{h=n360(oc+pick([-1,1])*rnd(60,130));s=rnd(8,11);p=intercept(h,s,rnd(8,10),rnd(-.2,.2));t=mk('cbd',{x:p.x,y:p.y,hdg:h,spd:s});break}
+  case 'anch':{p=ahead(rnd(5,8),rnd(-.9,.9));t=mk(pd(),{x:p.x,y:p.y,hdg:rnd(0,360),spd:0,anch:true});break}
+  case 'tow':case 'tow_long':{h=n360(oc+pick([-1,1])*rnd(50,120));s=rnd(4,6.5);p=intercept(h,s,rnd(6,8),rnd(-.2,.2));
+   t=mk('tow',{x:p.x,y:p.y,hdg:h,spd:s});if(kind==='tow_long'){t.longTow=true;t.towLen=250}else t.towLen=rnd(70,150);break}
+  case 'ln_opp':case 'ln_over':case 'ln_slow':case 'ln_any':case 'tow_lane':case 'ln_wrong':case 'ferry_x':case 'sail_x':case 'fish_lane':case 'fish_my':case 'anch_out':case 'dhow':case 'dhow_z':
+   t=tssBuild(kind);break;
+  case 'pilot':{h=n360(oc+pick([-1,1])*rnd(40,110));s=rnd(12,18);p=intercept(h,s,rnd(7,9),rnd(-.2,.2));t=mk('pilot',{x:p.x,y:p.y,hdg:h,spd:s});break}
+ }
+ return t;
+}
+/* ================= locations / traffic separation schemes ================= */
+const tlat=(x,y)=>(x-tss.ox)*tss.sx+(y-tss.oy)*tss.sy;
+const talong=(x,y)=>(x-tss.ox)*tss.ux+(y-tss.oy)*tss.uy;
+const tpos=(al,la)=>({x:tss.ox+tss.ux*al+tss.sx*la,y:tss.oy+tss.uy*al+tss.sy*la});
+function setupLoc(S){
+ const L=LOCS[curLoc],ol=S.own||{};
+ GEO.lat=L.geo.lat;GEO.lon=L.geo.lon;COSL=Math.cos(GEO.lat*D2R);
+ own.x=own.y=0;own.aground=false;tss=null;own.r=own.rud=own.rudCmd=0;own.mode='steer';
+ if(L.tss){
+  const T=L.tss,c=T.z+T.w/2,ax=T.ax,lane=ol.lane||'R';
+  const lat0=lane==='F'?c:lane==='R'?-c:-(T.z+T.w+(T.crossStart||2));
+  tss=Object.assign({c,ux:Math.sin(ax*D2R),uy:Math.cos(ax*D2R),sx:Math.cos(ax*D2R),sy:-Math.sin(ax*D2R),ox:0,oy:0},T);
+  const p=tpos(ol.along??(lane==='cross'?0:(T.along0||0)),lat0);own.x=p.x;own.y=p.y;
+  own.hdg=own.cmdHdg=n360(lane==='F'?ax:lane==='R'?ax+180:ax+90);
+ }else own.hdg=own.cmdHdg=0;
+ own.spd=own.cmdSpd=ol.spd||12;
+ $('course').value=Math.round(own.cmdHdg);
+ buildLand(L);
+ ecp.ox=ecp.oy=0;ecp.fx=own.x;ecp.fy=own.y;
+}
+/* ---- land: real-coordinate polygons -> world nm, raster mask for fast look-ups ---- */
+function inPoly(pts,x,y){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x)c=!c}return c}
+function buildLand(L){
+ LAND=null;if(!L.land)return;
+ const cv=p=>({x:(p[1]-GEO.lon)*60*COSL,y:(p[0]-GEO.lat)*60});
+ const polys=L.land.map(o=>({name:o.name,h:o.h,pts:o.pts.map(cv)}));
+ const banks=(L.banks||[]).map(b=>{const pts=b.pts.map(cv);return{name:b.name,pts,c:{x:pts.reduce((a,q)=>a+q.x,0)/pts.length,y:pts.reduce((a,q)=>a+q.y,0)/pts.length}}});
+ const places=(L.places||[]).map(p=>{const q=cv([p[1],p[2]]);return{n:p[0],x:q.x,y:q.y,t:p[3]}});
+ const R0=75,res=.25,N=Math.round(2*R0/res),cvs=document.createElement('canvas');cvs.width=cvs.height=N;
+ const g=cvs.getContext('2d',{willReadFrequently:true});g.fillStyle='#000';g.fillRect(0,0,N,N);g.fillStyle='#fff';
+ for(const p of polys){g.beginPath();p.pts.forEach((q,i)=>{const X=(q.x+R0)/res,Y=(R0-q.y)/res;i?g.lineTo(X,Y):g.moveTo(X,Y)});g.closePath();g.fill()}
+ const d=g.getImageData(0,0,N,N).data,mask=new Uint8Array(N*N);for(let i=0;i<N*N;i++)mask[i]=d[i*4]>127?1:0;
+ LAND={polys,banks,places,mask,N,R0,res};
+}
+function landAt(x,y){if(!LAND)return false;const i=Math.floor((x+LAND.R0)/LAND.res),j=Math.floor((LAND.R0-y)/LAND.res);return i>=0&&j>=0&&i<LAND.N&&j<LAND.N&&LAND.mask[j*LAND.N+i]===1}
+function landH(x,y){for(const p of LAND.polys)if(inPoly(p.pts,x,y))return p.h;return 20}
+function drawLandView(C,vis,day,dusk,night){
+ if(!LAND)return;
+ const W=BW,vc=own.hdg+view.off,fov=view.fov,fog=C.fog;
+ const maxR=Math.min(30,day?vis:dusk?Math.min(vis,15):Math.min(vis,8));
+ const cs=Math.max(2,Math.round(W/380));
+ const base=day?[104,126,92]:dusk?[40,38,50]:[5,8,13],hill=day?[120,138,104]:dusk?[52,50,64]:[7,10,17];
+ const yb=d=>HZ+EYE/(d*1852)*PXR*VEX,yt=(d,h)=>HZ+(EYE-h)/(d*1852)*PXR*VEX;
+ const fa=d=>clamp(Math.pow(d/Math.max(vis,.5),1.3)*.85,0,.9);
+ for(let x=0;x<W;x+=cs){
+  const brg=vc+(x+cs/2-W/2)/W*fov,sx=Math.sin(brg*D2R),sy=Math.cos(brg*D2R);
+  let d1=0;
+  for(let d=.25;d<=maxR;d+=.25){if(landAt(own.x+sx*d,own.y+sy*d)){d1=d;break}}
+  if(!d1)continue;
+  const h0=landH(own.x+sx*d1,own.y+sy*d1),n=1+.35*Math.sin(brg*1.7+1)+.2*Math.sin(brg*5.3)+.1*Math.sin(brg*13.1);
+  const dh=d1+3;
+  if(dh<=maxR*1.4&&landAt(own.x+sx*dh,own.y+sy*dh)){
+   let a=yt(dh,h0*2.8*n),b=yb(dh);if(b-a<2)a=b-2;
+   bx.fillStyle=mixc(hill,fog,fa(dh));bx.fillRect(x,a,cs+1,b-a);
+  }
+  let a=yt(d1,h0*n),b=yb(d1);if(b-a<1.5)a=b-1.5;
+  bx.fillStyle=mixc(base,fog,fa(d1));bx.fillRect(x,a,cs+1,b-a);
+ }
+}
+const ownFlow=()=>{const c=Math.cos(n180(own.hdg-tss.ax)*D2R);return c>.5?1:c<-.5?-1:0};
+const SPD={pdL:[12,17],pdS:[9,13],cbd:[9.5,13],tow:[4.5,6.5],ferry:[18,23],sail:[4,7],pilot:[12,18]};
+function wpick(L){let r=Math.random()*L.reduce((a,k)=>a+k[1],0);for(const [k,w] of L){r-=w;if(r<=0)return k}return L[0][0]}
+// give a vessel rule-breaking habits: o = probabilities
+function quirk(t,o){
+ const q=[];
+ if(Math.random()<(o.noAis||0)){t.noAis=true;q.push('not transmitting AIS')}
+ const r=Math.random(),nn=o.none||0,dd=o.dim||0;
+ t.lightMode=r<nn?'none':r<nn+dd?'dim':'proper';
+ if(t.lightMode==='none')q.push('shows no navigation lights');else if(t.lightMode==='dim')q.push('shows a single dim white light only');
+ if(Math.random()<(o.erratic||0)){t.erratic=true;t.b0=t.hdg;t.nextE=simT+rnd(30,120);q.push('makes erratic course changes')}
+ if(o.comply!==undefined&&Math.random()>=o.comply){t.complies=false;q.push('may fail to give way')}
+ if(TYPES[t.type].kind==='dhow')q.push('poor radar echo (wooden, small)');
+ t.quirks=q;return t;
+}
+function laneBuild(mode,type,forceLane){
+ const T=tss,of=ownFlow(),oa=talong(own.x,own.y);
+ let ln=forceLane;
+ if(of===0)mode='opp';
+ if(!ln){
+  if(of===0)ln=Math.random()<.5?'F':'R';
+  else{const ol=of>0?'F':'R';ln=mode==='opp'?(ol==='F'?'R':'F'):ol}
+ }
+ const sg=ln==='F'?1:-1;
+ if(!type)type=mode==='over'?pick(['pdL','pdL','pdS']):mode==='slow'?pick(['pdS','tow','cbd']):wpick(LOCS[curLoc].lane);
+ let s=rnd(...(SPD[type]||[10,14])),al;
+ if(mode==='over'){s=clamp(own.spd+rnd(3,6),12,23);al=oa-sg*rnd(5.5,7.5)}
+ else if(mode==='slow'){s=clamp(own.spd-rnd(3,5),3.5,Math.max(3.5,own.spd-2.5));al=oa+sg*rnd(5.5,7.5)}
+ else al=oa-sg*rnd(8,10.5);
+ const p=tpos(al,sg*T.c+rnd(-.4,.4)*Math.min(1,T.w/2.5));
+ const h=n360(T.ax+(ln==='F'?0:180)+rnd(-1.2,1.2));
+ const t=mk(type,{x:p.x,y:p.y,hdg:h,spd:s,towLen:rnd(70,150)});
+ t.lane=ln;if(type==='tow'&&Math.random()<.25){t.longTow=true;t.towLen=250}
+ return t;
+}
+function tssBuild(kind){
+ const T=tss,of=ownFlow(),oa=talong(own.x,own.y);let t,p,h,s;
+ switch(kind){
+  case 'ln_opp':return laneBuild('opp');
+  case 'ln_over':return laneBuild('over');
+  case 'ln_slow':return laneBuild('slow');
+  case 'ln_any':{const r=Math.random();return laneBuild(r<.55?'opp':r<.8?'over':'slow')}
+  case 'tow_lane':return laneBuild(Math.random()<.5?'opp':'slow','tow');
+  case 'ln_wrong':{
+   const ln=of>0?'F':of<0?'R':(Math.random()<.5?'F':'R'),sg=ln==='F'?1:-1;
+   p=tpos(oa+sg*rnd(8,10),sg*T.c+rnd(-.3,.3));
+   t=mk(pick(['pdS','pdS','pdL']),{x:p.x,y:p.y,hdg:n360(T.ax+(ln==='F'?180:0)+rnd(-1,1)),spd:rnd(8,12)});
+   t.wrongWay=true;t.lane=ln;t.quirks=['proceeding against the traffic flow'];return t}
+  case 'ferry_x':{
+   if(of===0)return laneBuild('opp');
+   const sg=pick([-1,1]);h=n360(T.ax+sg*90+rnd(-5,5));s=rnd(18,23);p=intercept(h,s,rnd(7.5,9.5),rnd(-.2,.2));
+   t=mk('ferry',{x:p.x,y:p.y,hdg:h,spd:s});t.crossing=true;return t}
+  case 'sail_x':{
+   const sg=pick([-1,1]);h=n360(T.ax+sg*90+rnd(-30,30));s=rnd(4,7);p=intercept(h,s,rnd(6,8),rnd(-.3,.3));
+   t=mk('sail',{x:p.x,y:p.y,hdg:h,spd:s});if(Math.random()<.5)t.tack={d:pick([-1,1])*rnd(70,90),n:rnd(500,900)};return t}
+  case 'fish_lane':case 'fish_my':{
+   const sd=of||1,ed=T.z+T.w+(kind==='fish_my'?4:1.5),k=pick(['trawl','fish','fish']);h=rnd(0,360);
+   p=tpos(oa+sd*rnd(5,8),rnd(-ed,ed));
+   t=mk(k,{x:p.x,y:p.y,hdg:h,spd:k==='trawl'?rnd(2,4):rnd(.5,3)});t.wander=true;t.b0=h;t.nextW=simT+rnd(60,200);
+   if(kind==='fish_my')quirk(t,{noAis:.5,dim:.3,none:.15});
+   return t}
+  case 'anch_out':{
+   const sd=pick([-1,1]);p=tpos(oa+rnd(-4,9),sd*(T.z+T.w+rnd(1.5,4)));
+   return mk(pick(['pdL','pdL','pdS']),{x:p.x,y:p.y,hdg:rnd(0,360),spd:0,anch:true})}
+  case 'dhow':{ // crosses the lanes at any angle, ignores the Rules
+   const sg=pick([-1,1]),motor=Math.random()<.5;
+   h=n360(T.ax+sg*90+rnd(-50,50));s=motor?rnd(5,8.5):rnd(3,6.5);p=intercept(h,s,rnd(6,8),rnd(-.3,.3));
+   t=mk('dhow',{x:p.x,y:p.y,hdg:h,spd:s});t.motor=motor;t.sailUp=!motor||Math.random()<.5;t.b0=h;
+   return quirk(t,{noAis:.65,dim:.35,none:.25,erratic:.4,comply:motor?.45:undefined})}
+  case 'dhow_z':{ // runs along the separation zone
+   const sg=of?-of:pick([-1,1]),motor=Math.random()<.5;s=motor?rnd(5,8):rnd(3.5,6);
+   p=tpos(oa-sg*rnd(7,9),rnd(-.7,.7)*T.z);
+   t=mk('dhow',{x:p.x,y:p.y,hdg:n360(T.ax+(sg>0?0:180)+rnd(-8,8)),spd:s});t.motor=motor;t.sailUp=!motor||Math.random()<.5;t.b0=t.hdg;
+   return quirk(t,{noAis:.65,dim:.35,none:.25,erratic:.4,comply:motor?.45:undefined})}
+ }
+}
+// Rule 10 status of a vessel (target or own ship)
+function tssStat(o,isOwn){
+ if(!tss)return null;
+ if(Math.abs(talong(o.x,o.y))>tss.len)return{key:'clear',ok:null,text:'Clear of the traffic separation scheme.'};
+ const T=tss,lat=tlat(o.x,o.y),al=Math.abs(lat),edge=T.z+T.w,cat=isOwn?'power':catOf(o),L=isOwn?120:o.L;
+ const ang0=Math.abs(n180(o.hdg-T.ax)),ang=Math.min(ang0,180-ang0),stat=o.spd<.5;
+ let where,lk=null;
+ if(al<T.z)where='zone';else if(al<=edge){where='lane';lk=lat>0?'F':'R'}else where=al<edge+(T.inshore||4)?'inshore':'clear';
+ if(where==='clear')return{key:'clear',ok:null,text:'Clear of the traffic separation scheme.'};
+ if(where==='inshore')return{key:'inshore',ok:null,text:'Outside the lanes (inshore traffic zone) – through traffic should keep clear of it (Rule 10(d)).'};
+ const nm=lk?T.laneNames[lk]+' lane':'separation zone';
+ let cls,ok=null,tx;
+ if(stat){cls='stat';ok=false;tx=`Stationary in the ${nm} – anchoring or lying stopped in a scheme should be avoided (Rule 10(g)).`}
+ else if(ang<=25){
+  if(where==='zone'){cls='zpar';if(cat==='fish'){ok=true;tx='Fishing vessel in the separation zone – permitted (Rule 10(e)(ii)).'}else{ok=false;tx='Proceeding along the separation zone – only crossing, joining or leaving a lane, emergencies and fishing may use it (Rule 10(e)).'}}
+  else{const lh=n360(T.ax+(lk==='F'?0:180)),dd=Math.abs(n180(o.hdg-lh));
+   if(dd<=60){cls='par';ok=true;tx=`In the ${nm}, going with the traffic flow (Rule 10(b)(i)).`}
+   else{cls='wrong';ok=false;tx=`In the ${nm} but heading AGAINST the traffic flow – breach of Rule 10(b)(i).`}}
+ }else if(ang>=50){cls='cross';ok=ang>=70?null:false;tx=`Crossing the ${nm} at ${Math.round(ang)}° to the traffic flow – should be as near 90° as practicable (Rule 10(c)).${ang<70?' Too oblique.':''}`}
+ else{cls='obl';ok=false;tx=`Cutting the ${nm} at ${Math.round(ang)}° – neither lane-keeping nor a proper crossing; joining or leaving should be at a small angle to the flow (Rule 10(b)(iii)).`}
+ if(!isOwn&&where==='lane'&&!stat){
+  if(cat==='fish')tx+=' A fishing vessel must not impede vessels following the lane (Rule 10(i)).';
+  else if(cat==='sail'||L<20)tx+=' A sailing vessel or one under 20 m must not impede a power-driven vessel following the lane (Rule 10(j)).';
+ }
+ return{key:where+(lk||'')+cls,ok,text:tx};
+}
+function extraInfo(t){
+ if(!cfg.training)return'';
+ let h='';const st=tssStat(t,false);
+ if(st&&st.key!=='clear')h+=`<div class="rule" style="border-left-color:#c026d3">TSS: ${st.text}</div>`;
+ if(t.quirks&&t.quirks.length)h+=`<div class="rule" style="border-left-color:#f59e0b">Non-conforming vessel: ${t.quirks.join(', ')}.</div>`;
+ return h;
+}
+function tssOwnUpdate(){
+ const el=$('tssBox'),st=(tss&&cfg.training)?tssStat(own,true):null;
+ const h=st?`<b>${tss.name}</b><br>${st.text}`:'';
+ if(el._h!==h){el._h=h;el.innerHTML=h;el.classList.toggle('hid',!st);el.style.borderLeftColor=!st||st.ok==null?'#c026d3':st.ok?'#4ade80':'#f87171';if(typeof WIN!=='undefined'&&WIN.helm&&WIN.helm.nh)fit('helm')}
+ if(st&&st.key!==ownTssKey){if(ownTssKey!==null&&st.key!=='clear')addLog('TSS: '+st.text,st.ok===false?'w':'s');ownTssKey=st.key}
+ if(!st)ownTssKey=null;
+}
+// small wooden craft: weak radar echo, only seen close in
+const detected=t=>TYPES[t.type].kind!=='dhow'||t.range<=3;
+const radarSees=(t,now)=>{if(TYPES[t.type].kind!=='dhow')return true;if(t.range>3)return false;return t.range<1.2||((Math.floor(now/1100)+t.id)%3!==0)};
+
+function spawn(kind){
+ for(let i=0;i<8;i++){
+  const t=build(kind);nextId--; // id assigned only if accepted
+  if(targets.every(o=>Math.hypot(o.x-t.x,o.y-t.y)>2.5)||i===7){t.id=nextId++;targets.push(t);return t}
+ }
+}
+
+/* ================= COLREGS assessment ================= */
+function derive(t){
+ const rx=t.x-own.x,ry=t.y-own.y,tv=vec(t.hdg,t.spd),ov=vec(own.hdg,own.spd),vx=tv.x-ov.x,vy=tv.y-ov.y,vv=vx*vx+vy*vy;
+ t.range=Math.hypot(rx,ry);t.brg=n360(Math.atan2(rx,ry)*R2D);
+ t.rrate=vv>1e-9?(rx*vx+ry*vy)/Math.max(t.range,1e-6):0;
+ if(vv<1e-9){t.tcpa=Infinity;t.cpa=t.range}
+ else{const tc=-(rx*vx+ry*vy)/vv;t.tcpa=tc;t.cpa=tc>0?Math.hypot(rx+vx*tc,ry+vy*tc):t.range}
+ t.risk=t.tcpa>0&&t.cpa<RISK_CPA&&t.range<8;
+}
+function cpaFor(t,hdg){
+ const rx=t.x-own.x,ry=t.y-own.y,tv=vec(hdg,t.spd),ov=vec(own.hdg,own.spd),vx=tv.x-ov.x,vy=tv.y-ov.y,vv=vx*vx+vy*vy;
+ if(vv<1e-9)return t.range;const tc=-(rx*vx+ry*vy)/vv;return tc<=0?t.range:Math.hypot(rx+vx*tc,ry+vy*tc);
+}
+// role of OWN ship with respect to target t
+function assess(t){
+ const c=catOf(t),aT=n180(t.brg-own.hdg),aO=n180(n360(t.brg+180)-t.hdg),closing=t.rrate<0,N='T'+t.id;
+ if(c==='anch')return{rule:'18',role:'keep-clear',text:'Vessel at anchor (white all-round light(s) / one ball). Keep well clear.'};
+ if(Math.abs(aT)>=112.5&&closing)return{rule:'13',role:'stand-on',text:`Rule 13: ${N} is coming up from abaft your beam (you show her only your stern light). She is the overtaking vessel and must keep clear. You stand on (Rule 17).`};
+ if(Math.abs(aO)>=112.5&&closing)return{rule:'13',role:'give-way',text:`Rule 13: you are overtaking ${N} (you are in her stern-light sector). You must keep clear until well past and clear.`};
+ const rk=RANK[c];
+ if(rk<RANK.power){
+  const why={nuc:'a vessel not under command (Rule 18(a)(i))',ram:'a vessel restricted in her ability to manoeuvre (18(a)(ii))',cbd:'a vessel constrained by her draught – avoid impeding her (18(d))',fish:'a vessel engaged in fishing (18(a)(iii))',sail:'a sailing vessel (18(a)(iv))'}[c];
+  return{rule:'18',role:'give-way',text:`Rule 18: ${N} is ${why}. A power-driven vessel gives way, whichever side she is on.`};
+ }
+ if(Math.abs(aT)<=12&&Math.abs(aO)<=12)return{rule:'14',role:'both',text:`Rule 14: head-on. Both vessels alter course to starboard and pass port-to-port.`};
+ if(aT>0)return{rule:'15',role:'give-way',text:`Rule 15/16: crossing – ${N} is on your starboard side. You give way: act early, make a large alteration (to starboard) and avoid crossing ahead of her.`};
+ return{rule:'15',role:'stand-on',text:`Rule 15/17: crossing – ${N} is on your port side. She gives way. You hold course and speed; act alone only if she fails to give way (17(a)(ii)), and avoid turning to port.`};
+}
+
+/* ================= signals ================= */
+let audio=null,muted=false;
+function horn(seq,freq){
+ if(muted)return;
+ try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();let t0=audio.currentTime+.05;
+  for(const d of seq){
+   const g=audio.createGain(),lp=audio.createBiquadFilter();lp.type='lowpass';lp.frequency.value=700;
+   [0,3].forEach(df=>{const o=audio.createOscillator();o.type='sawtooth';o.frequency.value=freq+df;o.connect(lp);o.start(t0);o.stop(t0+d)});
+   lp.connect(g);g.connect(audio.destination);g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.18,t0+.05);g.gain.setValueAtTime(.18,t0+d-.06);g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+   t0+=d+1;}
+ }catch(e){}
+}
+const SIG={1:['1 short blast – "I am altering my course to starboard"',[1]],2:['2 short blasts – "I am altering my course to port"',[1,1]],3:['3 short blasts – "I am operating astern propulsion"',[1,1,1]],5:['5 short blasts – danger / doubt: "I do not understand your intentions"',[1,1,1,1,1]],p:['1 prolonged blast – restricted-visibility signal (power-driven, making way)',[5]]};
+function ownSignal(k){const s=SIG[k];addLog('You: '+s[0],'s');horn(s[1].map(x=>x===1?.9:5),130)}
+function targetSignal(t,k){
+ const s=SIG[k];t.sigN=(t.sigN||0)+(k==5?1:0);if(k==5&&t.sigN>3)return;if(t.range<4.5){addLog(`T${t.id}: ${s[0]}`,k==5?'w':'s');horn(s[1].map(x=>.9),170)}
+}
+function addLog(msg,cls){logLines.push({t:simT,msg,cls});if(logLines.length>60)logLines.shift();renderLog()}
+function renderLog(){const el=$('log');el.innerHTML=logLines.slice(-30).reverse().map(l=>`<div class="${l.cls||''}">[${hms(l.t)}] ${l.msg}</div>`).join('')}
+
+/* ================= simulation step (1 s) ================= */
+function stepSim(dt){
+ simT+=dt;
+ stepHelm(dt);
+ own.spd+=clamp(own.cmdSpd-own.spd,-.05*dt,.05*dt);
+ const ov=vec(own.hdg,own.spd);own.x+=ov.x*dt/60;own.y+=ov.y*dt/60;
+ if(LAND&&!own.aground&&landAt(own.x,own.y)){own.aground=true;addLog('AGROUND – you have run onto the shore!','w');showOverlay('You have run aground. The engine has stopped – use Restart to try again.','AGROUND')}
+ if(own.aground){own.spd=0;own.cmdSpd=0}
+ for(const t of targets)derive(t);
+ for(const t of targets){ai(t);
+  const sp=TYPES[t.type];
+  t.hdg=turnTo(t.hdg,t.cmd,sp.rot*dt);t.spd=t.cmdSpd;
+  const v=vec(t.hdg,t.spd);t.x+=v.x*dt/60;t.y+=v.y*dt/60;
+  if(simT-t.lastTrail>=60){t.lastTrail=simT;t.trail.push({x:t.x,y:t.y});if(t.trail.length>14)t.trail.shift()}
+ }
+ for(const t of targets)derive(t);
+ // passes, collisions, housekeeping
+ for(const t of [...targets]){
+  t.minR=Math.min(t.minR,t.range);
+  if(LAND&&t.spd>.3&&landAt(t.x,t.y)){remove(t);continue}
+  const cr=(t.L+own.L)/2/1852*.8+.01;
+  if(t.range<cr){collisions++;addLog(`COLLISION with T${t.id}!`,'w');showOverlay(`Collision with T${t.id} (${nameOf(t)}).`);remove(t);continue}
+  if(!t.passed&&t.tcpa<0&&t.minR<3&&t.range>t.minR+.05){
+   t.passed=true;const q=t.minR<.25;if(q)closeQ++;
+   addLog(`T${t.id} passed at ${f2(t.minR)} nm${t.minR<.25?' – CLOSE QUARTERS':t.minR<.5?' – close':''}`,q?'w':'');
+  }
+  if((t.range>14.5&&t.rrate>0)||(t.spd<.3&&t.range>16))remove(t);
+ }
+ if($('cont').checked&&simT-lastSpawn>45){
+  lastSpawn=simT;
+  const M=LOCS[curLoc],KL=(curS&&curS.kinds)||M.kinds||KINDS;
+  if(targets.length<((curS&&curS.max)||M.max||7)&&Math.random()<(M.p||.4))spawn(wpick(KL));
+ }
+}
+function remove(t){targets=targets.filter(o=>o!==t);if(sel===t)sel=null}
+
+function ai(t){
+ const c=catOf(t),sp=TYPES[t.type],A=assess(t);t.A=A;
+ if(t.anch){t.cmdSpd=0;return}
+ const mans=c==='power'||c==='cbd';
+ if(t.wander&&simT>=t.nextW){t.base=n360(t.b0+rnd(-40,40));t.cmd=t.base;t.nextW=simT+rnd(180,420)}
+ if(t.tack&&simT>=(t.nextT||0)){t.ts=!t.ts;t.base=n360((t.b0=t.b0??t.hdg)+(t.ts?t.tack.d:0));t.cmd=t.base;t.nextT=simT+t.tack.n+rnd(0,300)}
+ if(t.erratic&&!t.acting&&!t.emerg&&simT>=(t.nextE||0)){t.base=n360((t.b0??t.hdg)+rnd(-50,50));t.cmd=t.base;t.nextE=simT+rnd(60,200)}
+ if(!mans)return;
+ const tRole=A.role==='give-way'?'stand-on':A.role==='stand-on'?'give-way':A.role==='both'?'give-way':'none';
+ if(tRole==='give-way'&&t.risk){
+  if(!t.acting&&t.complies&&t.range<=t.actRange){
+   let dir=1;
+   if(A.rule==='13'){const rx=own.x-t.x,ry=own.y-t.y,lat=rx*Math.cos(t.hdg*D2R)-ry*Math.sin(t.hdg*D2R);dir=lat>.05?-1:1}
+   t.acting=true;t.dir=dir;t.cmd=n360(t.base+dir*30);
+   targetSignal(t,dir>0?1:2);
+  }else if(!t.acting&&!t.complies&&t.range<.38&&cpaFor(t,t.hdg)<.15){
+   t.acting=true;t.dir=1;t.cmd=n360(t.base+60);targetSignal(t,5);
+  }
+ }
+ if(tRole==='stand-on'&&t.risk){
+  if(t.cpa<.25&&t.range<1&&simT-t.lastSig>90){t.lastSig=simT;targetSignal(t,5)}
+  if(!t.emerg&&t.cpa<.2&&t.range<.45){t.emerg=true;t.cmd=n360(t.base+55);addLog(`T${t.id} (stand-on) takes avoiding action – Rule 17(a)(ii)`,'w')}
+ }
+ if(t.acting){
+  if(cpaFor(t,t.hdg)<1.0&&Math.abs(n180(t.hdg-t.cmd))<3&&Math.abs(n180(t.cmd-t.base))<80)t.cmd=n360(t.cmd+t.dir*8);
+ }
+ if((t.acting||t.emerg)&&((t.tcpa<0&&t.range>.5)||cpaFor(t,t.base)>=1.1)){t.acting=false;t.emerg=false;t.cmd=t.base}
+}
+
+/* ================= scenario control ================= */
+function restart(){
+ targets=[];nextId=1;simT=0;lastSpawn=0;collisions=0;closeQ=0;sel=null;logLines=[];
+ const S=SCEN[$('scen').value];curS=S;curLoc=S.loc||'sea';ownTssKey=null;own.rot=0;setupLoc(S);$('cont').checked=S.cont;
+ S.start.forEach(k=>spawn(k));
+ for(const t of targets)derive(t);
+ addLog('Scenario started: '+S.label);renderLog();paused=false;$('pause').textContent='Pause';$('overlay').classList.remove('show');
+}
+function showOverlay(msg,title){paused=true;$('pause').textContent='Resume';$('ovTitle').textContent=title||'COLLISION';$('ovText').textContent=msg;$('overlay').classList.add('show')}
+
+/* ================= canvases ================= */
+const bc=$('bridge'),bx=bc.getContext('2d'),rc=$('radar'),rx=rc.getContext('2d'),ec=$('ecp'),ex=ec.getContext('2d');
+let BW=0,BH=0,RS=0,rk=1,ES=0,ek=1;
+function resize(){
+ const d=Math.min(window.devicePixelRatio||1,2);
+ BW=bc.clientWidth;BH=bc.clientHeight;bc.width=BW*d;bc.height=BH*d;bx.setTransform(d,0,0,d,0,0);
+ RS=rc.clientWidth;const rr=rc.getBoundingClientRect();rk=(RS&&rr.width)?rr.width/RS:1;const q=d*rk;rc.width=Math.round(RS*q);rc.height=Math.round(RS*q);rx.setTransform(q,0,0,q,0,0);
+ ES=ec.clientWidth;const er=ec.getBoundingClientRect();ek=(ES&&er.width)?er.width/ES:1;{const q2=d*ek;ec.width=Math.round(ES*q2);ec.height=Math.round(ES*q2);ex.setTransform(q2,0,0,q2,0,0)}
+}
+new ResizeObserver(resize).observe(bc);new ResizeObserver(resize).observe(rc);new ResizeObserver(resize).observe(ec);
+
+/* ---------- bridge ---------- */
+const EYE=18,VEX=3;
+const stars=Array.from({length:140},()=>({b:rnd(0,360),e:Math.random(),s:Math.random()*1.4+.4}));
+const clouds=Array.from({length:9},()=>({b:rnd(0,360),e:rnd(.15,.7),w:rnd(4,9)}));
+const waves=Array.from({length:110},()=>({u:Math.random(),v:Math.random()}));
+let HZ=0,PXR=0;
+function P(dx,dy,z){
+ const d=Math.max(Math.hypot(dx,dy),1e-4),brg=Math.atan2(dx,dy)*R2D,dl=n180(brg-(own.hdg+view.off));
+ return{x:BW/2+dl/view.fov*BW,y:HZ+((EYE-z)/(d*1852))*PXR*VEX,d};
+}
+function skyCols(){
+ if(cfg.light==='day')return{sky:['#3f86d0','#bcdcf3'],sea:['#8db3cc','#1d4a6c'],fog:[205,220,232]};
+ if(cfg.light==='dusk')return{sky:['#1a2240','#e29a63'],sea:['#4a4a5e','#141a2c'],fog:[120,100,110]};
+ return{sky:['#010309','#0b1428'],sea:['#070d1b','#02050b'],fog:[8,12,22]};
+}
+function mixc(rgb,fog,a){return`rgb(${Math.round(rgb[0]+(fog[0]-rgb[0])*a)},${Math.round(rgb[1]+(fog[1]-rgb[1])*a)},${Math.round(rgb[2]+(fog[2]-rgb[2])*a)})`}
+const LCOL={white:'255,246,224',red:'255,59,48',green:'39,227,106',yellow:'255,214,10'};
+
+function drawBridge(now){
+ const W=BW,H=BH;if(!W)return;
+ HZ=H*.56;PXR=W/(view.fov*D2R);
+ const C=skyCols(),vis=cfg.vis,day=cfg.light==='day',dusk=cfg.light==='dusk',night=cfg.light==='night';
+ let g=bx.createLinearGradient(0,0,0,HZ);g.addColorStop(0,C.sky[0]);g.addColorStop(1,C.sky[1]);bx.fillStyle=g;bx.fillRect(0,0,W,HZ);
+ g=bx.createLinearGradient(0,HZ,0,H);g.addColorStop(0,C.sea[0]);g.addColorStop(1,C.sea[1]);bx.fillStyle=g;bx.fillRect(0,HZ,W,H-HZ);
+ const vc=own.hdg+view.off;
+ if(night||dusk){bx.fillStyle=dusk?'rgba(255,255,255,.35)':'#fff';for(const s of stars){if(dusk&&s.e<.5)continue;const x=W/2+n180(s.b-vc)/view.fov*W;if(x<0||x>W)continue;bx.globalAlpha=night?.35+.5*s.e:.4;bx.fillRect(x,HZ*(1-s.e)*.95,s.s,s.s)}bx.globalAlpha=1}
+ if(day||dusk){bx.fillStyle=day?'rgba(255,255,255,.55)':'rgba(255,200,170,.25)';for(const c of clouds){const x=W/2+n180(c.b-vc)/view.fov*W,w=c.w/view.fov*W;if(x<-w||x>W+w)continue;bx.beginPath();bx.ellipse(x,HZ*(1-c.e),w,w*.1,0,0,7);bx.fill()}}
+ // waves
+ bx.strokeStyle=day?'rgba(255,255,255,.18)':dusk?'rgba(255,200,170,.1)':'rgba(120,150,200,.07)';bx.lineWidth=1;bx.beginPath();
+ for(const w of waves){const v=(w.v+now*.00003)%1,y=HZ+v*v*(H-HZ),x=w.u*W,l=3+v*v*40;bx.moveTo(x,y);bx.lineTo(x+l,y)}bx.stroke();
+ // vessels
+ drawLandView(C,vis,day,dusk,night);
+ const vis_=[...targets].sort((a,b)=>b.range-a.range);
+ for(const t of vis_){t.sx=null;drawVessel(t,C,vis,day,dusk,night)}
+ // fog
+ const fa=clamp((10-vis)/9,0,1);
+ if(fa>0){g=bx.createLinearGradient(0,HZ-H*.35,0,HZ+H*.3);const fc=C.fog.join(',');g.addColorStop(0,`rgba(${fc},0)`);g.addColorStop(.5,`rgba(${fc},${(.75*fa).toFixed(2)})`);g.addColorStop(1,`rgba(${fc},${(.3*fa).toFixed(2)})`);bx.fillStyle=g;bx.fillRect(0,HZ-H*.35,W,H*.65)}
+ // foredeck
+ const fx=W/2+n180(own.hdg-vc)/view.fov*W,sc=deckScale,bowA=clamp((view.fov-20)/25,0,1);
+ if(bowA>0&&Math.abs(fx-W/2)<W/2+200){bx.globalAlpha=bowA;bx.fillStyle=night?'#05070b':'#2b3440';bx.beginPath();bx.moveTo(fx-220*sc,H);bx.lineTo(fx-40*sc,H-55*sc);bx.lineTo(fx+40*sc,H-55*sc);bx.lineTo(fx+220*sc,H);bx.fill();bx.fillStyle=night?'#0c1018':'#4b5563';bx.fillRect(fx-2,H-70*sc,4,16*sc);bx.globalAlpha=1}
+ // frame, compass
+ bx.fillStyle='#0b0f17';bx.fillRect(0,0,6,H);bx.fillRect(W-6,0,6,H);bx.fillRect(0,H-26,W,26);
+ compass(vc);
+ bx.fillStyle='#9fb3c8';bx.font='11px Inter,system-ui,sans-serif';bx.textAlign='left';
+ bx.fillText(`VIEW ${b3(vc)}°T (${view.off>=0?'+':''}${Math.round(view.off)}° rel)   HDG ${b3(own.hdg)}°   SPD ${f1(own.spd)} kn   FOV ${Math.round(view.fov)}°   VIS ${cfg.vis} nm`,12,H-9);
+}
+const CH=90;let deckScale=1;
+function relTxt(r){return(r<0?'P':r>0?'S':'')+b3(Math.abs(r))}
+function compass(vc){
+ const W=BW,fov=view.fov;bx.fillStyle='rgba(8,12,20,.82)';bx.fillRect(0,0,W,CH);
+ const step=fov>60?5:fov>25?2:1,lab=fov>25?10:5;
+ // true bearing strip
+ bx.strokeStyle='#cbd5e1';bx.fillStyle='#e5e7eb';bx.font='10px Inter,system-ui,sans-serif';bx.textAlign='center';bx.lineWidth=1;
+ const s0=Math.floor((vc-fov/2)/step)*step;bx.beginPath();
+ for(let b=s0;b<=vc+fov/2+step;b+=step){const x=W/2+n180(b-vc)/fov*W,big=n360(b)%lab===0;bx.moveTo(x,0);bx.lineTo(x,big?10:5);if(big)bx.fillText(b3(b),x,22)}
+ bx.stroke();
+ bx.fillStyle='rgba(148,163,184,.25)';bx.fillRect(0,29,W,1);
+ // relative bearing strip: 0-180 each side of the bow, port red / starboard green
+ const r0=Math.floor((view.off-fov/2)/step)*step;bx.lineWidth=1.2;
+ for(let r=r0;r<=view.off+fov/2+step;r+=step){
+  const w=n180(r),x=W/2+(r-view.off)/fov*W,big=Math.abs(w)%lab===0;
+  const col=(w===0||Math.abs(w)===180)?'#f8fafc':w<0?'#f87171':'#4ade80';
+  bx.strokeStyle=col;bx.beginPath();bx.moveTo(x,32);bx.lineTo(x,big?43:37);bx.stroke();
+  if(big){bx.fillStyle=col;bx.font='600 10px Inter,system-ui,sans-serif';bx.fillText(String(Math.abs(w)),x,55)}
+ }
+ const bowx=W/2+(0-view.off)/fov*W;
+ bx.fillStyle='#22c55e';bx.beginPath();bx.moveTo(bowx-5,0);bx.lineTo(bowx+5,0);bx.lineTo(bowx,8);bx.fill();
+ bx.fillStyle='rgba(248,113,113,.9)';bx.font='600 9px Inter,system-ui,sans-serif';bx.textAlign='left';bx.fillText('◀ PORT',6,44);
+ bx.fillStyle='rgba(74,222,128,.9)';bx.textAlign='right';bx.fillText('STBD ▶',W-6,44);bx.textAlign='center';
+ bx.fillStyle='rgba(148,163,184,.25)';bx.fillRect(0,60,W,1);
+ // target tags: name + relative bearing
+ for(const t of targets){
+  if(cfg.light==='day'&&t.range>cfg.vis)continue;
+  const x=W/2+n180(t.brg-vc)/fov*W;if(x<0||x>W)continue;
+  const rel=n180(t.brg-own.hdg);
+  bx.fillStyle=t===sel?'#fff':'#7dd3fc';bx.font='600 10px Inter,system-ui,sans-serif';bx.fillRect(x-.5,62,1,4);bx.fillText('T'+t.id,x,76);
+  bx.fillStyle=rel<0?'#f87171':'#4ade80';bx.font='600 9px Inter,system-ui,sans-serif';bx.fillText(relTxt(rel)+'°',x,87);
+ }
+}
+function shade(rgb,f){return[rgb[0]*f,rgb[1]*f,rgb[2]*f].map(v=>clamp(Math.round(v),0,255))}
+function drawVessel(t,C,vis,day,dusk,night){
+ const sp=TYPES[t.type],range=t.range;
+ const hasHull=day||dusk,hasLights=dusk||night;
+ const vlimit=day?vis:Math.max(vis,.3);
+ if(day&&range>vis)return;
+ const dl=n180(t.brg-(own.hdg+view.off)),half=Math.atan2(Math.max(sp.L,t.longTow?300:t.towLen+30)/2/1852,Math.max(range,.01))*R2D+4;
+ if(Math.abs(dl)>view.fov/2+half)return;
+ const alpha=day?clamp((vis-range)/(vis*.25),0,1):1;
+ // screen box for selection
+ const c0=P(t.x-own.x,t.y-own.y,sp.fb);
+ t.sx=c0.x;t.sy=c0.y;t.sw=Math.max(14,sp.L/2/1852/Math.max(range,.01)*PXR);
+ bx.save();bx.globalAlpha=alpha;
+ const fogA=clamp(Math.pow(range/Math.max(vis,.5),1.3)*.85,0,.9);
+ const fog=C.fog;
+ const W=(s,c,z)=>{const h=t.hdg*D2R,fx=Math.sin(h),fy=Math.cos(h);return P(t.x-own.x+(s*fx+c*fy)/1852,t.y-own.y+(s*fy-c*fx)/1852,z)};
+ const hexa=(s0,s1,wsb,wbb,wst,wbt,z0,z1,rgb)=>{
+  const v=[W(s0,-wsb,z0),W(s0,wsb,z0),W(s1,wbb,z0),W(s1,-wbb,z0),W(s0,-wst,z1),W(s0,wst,z1),W(s1,wbt,z1),W(s1,-wbt,z1)];
+  const faces=[[4,5,6,7,1.18],[0,3,7,4,1],[1,2,6,5,1],[0,1,5,4,.8],[3,2,6,7,.9]].map(f=>({f,d:(v[f[0]].d+v[f[1]].d+v[f[2]].d+v[f[3]].d)/4}));
+  faces.sort((a,b)=>b.d-a.d);
+  for(const {f} of faces){
+   if(f[4]>1.1&&z1>EYE)continue;
+   bx.fillStyle=night?'rgb(7,10,16)':mixc(shade(rgb,f[4]),fog,fogA);
+   if(dusk)bx.fillStyle=mixc(shade(rgb,f[4]*.45),fog,fogA);
+   bx.beginPath();bx.moveTo(v[f[0]].x,v[f[0]].y);for(let i=1;i<4;i++)bx.lineTo(v[f[i]].x,v[f[i]].y);bx.closePath();bx.fill();
+  }
+ };
+ const L=sp.L,B=sp.B;
+ if(hasHull){
+  if(t.type==='tow'){ // towed barge
+   const e=t.towLen,s1=-L/2-25;hexa(s1-e,s1,3.5,3.5,4,4,0,1.8,hex('#44403c'));
+  }
+  hexa(-L/2,L/2,B/2*.85,B*.05,B/2,B*.2,0,sp.fb,hex(sp.hull));
+  const bxs=sp.boxes;
+  for(const b of bxs)hexa((b.a0-.5)*L,(b.a1-.5)*L,B/2*b.w,B/2*b.w,B/2*b.w,B/2*b.w,sp.fb+(b.b||0),sp.fb+(b.b||0)+b.h,hex(b.c));
+  // masts
+  bx.strokeStyle=night?'#000':mixc([40,44,52],fog,fogA);bx.lineWidth=Math.max(1,PXR/(range*1852)*.5);
+  for(const m of sp.masts){const a=W((m.a-.5)*L,0,sp.fb),b=W((m.a-.5)*L,0,m.top);bx.beginPath();bx.moveTo(a.x,a.y);bx.lineTo(b.x,b.y);bx.stroke()}
+  if(sp.kind==='sail'||(sp.kind==='dhow'&&t.sailUp)){
+   const m=(sp.masts[0].a-.5)*L,top=sp.masts[0].top;
+   const poly=(pts,col)=>{bx.fillStyle=col;bx.beginPath();pts.forEach((p,i)=>{const q=W(p[0],0,p[1]);i?bx.lineTo(q.x,q.y):bx.moveTo(q.x,q.y)});bx.closePath();bx.fill()};
+   const sc=dusk?mixc([120,100,110],fog,fogA):mixc([245,247,250],fog,fogA);
+   if(sp.kind==='dhow'){poly([[.42*L,sp.fb+.5],[-.04*L,top],[-.46*L,sp.fb+1.4]],dusk?mixc([110,95,80],fog,fogA):mixc([232,220,190],fog,fogA))}
+   else{poly([[m,sp.fb+1.2],[m,top-1],[-L/2,sp.fb+1.3]],sc);poly([[m+.4,top-2],[L/2*.95,sp.fb+.8],[m+.4,sp.fb+1.2]],sc)}
+  }
+  // day shapes
+  if(!night){
+   for(const s of shapesFor(t)){
+    const p=W(s.s,0,s.z),px=Math.max(3,s.d/(range*1852)*PXR*2.2);
+    bx.fillStyle=dusk?'#0a0a0e':'#050505';
+    const x=p.x,y=p.y;bx.beginPath();
+    if(s.sh==='ball')bx.arc(x,y,px/2,0,7);
+    else if(s.sh==='diamond'){bx.moveTo(x,y-px*.7);bx.lineTo(x+px*.55,y);bx.lineTo(x,y+px*.7);bx.lineTo(x-px*.55,y)}
+    else if(s.sh==='cyl')bx.rect(x-px*.4,y-px*.6,px*.8,px*1.2);
+    else if(s.sh==='basket'){bx.moveTo(x,y);bx.lineTo(x-px*.5,y-px*.8);bx.lineTo(x+px*.5,y-px*.8);bx.closePath();bx.moveTo(x,y);bx.lineTo(x-px*.5,y+px*.8);bx.lineTo(x+px*.5,y+px*.8)}
+    bx.fill();
+   }
+  }
+ }else if(range<.5){ // faint night silhouette
+  bx.globalAlpha=alpha*.55*(1-range/.5);
+  hexa(-L/2,L/2,B/2*.85,B*.05,B/2,B*.2,0,sp.fb,[18,22,30]);for(const b of sp.boxes)hexa((b.a0-.5)*L,(b.a1-.5)*L,B/2*b.w,B/2*b.w,B/2*b.w,B/2*b.w,sp.fb+(b.b||0),sp.fb+(b.b||0)+b.h,[26,30,40]);
+ }
+ // lights
+ if(hasLights){
+  const rel=n180(n360(t.brg+180)-t.hdg),big=L>=50;
+  const R={mast:L>=50?6:L>=20?5:L>=12?3:2,sbd:L>=50?3:L>=20?2:1,prt:L>=50?3:L>=20?2:1,stern:2,all:L>=50?3:2};
+  const eff=k=>cfg.allLights?vis:Math.min(R[k],vis);
+  bx.globalCompositeOperation='lighter';
+  const lit=night?1:.55;
+  for(const l of lightsFor(t)){
+   if(l.way&&t.spd<.5)continue;
+   const k=l.k;
+   const arc=k==='all'||(k==='mast'&&Math.abs(rel)<=112.5)||(k==='sbd'&&rel>=0&&rel<=112.5)||(k==='prt'&&rel<=0&&rel>=-112.5)||(k==='stern'&&Math.abs(rel)>=112.5);
+   if(!arc)continue;
+   const e=cfg.allLights?vis:(l.r?Math.min(l.r,vis):eff(k));if(range>e)continue;
+   const a=clamp((e-range)/(e*.3),0,1)*lit;
+   const p=W(l.s,l.x,l.z),r=Math.min(9,1.1+1.7/(range+.15));
+   if(p.x<-20||p.x>BW+20)continue;
+   const col=LCOL[l.c];
+   const g=bx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*4);g.addColorStop(0,`rgba(${col},${(.55*a).toFixed(2)})`);g.addColorStop(1,`rgba(${col},0)`);
+   bx.fillStyle=g;bx.fillRect(p.x-r*4,p.y-r*4,r*8,r*8);
+   bx.fillStyle=`rgba(${col},${a.toFixed(2)})`;bx.beginPath();bx.arc(p.x,p.y,r,0,7);bx.fill();
+   bx.fillStyle=`rgba(255,255,255,${(.7*a).toFixed(2)})`;bx.beginPath();bx.arc(p.x,p.y,r*.45,0,7);bx.fill();
+  }
+ }
+ bx.restore();
+ if(t===sel){const y=Math.min(c0.y,HZ)-20-Math.min(60,sp.L/1852/Math.max(range,.01)*PXR*.12*VEX);bx.fillStyle='#fff';bx.beginPath();bx.moveTo(c0.x-6,y-8);bx.lineTo(c0.x+6,y-8);bx.lineTo(c0.x,y);bx.fill();bx.font='600 11px Inter,system-ui,sans-serif';bx.textAlign='center';bx.fillText('T'+t.id,c0.x,y-12)}
+}
+
+/* ---------- radar ---------- */
+let sweep=0,lastSweepT=0,clutter=[],clutT=0;
+const ropt={range:6,head:true,vec:'true',vecT:6,cpaLim:1,trails:true};
+function rpos(t,orient,ppn,cx,cy,wx,wy){const dx=(wx??t.x)-own.x,dy=(wy??t.y)-own.y,d=Math.hypot(dx,dy),a=(Math.atan2(dx,dy)*R2D-orient)*D2R;return{x:cx+Math.sin(a)*d*ppn,y:cy-Math.cos(a)*d*ppn,d}}
+function drawRadar(now){
+ const S=RS;if(!S)return;
+ const cx=S/2,cy=S/2,R=S/2-26,ppn=R/ropt.range,orient=ropt.head?own.hdg:0;
+ rx.clearRect(0,0,S,S);
+ rx.fillStyle='#020b06';rx.beginPath();rx.arc(cx,cy,S/2,0,7);rx.fill();
+ const G='#34d399',Gd='rgba(52,211,153,.22)';
+ // rings
+ rx.strokeStyle=Gd;rx.lineWidth=1;rx.fillStyle='rgba(52,211,153,.7)';rx.font='10px Inter,system-ui,sans-serif';rx.textAlign='left';
+ const nr=ropt.range===3?3:ropt.range===6?6:4,st=ropt.range/nr;
+ for(let i=1;i<=nr;i++){rx.beginPath();rx.arc(cx,cy,st*i*ppn,0,7);rx.stroke();rx.fillText(f1(st*i).replace('.0','')+' nm',cx+4,cy-st*i*ppn+11)}
+ // bearing scale
+ rx.strokeStyle='rgba(52,211,153,.6)';rx.beginPath();rx.arc(cx,cy,R,0,7);rx.stroke();
+ rx.textAlign='center';rx.textBaseline='middle';
+ for(let b=0;b<360;b+=5){
+  const a=(b-orient)*D2R,s=Math.sin(a),c=-Math.cos(a),l=b%10===0?9:5;
+  rx.beginPath();rx.moveTo(cx+s*R,cy+c*R);rx.lineTo(cx+s*(R+l),cy+c*(R+l));rx.stroke();
+  if(b%30===0){rx.fillStyle='#6ee7b7';rx.fillText(b3(b),cx+s*(R+19),cy+c*(R+19))}
+ }
+ rx.textBaseline='alphabetic';
+ // relative bearing ring (inside the scale): port red, starboard green
+ rx.lineWidth=1.2;rx.textAlign='center';rx.textBaseline='middle';rx.font='600 9px Inter,system-ui,sans-serif';
+ for(let r=0;r<360;r+=10){
+  const w=n180(r),col=(w===0||Math.abs(w)===180)?'#f8fafc':w<0?'#f87171':'#4ade80',a=(own.hdg+r-orient)*D2R,s=Math.sin(a),c=-Math.cos(a);
+  rx.strokeStyle=col;rx.beginPath();rx.moveTo(cx+s*R,cy+c*R);rx.lineTo(cx+s*(R-(r%30?4:8)),cy+c*(R-(r%30?4:8)));rx.stroke();
+  if(r%30===0){rx.fillStyle=col;rx.fillText(String(Math.abs(w)),cx+s*(R-17),cy+c*(R-17))}
+ }
+ rx.textBaseline='alphabetic';
+ // spokes
+ rx.strokeStyle='rgba(52,211,153,.1)';for(let b=0;b<360;b+=30){const a=(b-orient)*D2R;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(a)*R,cy-Math.cos(a)*R);rx.stroke()}
+ // land echoes
+ if(LAND){rx.save();rx.beginPath();rx.arc(cx,cy,R,0,7);rx.clip();
+  const oa=orient*D2R,co=Math.cos(oa),si=Math.sin(oa);
+  rx.fillStyle='rgba(52,211,153,.24)';rx.strokeStyle='rgba(134,239,172,.75)';rx.lineWidth=1.2;
+  for(const pl of LAND.polys){rx.beginPath();pl.pts.forEach((q,i)=>{const dx=q.x-own.x,dy=q.y-own.y,X=cx+(dx*co-dy*si)*ppn,Y=cy-(dx*si+dy*co)*ppn;i?rx.lineTo(X,Y):rx.moveTo(X,Y)});rx.closePath();rx.fill();rx.stroke()}
+  rx.restore()}
+ // CPA limit
+ rx.setLineDash([4,4]);rx.strokeStyle='rgba(251,191,36,.55)';rx.beginPath();rx.arc(cx,cy,ropt.cpaLim*ppn,0,7);rx.stroke();rx.setLineDash([]);
+ // heading line
+ // view wedge: where the bridge is looking
+ const va=(own.hdg+view.off-orient)*D2R,hf=view.fov/2*D2R;
+ rx.fillStyle='rgba(56,189,248,.12)';rx.strokeStyle='rgba(56,189,248,.8)';rx.lineWidth=1;
+ rx.beginPath();rx.moveTo(cx,cy);rx.arc(cx,cy,R,va-hf-Math.PI/2,va+hf-Math.PI/2);rx.closePath();rx.fill();rx.stroke();
+ rx.setLineDash([3,4]);rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(va)*R,cy-Math.cos(va)*R);rx.stroke();rx.setLineDash([]);
+ rx.save();rx.translate(cx,cy);rx.rotate(va);rx.fillStyle='#38bdf8';rx.beginPath();rx.moveTo(0,-R+1);rx.lineTo(-5,-R+11);rx.lineTo(5,-R+11);rx.closePath();rx.fill();rx.restore();
+ // heading line + bow arrow: where the ship is pointing
+ const ha=(own.hdg-orient)*D2R;rx.strokeStyle='#f8fafc';rx.lineWidth=2;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(ha)*R,cy-Math.cos(ha)*R);rx.stroke();
+ rx.save();rx.translate(cx,cy);rx.rotate(ha);rx.fillStyle='#f8fafc';rx.beginPath();rx.moveTo(0,-R-1);rx.lineTo(-6,-R+13);rx.lineTo(6,-R+13);rx.closePath();rx.fill();rx.restore();
+ // sweep
+ const dt=Math.min(.1,(now-lastSweepT)/1000||0);lastSweepT=now;
+ const prev=sweep;sweep=(sweep+dt*360/2.6)%360;
+ for(let i=0;i<28;i++){const a0=(sweep-i*1.6-orient)*D2R-Math.PI/2,a1=(sweep-(i+1)*1.6-orient)*D2R-Math.PI/2;rx.fillStyle=`rgba(52,211,153,${(.2*(1-i/28)).toFixed(3)})`;rx.beginPath();rx.moveTo(cx,cy);rx.arc(cx,cy,R,a1,a0);rx.fill()}
+ rx.strokeStyle='rgba(110,231,183,.9)';rx.lineWidth=1.2;const sa=(sweep-orient)*D2R;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(sa)*R,cy-Math.cos(sa)*R);rx.stroke();
+ // clutter
+ if(now-clutT>450){clutT=now;clutter=Array.from({length:45},()=>({a:Math.random()*360,d:Math.pow(Math.random(),2)*Math.min(1.2,ropt.range*.4)}))}
+ rx.fillStyle='rgba(52,211,153,.17)';for(const c of clutter){const a=c.a*D2R;rx.fillRect(cx+Math.sin(a)*c.d*ppn,cy-Math.cos(a)*c.d*ppn,2,2)}
+ // targets
+ const ov=vec(own.hdg,own.spd);
+ for(const t of targets){
+  if(t.range>ropt.range*1.02||!radarSees(t,now)){t.rx=null;continue}
+  // echo refresh when sweep passes target bearing
+  const tb=n360(t.brg);const crossed=prev<=sweep?(tb>=prev&&tb<sweep):(tb>=prev||tb<sweep);
+  if(crossed)t.echo={x:t.x,y:t.y,t:now};
+  if(t.echo){const age=(now-t.echo.t)/2600;if(age<1){const e=rpos(t,orient,ppn,cx,cy,t.echo.x,t.echo.y);const g=rx.createRadialGradient(e.x,e.y,0,e.x,e.y,9);g.addColorStop(0,`rgba(190,255,220,${(.9*(1-age)).toFixed(2)})`);g.addColorStop(1,'rgba(52,211,153,0)');rx.fillStyle=g;rx.fillRect(e.x-9,e.y-9,18,18)}}
+  const p=rpos(t,orient,ppn,cx,cy);
+  const danger=t.tcpa>0&&t.tcpa<20&&t.cpa<ropt.cpaLim&&t.range<12&&!t.anch;
+  const col=danger?((Math.floor(now/400)%2)?'#f87171':'#fecaca'):'#86efac';
+  // trails
+  if(ropt.trails){rx.fillStyle='rgba(134,239,172,.45)';for(const q of t.trail){const e=rpos(t,orient,ppn,cx,cy,q.x,q.y);if(e.d<ropt.range)rx.fillRect(e.x-1,e.y-1,2,2)}}
+  // vector
+  if(ropt.vec!=='off'&&t.spd>.1||ropt.vec==='rel'){
+   const tv=vec(t.hdg,t.spd),T=ropt.vecT;let vx=tv.x,vy=tv.y;if(ropt.vec==='rel'){vx-=ov.x;vy-=ov.y}
+   const e=rpos(t,orient,ppn,cx,cy,t.x+vx*T,t.y+vy*T);
+   if(ropt.vec!=='off'){rx.strokeStyle=ropt.vec==='rel'?'#fbbf24':col;rx.lineWidth=1.4;rx.beginPath();rx.moveTo(p.x,p.y);rx.lineTo(e.x,e.y);rx.stroke()}
+  }
+  rx.strokeStyle=col;rx.lineWidth=1.6;rx.beginPath();rx.arc(p.x,p.y,5,0,7);rx.stroke();
+  rx.fillStyle=col;rx.font='600 10px Inter,system-ui,sans-serif';rx.textAlign='left';rx.fillText(t.id,p.x+8,p.y-6);
+  if(t===sel){rx.strokeStyle='#fff';rx.lineWidth=1.3;rx.strokeRect(p.x-10,p.y-10,20,20)}
+  t.rx=p.x;t.ry=p.y;
+ }
+ // own ship vector + symbol
+ if(ropt.vec==='true'){const e=rpos(own,orient,ppn,cx,cy,own.x+ov.x*ropt.vecT,own.y+ov.y*ropt.vecT);rx.strokeStyle='#e5e7eb';rx.lineWidth=1.4;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(e.x,e.y);rx.stroke()}
+ rx.save();rx.translate(cx,cy);rx.rotate(ha);rx.fillStyle='#f8fafc';rx.beginPath();rx.moveTo(0,-10);rx.lineTo(5,7);rx.lineTo(0,3);rx.lineTo(-5,7);rx.closePath();rx.fill();rx.restore();
+}
+
+/* ================= ECPINS (chart display + AIS interrogation) ================= */
+// No chart data: a graticule, range rings and AIS targets over open water.
+const T0=Date.now(),MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const utcAt=s=>new Date(T0+s*1000),utcHMS=s=>{const d=utcAt(s);return pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+':'+pad(d.getUTCSeconds())};
+const etaTxt=d=>pad(d.getUTCDate())+' '+MON[d.getUTCMonth()]+' '+pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+' UTC';
+const GEO={lat:50,lon:-1};let COSL=Math.cos(GEO.lat*D2R); // own ship start position (flat-earth)
+const toLL=(x,y)=>({lat:GEO.lat+y/60,lon:GEO.lon+x/60/COSL});
+function dm(deg,pl,hs){const a=Math.abs(deg),tot=Math.round(a*6000),d=Math.floor(tot/6000),m=(tot%6000)/100;return String(d).padStart(pl,'0')+'°'+m.toFixed(2).padStart(5,'0')+'′'+hs[deg<0?1:0]}
+const fmtLat=v=>dm(v,2,'NS'),fmtLon=v=>dm(v,3,'EW');
+function gl(A,pl,hs,dec){const a=Math.abs(A),d=Math.floor(a/60+1e-9),m=a-d*60;return String(d).padStart(pl,'0')+'°'+m.toFixed(dec).padStart(dec?4:2,'0')+'′'+hs[A<0?1:0]}
+
+const ecp={range:6,north:true,vecT:6,cpaLim:1,tcpaLim:20,trk:true,follow:true,ox:0,oy:0,fx:0,fy:0,vx:0,vy:0,ppn:1,co:1,si:0};
+const ecDanger=t=>!t.anch&&t.tcpa>0&&t.tcpa<ecp.tcpaLim&&t.cpa<ecp.cpaLim;
+
+/* ---- AIS data a vessel returns when interrogated ---- */
+const AIS_FLAG=[['232','United Kingdom','M'],['211','Germany','DA'],['244','Netherlands','PA'],['205','Belgium','OO'],['227','France','F'],['219','Denmark','OU'],['257','Norway','LA'],['538','Marshall Islands','V7'],['636','Liberia','A8'],['351','Panama','H3'],['248','Malta','9H'],['209','Cyprus','5B']];
+const AIS_LOCAL=[0,2,3,4];
+const AIS_W1=['BALTIC','NORDIC','ATLANTIC','CELTIC','CHANNEL','ORIENT','PACIFIC','HANSE','MAAS','NORTHERN','SILVER','GOLDEN'];
+const AIS_W2=['TRADER','SPIRIT','EXPRESS','PIONEER','VOYAGER','HARMONY','GRACE','ENDEAVOUR','FORTUNE','CARRIER','STAR','PRIDE'];
+const AIS_FISH=['OCEAN HARVEST','SILVER DAWN','LADY JANE','MARGARET ROSE','NORTHERN PRIDE','PROVIDENCE','ANNA MARIE','CORAL REEF','SEA HUNTER','BOY WILLIAM'];
+const AIS_SAIL=['WINDSONG','SEA BREEZE','ARIEL','KESTREL','TALISMAN','MISTRAL','SANDPIPER','GALATEA','SKYLARK','WILD GOOSE'];
+const AIS_TUG=['HERCULES','ATLAS','TITAN','SEA GIANT','MARINER','VALIANT'];
+const AIS_DHOW=['AL NOOR','AL FARID','SALAMA','BAHARI','MUTIARA LAUT','FATH AL KHAIR','SHAMS','KM SAMUDRA'];
+const AIS_FERRY=['CHANNEL STAR','SEA LINK','ISLAND EXPRESS','HARBOUR PRIDE'];
+const AIS_RAM=['CABLE VENTURE','SEABED EXPLORER','DEEP SURVEYOR','OCEAN SENTINEL'];
+const AIS_PORTS=['SOUTHAMPTON','LE HAVRE','ROTTERDAM','ANTWERP','HAMBURG','FELIXSTOWE','CHERBOURG','BILBAO','LISBON','GIBRALTAR','LONDON GATEWAY','DOVER','ZEEBRUGGE','DUNKERQUE','FOR ORDERS'];
+const AIS_LPORTS=['PLYMOUTH','BRIXHAM','NEWHAVEN','CHERBOURG','DIEPPE','POOLE','GUERNSEY','COWES'];
+const AIS_STATUS=['Under way using engine','At anchor','Not under command','Restricted manoeuvrability','Constrained by her draught','Moored','Aground','Engaged in fishing','Under way sailing'];
+const AIS_DRAUGHT={pdS:[2.5,4],pdL:[6.5,9.5],tow:[3,4.5],sail:[1.4,2.2],trawl:[3,4.5],fish:[2.2,3.5],ram:[4.5,6.5],nuc:[5,7],cbd:[12,15],pilot:[1.2,1.8],ferry:[5,6.5],dhow:[1.2,2.4]};
+function imoNo(){const d=[9];for(let i=0;i<5;i++)d.push(Math.floor(Math.random()*10));return'IMO '+d.join('')+d.reduce((s,x,i)=>s+x*(7-i),0)%10}
+function makeAis(t){
+ const sp=TYPES[t.type],k=sp.kind,big=sp.L>=50,loc=['tow','sail','trawl','fish','pilot','dhow'].includes(k),LC=LOCS[curLoc],FL=LC.flags||AIS_FLAG,LI=LC.localIdx||AIS_LOCAL;
+ const fl=FL[loc?pick(LI):Math.floor(Math.random()*FL.length)];
+ const nm=()=>pick(AIS_W1)+' '+pick(AIS_W2);let ty,gen;
+ switch(k){
+  case 'sail':ty=[36,'Sailing'];gen=()=>pick(AIS_SAIL);break;
+  case 'trawl':case 'fish':ty=[30,'Fishing'];gen=()=>pick(LC.fishNames||AIS_FISH);break;
+  case 'dhow':ty=t.motor?[70,'Cargo']:[36,'Sailing'];gen=()=>pick(AIS_DHOW);break;
+  case 'tow':ty=t.longTow?[32,'Towing (large)']:[31,'Towing'];gen=()=>pick(AIS_TUG);break;
+  case 'ram':ty=[33,'Dredging / underwater ops'];gen=()=>pick(AIS_RAM);break;
+  case 'pilot':ty=[50,'Pilot vessel'];gen=()=>'PILOT '+(1+Math.floor(Math.random()*9));break;
+  case 'cbd':ty=[80,'Tanker'];gen=nm;break;
+  case 'nuc':ty=[70,'Cargo'];gen=nm;break;
+  default:ty=t.type==='ferry'?[60,'Passenger']:big?pick([[70,'Cargo'],[70,'Cargo'],[80,'Tanker'],[60,'Passenger']]):pick([[70,'Cargo'],[80,'Tanker'],[52,'Tug']]);gen=ty[0]===52?()=>pick(AIS_TUG):nm;
+ }
+ if(t.type==='ferry')gen=()=>pick(LC.ferryNames||AIS_FERRY);
+ let name=gen();for(let i=0;i<25&&targets.some(o=>o!==t&&o.ais&&o.ais.name===name);i++)name=gen(); // no two ships with the same name nearby
+ let call=fl[2];while(call.length<5)call+=Math.random()<.35?Math.floor(Math.random()*10):pick('ABCDEFGHJKLMNPQRSTUVWXYZ');
+ const status=t.anch?1:({trawl:7,fish:7,sail:8,dhow:t.motor?0:8,ram:3,nuc:2,cbd:4}[k]??(k==='tow'&&t.longTow?3:0));
+ const dr=AIS_DRAUGHT[t.type],hrs=loc?rnd(1,10):rnd(3,40);
+ return{name,mmsi:fl[0]+String(Math.floor(Math.random()*1e6)).padStart(6,'0'),
+  imo:(['pd','cbd','nuc','ram'].includes(k)&&ty[0]!==52)?imoNo():'–',call,flag:fl[1],
+  typeTxt:`${ty[1]} (${ty[0]})`,statusTxt:AIS_STATUS[status],dims:`${t.L} × ${sp.B} m`,draught:f1(rnd(dr[0],dr[1])),
+  dest:(t.type==='ferry'&&LC.ferryDest)?pick(LC.ferryDest):pick(loc?(LC.lports||AIS_LPORTS):(LC.ports||AIS_PORTS)),eta:etaTxt(utcAt(simT+hrs*3600)),at:simT};
+}
+function interrogate(){
+ if($('pEcp').classList.contains('hid'))togglePanel('ecp',true);
+ const t=sel;if(!t||t.ais||t.query||t.noReply)return;
+ t.act=true;t.query={t0:performance.now(),dur:rnd(1800,3200)};
+ addLog(`ECPINS: AIS interrogation sent to T${t.id}`);
+}
+function ecpStep(now){
+ for(const t of targets){
+  if(t.query&&now-t.query.t0>=t.query.dur){t.query=null;if(t.noAis){t.noReply=true;addLog('ECPINS: no reply from T'+t.id+' – not transmitting AIS','w');continue}t.ais=makeAis(t);addLog(`ECPINS: T${t.id} replied – ${t.ais.name} · ${t.ais.typeTxt} · ${t.ais.statusTxt}`)}
+  const r=t._r||(t._r={h:t.hdg,T:simT,rot:0});
+  if(simT-r.T>=4){r.rot=n180(t.hdg-r.h)/(simT-r.T)*60;r.h=t.hdg;r.T=simT}
+ }
+}
+// where the target's relative track crosses own ship's heading line: a>0 = ahead (BCR), a<0 = astern
+function bowCross(t){
+ const h=own.hdg*D2R,fx=Math.sin(h),fy=Math.cos(h),sx=Math.cos(h),sy=-Math.sin(h);
+ const tv=vec(t.hdg,t.spd),ov=vec(own.hdg,own.spd),rx_=t.x-own.x,ry_=t.y-own.y,vx=tv.x-ov.x,vy=tv.y-ov.y;
+ const l0=rx_*sx+ry_*sy,lv=vx*sx+vy*sy,a0=rx_*fx+ry_*fy,av=vx*fx+vy*fy;
+ if(Math.abs(lv)<1e-9)return null;
+ const tc=-l0/lv;if(tc<=0)return null;
+ return{t:tc,a:a0+av*tc};
+}
+
+/* ---- chart drawing ---- */
+function drawChartLand(ep,S,ppn){
+ if(!LAND)return;
+ const F='Inter,system-ui,sans-serif',pth=pts=>{ex.beginPath();pts.forEach((q,i)=>{const p=ep(q.x,q.y);i?ex.lineTo(p.x,p.y):ex.moveTo(p.x,p.y)});ex.closePath()};
+ for(const b of LAND.banks){pth(b.pts);ex.fillStyle='rgba(56,189,248,.16)';ex.fill();ex.setLineDash([3,3]);ex.strokeStyle='rgba(125,211,252,.55)';ex.lineWidth=1;ex.stroke();ex.setLineDash([])}
+ for(const pl of LAND.polys){pth(pl.pts);ex.fillStyle='rgba(150,134,86,.55)';ex.fill();ex.strokeStyle='rgba(232,218,156,.95)';ex.lineWidth=1.4;ex.stroke()}
+ ex.textBaseline='alphabetic';
+ if(ecp.range<=24)for(const b of LAND.banks){const p=ep(b.c.x,b.c.y);if(p.x<0||p.x>S||p.y<0||p.y>S)continue;ex.font='italic 600 9px '+F;ex.fillStyle='rgba(147,210,245,.9)';ex.textAlign='center';ex.fillText(b.name,p.x,p.y)}
+ for(const p of LAND.places){
+  const q=ep(p.x,p.y);if(q.x<4||q.x>S-4||q.y<14||q.y>S-4)continue;
+  if(p.t==='region'){if(ecp.range<6)continue;ex.font='italic 700 12px '+F;ex.fillStyle='rgba(240,230,185,.75)';ex.textAlign='center';ex.fillText(p.n,q.x,q.y);continue}
+  if(p.t==='town'&&ecp.range>24)continue;
+  if(p.t==='light'){ex.fillStyle='#e879f9';ex.beginPath();ex.arc(q.x,q.y,2.6,0,7);ex.fill();ex.strokeStyle='#e879f9';ex.lineWidth=1;ex.beginPath();ex.moveTo(q.x,q.y);ex.lineTo(q.x+5,q.y-5);ex.stroke()}
+  else if(p.t==='port'){ex.strokeStyle='#f4e9b8';ex.lineWidth=1.3;ex.beginPath();ex.arc(q.x,q.y,3.2,0,7);ex.stroke()}
+  else{ex.fillStyle='#f4e9b8';ex.fillRect(q.x-1.5,q.y-1.5,3,3)}
+  ex.font='600 10px '+F;ex.fillStyle='#f4e9b8';ex.textAlign='left';ex.fillText(p.n,q.x+6,q.y+3);
+ }
+}
+function drawTss(ep,S,ppn){
+ if(!tss)return;
+ const T=tss,F='Inter,system-ui,sans-serif',A0=-T.len,A1=T.len;
+ const P=(al,la)=>{const p=tpos(al,la);return ep(p.x,p.y)};
+ const ln=la=>{ex.beginPath();let q=P(A0,la);ex.moveTo(q.x,q.y);q=P(A1,la);ex.lineTo(q.x,q.y);ex.stroke()};
+ ex.beginPath();let q=P(A0,-T.z);ex.moveTo(q.x,q.y);q=P(A1,-T.z);ex.lineTo(q.x,q.y);q=P(A1,T.z);ex.lineTo(q.x,q.y);q=P(A0,T.z);ex.lineTo(q.x,q.y);ex.closePath();
+ ex.fillStyle='rgba(192,38,211,.26)';ex.fill();
+ ex.lineWidth=1.3;ex.strokeStyle='rgba(217,70,239,.85)';ln(-T.z);ln(T.z);
+ ex.setLineDash([6,5]);ex.lineWidth=1;ex.strokeStyle='rgba(217,70,239,.55)';ln(-(T.z+T.w));ln(T.z+T.w);ex.setLineDash([]);
+ ex.strokeStyle='rgba(217,70,239,.85)';ex.lineWidth=1.4;
+ for(let al=Math.ceil(A0/5)*5;al<=A1;al+=5)for(const sd of [1,-1]){
+  const la=sd*T.c,d=sd,tail=P(al-d*.7,la),tip=P(al+d*.7,la),h1=P(al+d*.35,la+.25),h2=P(al+d*.35,la-.25);
+  ex.beginPath();ex.moveTo(tail.x,tail.y);ex.lineTo(tip.x,tip.y);ex.moveTo(h1.x,h1.y);ex.lineTo(tip.x,tip.y);ex.lineTo(h2.x,h2.y);ex.stroke();
+ }
+ const va=clamp(talong(ecp.vx,ecp.vy),A0+4,A1-4);
+ ex.font='600 9px '+F;ex.fillStyle='rgba(240,171,252,.9)';ex.textAlign='center';
+ for(const sd of [1,-1]){const lb=P(va+2,sd*(T.c+T.w*.38));if(lb.x>20&&lb.x<S-20&&lb.y>20&&lb.y<S-6)ex.fillText(T.laneNames[sd>0?'F':'R'].toUpperCase(),lb.x,lb.y)}
+}
+function drawEcp(now){
+ const S=ES;if(!S||$('pEcp').classList.contains('hid'))return;
+ const cx=S/2,cy=S/2,R=S/2-24,ppn=R/ecp.range,orient=ecp.north?0:own.hdg,oa=orient*D2R,co=Math.cos(oa),si=Math.sin(oa);
+ const Cx=ecp.follow?own.x+ecp.ox:ecp.fx,Cy=ecp.follow?own.y+ecp.oy:ecp.fy;
+ ecp.vx=Cx;ecp.vy=Cy;ecp.ppn=ppn;ecp.co=co;ecp.si=si;
+ const ep=(wx,wy)=>{const dx=wx-Cx,dy=wy-Cy;return{x:cx+(dx*co-dy*si)*ppn,y:cy-(dx*si+dy*co)*ppn}};
+ const ov=vec(own.hdg,own.spd),F='Inter,system-ui,sans-serif',so=ep(own.x,own.y);
+ ex.clearRect(0,0,S,S);ex.fillStyle='#071426';ex.fillRect(0,0,S,S);
+ drawChartLand(ep,S,ppn);
+ // graticule
+ const step=ecp.range<=1.5?.5:ecp.range<=3?1:ecp.range<=6?2:ecp.range<=12?5:ecp.range<=24?10:20,L=S/ppn;
+ const la0=GEO.lat*60+Cy,lo0=GEO.lon*60+Cx/COSL;
+ ex.lineWidth=1;ex.strokeStyle='rgba(120,160,210,.16)';ex.fillStyle='rgba(150,180,220,.6)';ex.font='9px '+F;ex.textBaseline='alphabetic';
+ let lastY=-1e9,lastX=-1e9;
+ for(let m=Math.ceil((la0-L)/step);m*step<=la0+L;m++){
+  const A=m*step,y=A-GEO.lat*60,a=ep(Cx-L,y),b=ep(Cx+L,y);
+  ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(b.x,b.y);ex.stroke();
+  if(ecp.north&&a.y>22&&a.y<S-8&&Math.abs(a.y-lastY)>=24){lastY=a.y;ex.textAlign='left';ex.fillText(gl(A,2,'NS',step<1?1:0),4,a.y-3)}
+ }
+ for(let m=Math.ceil((lo0-L/COSL)/step);m*step<=lo0+L/COSL;m++){
+  const A=m*step,x=(A-GEO.lon*60)*COSL,a=ep(x,Cy-L),b=ep(x,Cy+L);
+  ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(b.x,b.y);ex.stroke();
+  if(ecp.north&&a.x>30&&a.x<S-30&&a.x-lastX>=52){lastX=a.x;ex.textAlign='center';ex.fillText(gl(A,3,'EW',step<1?1:0),a.x,S-5)}
+ }
+ drawTss(ep,S,ppn);
+ // range rings & CPA limit (around own ship), compass ring (around the chart)
+ const nr={1.5:3,3:3,6:3,12:4,24:4}[ecp.range]||4,st=ecp.range/nr;
+ ex.strokeStyle='rgba(125,211,252,.30)';ex.fillStyle='rgba(125,211,252,.8)';ex.textAlign='left';
+ for(let i=1;i<=nr;i++){ex.beginPath();ex.arc(so.x,so.y,st*i*ppn,0,7);ex.stroke();ex.fillText(String(+(st*i).toFixed(2))+' nm',so.x+4,so.y-st*i*ppn+10)}
+ ex.setLineDash([4,4]);ex.strokeStyle='rgba(251,191,36,.55)';ex.beginPath();ex.arc(so.x,so.y,ecp.cpaLim*ppn,0,7);ex.stroke();ex.setLineDash([]);
+ ex.strokeStyle='rgba(125,211,252,.55)';ex.beginPath();ex.arc(cx,cy,R,0,7);ex.stroke();
+ ex.textAlign='center';ex.textBaseline='middle';
+ for(let b=0;b<360;b+=10){
+  const a=(b-orient)*D2R,s=Math.sin(a),c=-Math.cos(a),l=b%30===0?8:4;
+  ex.beginPath();ex.moveTo(cx+s*R,cy+c*R);ex.lineTo(cx+s*(R+l),cy+c*(R+l));ex.stroke();
+  if(b%30===0){ex.fillStyle=b===0?'#fbbf24':'#9fb6d4';ex.fillText(b===0?'N':b3(b),cx+s*(R+16),cy+c*(R+16))}
+ }
+ ex.textBaseline='alphabetic';
+ // own ship: heading line, vector, symbol
+ const ha=(own.hdg-orient)*D2R;
+ ex.strokeStyle='rgba(248,250,252,.75)';ex.lineWidth=1;ex.beginPath();ex.moveTo(so.x,so.y);ex.lineTo(so.x+Math.sin(ha)*R,so.y-Math.cos(ha)*R);ex.stroke();
+ if(ecp.vecT>0&&own.spd>.1){const e=ep(own.x+ov.x*ecp.vecT,own.y+ov.y*ecp.vecT);ex.strokeStyle='#f8fafc';ex.lineWidth=2;ex.beginPath();ex.moveTo(so.x,so.y);ex.lineTo(e.x,e.y);ex.stroke()}
+ ex.strokeStyle='rgba(248,250,252,.5)';ex.lineWidth=1;ex.beginPath();ex.arc(so.x,so.y,10,0,7);ex.stroke();
+ ex.save();ex.translate(so.x,so.y);ex.rotate(ha);ex.fillStyle='#f8fafc';ex.beginPath();ex.moveTo(0,-9);ex.lineTo(4.5,6);ex.lineTo(0,3);ex.lineTo(-4.5,6);ex.closePath();ex.fill();ex.restore();
+ // AIS targets (far first so near ones sit on top)
+ for(const t of [...targets].sort((a,b)=>b.range-a.range)){
+  if(t===sel)t.act=true;
+  if(t.noAis){t.ex=null;t.ey=null;continue}
+  const dg=ecDanger(t),isAct=!!(t.act||dg||t.ais),p=ep(t.x,t.y);t.ex=p.x;t.ey=p.y;
+  if(p.x<-20||p.x>S+20||p.y<-20||p.y>S+20)continue;
+  const col=dg?((Math.floor(now/400)%2)?'#f87171':'#fecaca'):isAct?'#7dd3fc':'#7c93b3';
+  if(ecp.trk&&isAct&&t.trail.length){
+   ex.strokeStyle='rgba(125,211,252,.35)';ex.fillStyle='rgba(125,211,252,.6)';ex.lineWidth=1;ex.beginPath();
+   t.trail.forEach((q,i)=>{const e=ep(q.x,q.y);i?ex.lineTo(e.x,e.y):ex.moveTo(e.x,e.y)});ex.lineTo(p.x,p.y);ex.stroke();
+   for(const q of t.trail){const e=ep(q.x,q.y);ex.fillRect(e.x-1.5,e.y-1.5,3,3)}
+  }
+  if(isAct&&ecp.vecT>0&&t.spd>.1){const tv=vec(t.hdg,t.spd),e=ep(t.x+tv.x*ecp.vecT,t.y+tv.y*ecp.vecT);ex.strokeStyle=col;ex.lineWidth=dg?1.8:1.3;ex.beginPath();ex.moveTo(p.x,p.y);ex.lineTo(e.x,e.y);ex.stroke()}
+  const sz=isAct?7:4.5;
+  ex.save();ex.translate(p.x,p.y);ex.rotate((t.hdg-orient)*D2R);
+  ex.beginPath();ex.moveTo(0,-sz*1.5);ex.lineTo(sz*.85,sz);ex.lineTo(-sz*.85,sz);ex.closePath();
+  ex.lineWidth=isAct?1.8:1.2;ex.strokeStyle=col;ex.stroke();
+  if(isAct){ex.fillStyle=dg?'rgba(248,113,113,.35)':'rgba(125,211,252,.22)';ex.fill()}
+  ex.restore();
+  ex.font='600 10px '+F;ex.fillStyle=col;ex.textAlign='left';
+  {const lab='T'+t.id+(t.ais?' '+t.ais.name:''),w=ex.measureText(lab).width;ex.fillText(lab,p.x+sz+5+w>S-3?p.x-sz-5-w:p.x+sz+5,p.y-sz)}
+  if(t.query){const k=((now-t.query.t0)/700)%1;ex.strokeStyle=`rgba(250,204,21,${(1-k).toFixed(2)})`;ex.lineWidth=1.5;ex.beginPath();ex.arc(p.x,p.y,8+k*16,0,7);ex.stroke()}
+  if(t===sel){
+   const q=14,m=5;ex.strokeStyle='#fff';ex.lineWidth=1.4;ex.beginPath();
+   for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]){ex.moveTo(p.x+sx*q,p.y+sy*(q-m));ex.lineTo(p.x+sx*q,p.y+sy*q);ex.lineTo(p.x+sx*(q-m),p.y+sy*q)}
+   ex.stroke();
+  }
+ }
+ // predicted closest point of approach for the selected target
+ if(sel&&targets.includes(sel)&&sel.tcpa>0&&sel.tcpa<90){
+  const tc=sel.tcpa,tv=vec(sel.hdg,sel.spd),a=ep(own.x+ov.x*tc,own.y+ov.y*tc),b=ep(sel.x+tv.x*tc,sel.y+tv.y*tc);
+  ex.strokeStyle='rgba(251,191,36,.9)';ex.lineWidth=1.2;ex.setLineDash([3,3]);ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(b.x,b.y);ex.stroke();ex.setLineDash([]);
+  ex.fillStyle='#f8fafc';ex.beginPath();ex.arc(a.x,a.y,3,0,7);ex.fill();ex.fillStyle='#fbbf24';ex.beginPath();ex.arc(b.x,b.y,3,0,7);ex.fill();
+  ex.font='600 10px '+F;ex.textAlign='left';ex.fillText(`CPA ${f2(sel.cpa)} nm · ${f1(tc)} min`,(a.x+b.x)/2+6,(a.y+b.y)/2-5);
+ }
+ // status text
+ ex.font='600 10px '+F;ex.fillStyle='#9fb6d4';ex.textAlign='left';ex.fillText((ecp.north?'NORTH-UP':'HEAD-UP')+' · '+(+ecp.range.toFixed(1))+' NM · '+(ecp.follow?'SNAPPED TO SHIP':'CHART FIXED'),8,14);
+ ex.textAlign='right';ex.fillText(`CPA ${ecp.cpaLim} nm · TCPA ${ecp.tcpaLim} min`,S-8,14);
+ if(so.x<0||so.x>S||so.y<0||so.y>S){ex.fillStyle='#fbbf24';ex.textAlign='center';ex.fillText('OWN SHIP OFF SCREEN – press Re-centre',S/2,S-20)}
+}
+
+/* ---- data panel ---- */
+function setHtml(el,h){if(el._h!==h){el._h=h;el.innerHTML=h}}
+const kv=(k,v,c='')=>`<div class="er"><span class="k">${k}</span><span class="v ${c}">${v}</span></div>`;
+function updateEcp(){
+ if($('pEcp').classList.contains('hid'))return;
+ const ll=toLL(own.x,own.y),btn=$('eInt');
+ const _oh=$('eOwn').offsetHeight;setHtml($('eOwn'),`<span>${fmtLat(ll.lat)} ${fmtLon(ll.lon)}</span><span>${utcHMS(simT)} UTC</span><span class="h">HDG ${b3(own.hdg)}° · SOG ${f1(own.spd)} kn</span><span>COG ${b3(own.hdg)}° · ROT ${Math.round(own.rot)}°/min</span>`);if($('eOwn').offsetHeight!==_oh)fit('ecp');
+ const setBtn=(txt,dis)=>{const h=txt+' <kbd>I</kbd>';if(btn._h!==h){btn._h=h;btn.innerHTML=h}btn.disabled=dis};
+ const t=sel;
+ if(!t){
+  setHtml($('eHead'),'<span class="k">No target selected</span>');
+  setHtml($('eData'),'<div class="note">Click a target on the chart, then press <b>Interrogate</b> to request its AIS identity and voyage data.</div>');
+  setBtn('Interrogate',true);return;
+ }
+ const dg=ecDanger(t),rel=n180(t.brg-own.hdg),bcr=bowCross(t),A=t.ais,p=toLL(t.x,t.y),rot=Math.round(t._r?t._r.rot:0);
+ let cb='–';
+ if(t.tcpa>0&&t.tcpa!==Infinity){
+  const tv=vec(t.hdg,t.spd),ov=vec(own.hdg,own.spd),px=t.x-own.x+(tv.x-ov.x)*t.tcpa,py=t.y-own.y+(tv.y-ov.y)*t.tcpa,r=n180(Math.atan2(px,py)*R2D-own.hdg);
+  cb=`<span class="${r<0?'pt':'sb'}">${relTxt(r)}</span>`;
+ }
+ const bcTxt=bcr?(bcr.a>0?`${f2(bcr.a)} nm / ${f1(bcr.t)} min`:'crosses astern'):'–';
+ setHtml($('eHead'),`<b style="font-size:.95rem">T${t.id}</b> <span class="k">${A?A.name:'unidentified'}</span>${dg?' <span class="bad">⚠ CPA/TCPA</span>':''}`);
+ let h=`<div class="sh">Track data</div>`
+  +kv('Range',f2(t.range)+' nm')
+  +kv('Bearing',`${b3(t.brg)}°T <span class="${rel<0?'pt':'sb'}">${relTxt(rel)}</span>`)
+  +kv('Lat',fmtLat(p.lat))+kv('Lon',fmtLon(p.lon))
+  +kv('COG / SOG',`${b3(t.hdg)}° / ${f1(t.spd)} kn`)
+  +kv('HDG / ROT',`${b3(t.hdg)}° / ${rot>0?'+':''}${rot}°/min`)
+  +kv('CPA',f2(t.cpa)+' nm',dg?'bad':'hi')
+  +kv('TCPA',t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)+' min',dg?'bad':'hi')
+  +kv('Brg at CPA',cb)
+  +kv('BCR / BCT',bcTxt)
+  +kv('Range rate',`${f1(Math.abs(t.rrate)*60)} kn ${t.rrate<0?'closing':'opening'}`);
+ if(A){
+  h+=`<div class="sh">AIS static &amp; voyage <span class="k">· rcvd ${utcHMS(A.at)}</span></div>`
+   +kv('Name',A.name)+kv('MMSI',A.mmsi)+kv('IMO',A.imo)+kv('Call sign',A.call)+kv('Flag',A.flag)
+   +kv('Ship type',A.typeTxt)+kv('Nav status',A.statusTxt)+kv('L × B',A.dims)+kv('Draught',A.draught+' m')
+   +kv('Destination',A.dest)+kv('ETA',A.eta)+(cfg.training?kv('COLREGS',nameOf(t)):'');
+ }else if(t.noReply)h+='<div class="note">No reply to AIS interrogation – this vessel is not transmitting AIS. Treat it as a radar / visual contact only.</div>';
+ else if(t.query)h+='<div class="note">Interrogating… waiting for the vessel to reply.</div>';
+ else h+='<div class="note">Static data not held. Press <b>Interrogate</b> to request name, MMSI, type, status, size, draught, destination and ETA.</div>';
+ setHtml($('eData'),h);
+ if(A)setBtn('Reply received',true);else if(t.noReply)setBtn('No reply',true);else if(t.query)setBtn('Interrogating…',true);else setBtn('Interrogate',false);
+}
+$('eRange').onchange=e=>ecp.range=+e.target.value;
+$('eOri').onchange=e=>ecp.north=e.target.value==='north';
+$('eVec').onchange=e=>ecp.vecT=+e.target.value;
+$('eCpa').onchange=e=>ecp.cpaLim=+e.target.value;
+$('eTcpa').onchange=e=>ecp.tcpaLim=+e.target.value;
+$('eTrk').onchange=e=>ecp.trk=e.target.checked;
+$('eInt').onclick=interrogate;
+let ed=null;
+ec.onpointerdown=e=>{ed={px:e.clientX,py:e.clientY,moved:false,ox:ecp.ox,oy:ecp.oy,fx:ecp.fx,fy:ecp.fy,vx:ecp.vx,vy:ecp.vy};ec.setPointerCapture(e.pointerId)};
+ec.onpointermove=e=>{
+ if(!ed)return;const dx=e.clientX-ed.px,dy=e.clientY-ed.py;
+ if(!ed.moved&&Math.hypot(dx,dy)<5)return;
+ ed.moved=true;ec.style.cursor='grabbing';
+ const u=(dx/ek)/ecp.ppn,v=-(dy/ek)/ecp.ppn,co=ecp.co,si=ecp.si,wx=u*co+v*si,wy=-u*si+v*co;
+ if(ecp.follow){ecp.ox=ed.ox-wx;ecp.oy=ed.oy-wy}else{ecp.fx=ed.fx-wx;ecp.fy=ed.fy-wy}
+};
+ec.onpointerup=e=>{
+ if(!ed)return;const moved=ed.moved;ed=null;ec.style.cursor='';
+ if(moved)return;
+ const r=ec.getBoundingClientRect(),x=(e.clientX-r.left)/ek,y=(e.clientY-r.top)/ek;let b=null,bd=16;
+ for(const t of targets){if(t.ex==null)continue;const d=Math.hypot(t.ex-x,t.ey-y);if(d<bd){bd=d;b=t}}
+ sel=b;if(b)b.act=true;
+};
+ec.onpointercancel=()=>{ed=null;ec.style.cursor=''};
+function syncRange(){
+ const s=$('eRange');let o=[...s.options].find(o=>!o.dataset.c&&Math.abs(+o.value-ecp.range)<.001);
+ if(o){s.value=o.value;const c=s.querySelector('[data-c]');if(c)c.remove()}
+ else{let c=s.querySelector('[data-c]');if(!c){c=document.createElement('option');c.dataset.c=1;s.appendChild(c)}c.value=ecp.range;c.textContent=(+ecp.range.toFixed(1))+'';s.value=c.value}
+}
+ec.onwheel=e=>{e.preventDefault();ecp.range=clamp(ecp.range*(e.deltaY>0?1.2:1/1.2),.5,60);syncRange()};
+$('eCen').onclick=()=>{ecp.ox=ecp.oy=0;ecp.fx=own.x;ecp.fy=own.y};
+function folLabel(){const b=$('eFol');b.classList.toggle('on',ecp.follow);b.textContent='⚓ Snap to ship: '+(ecp.follow?'on':'off')}
+$('eFol').onclick=()=>{
+ if(ecp.follow){ecp.fx=ecp.vx;ecp.fy=ecp.vy;ecp.follow=false}
+ else{ecp.ox=ecp.vx-own.x;ecp.oy=ecp.vy-own.y;ecp.follow=true}
+ folLabel();
+};
+
+/* ================= ECPINS CPA warnings (audible, acknowledged per vessel) ================= */
+// A vessel raises a warning when ECPINS predicts it will pass inside the ECPINS CPA limit within the TCPA limit
+// (the same test that makes its symbol flash red). It beeps until that vessel's warning is clicked/acknowledged.
+let almLast=0,almKey='',almUi=0,almOn=true;
+function setAlarms(on){
+ almOn=on;$('almBtn').textContent='Alarms: '+(on?'on':'off');$('almBtn').classList.toggle('red',!on);
+ if(!on){for(const t of targets)t.alm=null;togglePanel('warn',false);almRender(true)}
+ $('barWarn').classList.toggle('hid',!on);$('mWarn').classList.toggle('hid',!on);
+}
+function alarmBeep(){
+ if(muted)return;
+ try{
+  audio=audio||new (window.AudioContext||window.webkitAudioContext)();
+  if(audio.state==='suspended')audio.resume();
+  let t0=audio.currentTime+.02;
+  for(let i=0;i<2;i++){
+   const o=audio.createOscillator(),g=audio.createGain();
+   o.type='square';o.frequency.value=1250;o.connect(g);g.connect(audio.destination);
+   g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.12,t0+.01);
+   g.gain.setValueAtTime(.12,t0+.11);g.gain.exponentialRampToValueAtTime(.0001,t0+.13);
+   o.start(t0);o.stop(t0+.14);t0+=.2;
+  }
+ }catch(e){}
+}
+function alarmAck(t){
+ if(!t||!t.alm)return;
+ if(t.alm.live)t.alm.state='ack';else t.alm=null; // already clear: just remove it
+ sel=t;almRender(true);
+}
+const almVals=t=>`Rng ${f2(t.range)} nm · Brg ${b3(t.brg)}° · CPA <b>${f2(t.cpa)} nm</b> · TCPA ${t.tcpa>0&&t.tcpa!==Infinity?'<b>'+f1(t.tcpa)+' min</b>':'–'}`;
+function almRender(force){
+ const now=performance.now(),list=targets.filter(t=>t.alm).sort((a,b)=>(a.alm.state==='active'?0:1)-(b.alm.state==='active'?0:1)||a.range-b.range);
+ const nAct=list.filter(t=>t.alm.state==='active').length;
+ const key=list.map(t=>t.id+t.alm.state+(t.alm.live?1:0)+(t.ais?1:0)).join(',');
+ if(key!==almKey||force){
+  almKey=key;
+  for(const id of['barWarn','barShow','mWarn'])$(id).classList.toggle('alarm',nAct>0);
+  $('barWarn').innerHTML='⚠ Warnings <kbd>3</kbd>'+(list.length?` <span class="cnt">${list.length}</span>`:'');
+  $('mWarn').innerHTML='<i>⚠️</i><span>Alarms</span>'+(list.length?`<em class="cnt">${list.length}</em>`:'');
+  $('wList').innerHTML=list.length?list.map(t=>{const a=t.alm,A=t.ais;
+   return`<div class="wrow ${a.state}" data-id="${t.id}"><div><span class="t">T${t.id}</span>${A?` <span class="d">${A.name}</span>`:''}${a.live?'':' <span class="st">· limits no longer breached</span>'}<div class="d" data-v="${t.id}"></div></div>${a.state==='active'?`<button class="b red" data-ack="${t.id}">Acknowledge</button>`:'<span class="okk">✓ Acknowledged</span>'}</div>`}).join('')
+   :'<div id="wEmpty">No vessels predicted inside the CPA limit.</div>';
+  almUi=0;
+ }
+ if(now-almUi>250){
+  almUi=now;
+  $('wLim').textContent=`ECPINS limits: CPA < ${ecp.cpaLim} nm · TCPA < ${ecp.tcpaLim} min`;
+  for(const t of list){const el=$('wList').querySelector(`[data-v="${t.id}"]`);if(el){const h=almVals(t);if(el._h!==h){el._h=h;el.innerHTML=h}}}
+ }
+}
+function alarmStep(now){
+ if(!almOn)return;
+ let fresh=false;
+ for(const t of targets){
+  const live=!t.noAis&&ecDanger(t),a=t.alm;
+  if(live){
+   if(!a){t.alm={state:'active',live:true,lostT:null};fresh=true;addLog(`ECPINS WARNING: T${t.id} predicted to pass within ${ecp.cpaLim} nm – CPA ${f2(t.cpa)} nm in ${f1(t.tcpa)} min`,'w')}
+   else{a.live=true;a.lostT=null}
+  }else if(a){
+   a.live=false;if(a.lostT==null)a.lostT=simT;
+   if(a.state==='ack'&&simT-a.lostT>=20)t.alm=null; // re-arms once clear for 20 s, so a vessel hovering at the limit doesn't re-trigger
+  }
+ }
+ if(fresh){almLast=0;if($('pWarn').classList.contains('hid'))togglePanel('warn',true)}
+ almRender(fresh);
+ if(!paused&&targets.some(t=>t.alm&&t.alm.state==='active')&&now-almLast>=1200){almLast=now;alarmBeep()}
+}
+$('almBtn').onclick=()=>setAlarms(!almOn);
+$('wList').addEventListener('click',e=>{
+ const b=e.target.closest('[data-ack]');
+ if(b){alarmAck(targets.find(t=>t.id==b.dataset.ack));return}
+ const r=e.target.closest('[data-id]');if(r){const t=targets.find(t=>t.id==r.dataset.id);if(t)sel=t}
+});
+
+/* ================= UI ================= */
+function roleText(t){
+ if(!cfg.training)return'';
+ const A=t.A||assess(t);if(!t.risk&&A.role!=='keep-clear')return'<span style="color:#9ca3af">no risk</span>';
+ const m={'give-way':['GIVE-WAY','#fbbf24'],'stand-on':['STAND-ON','#86efac'],both:['BOTH ALTER STBD','#fbbf24'],'keep-clear':['KEEP CLEAR','#fbbf24']}[A.role];
+ return`<span style="color:${m[1]}">${m[0]}</span> R${A.rule}`;
+}
+function updateUI(){
+ {const lr=view.off;const _h=$('rinfo').offsetHeight;$('rinfo').innerHTML=`<span>${ropt.head?'HEAD-UP':'NORTH-UP'} · ${ropt.range} NM</span><span>${ropt.vec==='true'?'TRUE VECT':ropt.vec==='rel'?'REL VECT':'NO VECT'} ${ropt.vecT} MIN</span><span class="h">HDG ${b3(own.hdg)}°</span><span class="lk">LOOK ${b3(own.hdg+view.off)}°T · ${Math.abs(lr)<.5?'AHEAD':(lr<0?'P':'S')+Math.round(Math.abs(lr))+'°'}</span>`;if($('rinfo').offsetHeight!==_h&&typeof WIN!=='undefined'&&WIN.radar.nh)fit('radar')}
+ $('hHdg').textContent=b3(own.hdg)+'°';$('hSpd').textContent=f1(own.spd);$('hRot').textContent=Math.round(own.rot);$('cmdSpd').textContent=Math.round(own.cmdSpd);
+ $('clock').textContent=hms(simT);$('cq').textContent=closeQ;$('col').textContent=collisions;
+ $('roleH').style.display=cfg.training?'':'none';tssOwnUpdate();
+ const rows=[...targets].sort((a,b)=>a.range-b.range).filter(t=>t.range<14&&detected(t));
+ $('tbody').innerHTML=rows.map(t=>{const dg=t.tcpa>0&&t.tcpa<20&&t.cpa<ropt.cpaLim&&!t.anch;
+  return`<tr data-id="${t.id}" class="${t===sel?'sel':''} ${dg?'danger':''}"><td>T${t.id}</td><td>${b3(t.brg)}</td><td class="${n180(t.brg-own.hdg)<0?'pt':'sb'}">${relTxt(n180(t.brg-own.hdg))}</td><td>${f2(t.range)}</td><td>${b3(t.hdg)}</td><td>${f1(t.spd)}</td><td>${f2(t.cpa)}</td><td>${t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)}</td>${cfg.training?`<td class="role">${roleText(t)}</td>`:''}</tr>`}).join('')||'<tr><td colspan="9" style="color:#9ca3af;text-align:left">No targets in range</td></tr>';
+ const el=$('tinfo');
+ if(!sel){el.innerHTML='Click a vessel on the radar, bridge or in the list.';return}
+ const t=sel,rel=n180(t.brg-own.hdg),A=t.A||assess(t);
+ el.innerHTML=`<b style="font-size:1rem">Target ${t.id}</b>${cfg.training?` <span class="k">– ${nameOf(t)}</span>`:''}<br>
+ <span class="k">Bearing</span> ${b3(t.brg)}°T (<span class="${rel<0?'pt':'sb'}">${b3(Math.abs(rel))}° ${rel<0?'port':'stbd'}</span>) · <span class="k">Range</span> ${f2(t.range)} nm<br>
+ <span class="k">Course</span> ${b3(t.hdg)}° · <span class="k">Speed</span> ${f1(t.spd)} kn<br>
+ <span class="k">CPA</span> <b>${f2(t.cpa)} nm</b> · <span class="k">TCPA</span> <b>${t.tcpa===Infinity?'–':t.tcpa<0?'passed':f1(t.tcpa)+' min'}</b> · <span class="k">Range rate</span> ${f1(t.rrate*60)} kn<br>
+ <span class="k">Aspect</span> you see her ${aspect(t)}
+ ${cfg.training?`<div class="rule">${A.text}${t.risk?'':'<br><i>No risk of collision at present (diverging, or CPA over 1 nm).</i>'}</div>`:''}${extraInfo(t)}`;
+}
+function aspect(t){const rel=n180(n360(t.brg+180)-t.hdg);return Math.abs(rel)>=112.5?'from astern (stern light)':Math.abs(rel)<=10?'head-on':rel>0?'on her starboard side (green)':'on her port side (red)'}
+
+/* inputs */
+const lsel=$('loc');for(const k in LOCS){const o=document.createElement('option');o.value=k;o.textContent=LOCS[k].label;lsel.appendChild(o)}
+const sc=$('scen');
+function fillScen(){sc.innerHTML='';for(const k in SCEN){if((SCEN[k].loc||'sea')!==lsel.value)continue;const o=document.createElement('option');o.value=k;o.textContent=SCEN[k].label;sc.appendChild(o)}}
+fillScen();lsel.onchange=()=>{fillScen();restart()};
+sc.onchange=restart;$('restart').onclick=restart;
+$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'Resume':'Pause'};
+$('ovOk').onclick=()=>{$('overlay').classList.remove('show');paused=false;$('pause').textContent='Pause'};
+$('mute').onclick=()=>{muted=!muted;$('mute').textContent='Sound: '+(muted?'off':'on')};
+$('helm').onclick=e=>{const d=e.target.dataset.dc;if(d){steerTo((own.mode==='steer'?own.cmdHdg:own.hdg)+ +d);$('course').value=Math.round(own.cmdHdg)}};
+$('setCourse').onclick=()=>steerTo(+$('course').value||0);
+$('course').onkeydown=e=>{if(e.key==='Enter')steerTo(+$('course').value||0)};
+$('rud').onclick=e=>{const b=e.target.closest('[data-r]');if(b)setRudder(+b.dataset.r)};
+$('steady').onclick=()=>{steerTo(own.hdg+own.r*20);$('course').value=Math.round(own.cmdHdg)};
+$('rudLim').onchange=e=>own.rudLim=+e.target.value;
+let rudS='';
+function drawRudder(){
+ const a=own.rud,o=own.rudCmd,k=Math.abs(a)/RUD_MAX*100;
+ const key=[a.toFixed(1),o.toFixed(1),own.mode,Math.round(own.cmdHdg),Math.round(own.hdg*10)].join('|');if(key===rudS)return;rudS=key;
+ $('rudP').style.width=a<0?k+'%':'0';$('rudS').style.width=a>0?k+'%':'0';
+ const t=$('rudTxt');t.textContent=rudTxt(a);t.style.color=Math.round(Math.abs(a))<1?'#e2f3ff':a<0?'#fca5a5':'#86efac';
+ const ord=$('rudOrd');ord.style.display=Math.abs(o-a)>.4?'block':'none';ord.style.left=(50+o/RUD_MAX*50)+'%';
+ $('rudMode').textContent=own.mode==='steer'?'Steering '+b3(own.cmdHdg)+'°':'Manual rudder';
+ $('rudOrdT').textContent='Order: '+rudTxt(o).toLowerCase();
+ const e=n180(own.cmdHdg-own.hdg);$('rudErr').textContent=own.mode==='steer'&&Math.abs(e)>=.5?(e<0?'to port ':'to stbd ')+Math.abs(Math.round(e))+'°':'';
+}
+$('eng').onclick=e=>{const d=e.target.dataset.ds;if(d)own.cmdSpd=clamp(own.cmdSpd+ +d,0,25)};
+$('horn').onclick=e=>{const k=e.target.dataset.h;if(k)ownSignal(k)};
+$('ts').onchange=()=>{};
+$('light').onchange=e=>cfg.light=e.target.value;
+$('vis').oninput=e=>{cfg.vis=+e.target.value;$('visv').textContent=cfg.vis+' nm'};
+$('fov').oninput=e=>{view.fov=+e.target.value;$('fovv').textContent=Math.round(view.fov)+'°'};
+$('look').oninput=e=>setLook(+e.target.value);
+$('centre').onclick=()=>setLook(0);
+$('train').onchange=e=>{cfg.training=e.target.checked;updateUI()};
+$('rrange').onchange=e=>ropt.range=+e.target.value;
+$('orient').onchange=e=>ropt.head=e.target.value==='head';
+$('vec').onchange=e=>ropt.vec=e.target.value;
+$('vecT').onchange=e=>ropt.vecT=+e.target.value;
+$('cpaLim').onchange=e=>ropt.cpaLim=+e.target.value;
+$('trails').onchange=e=>ropt.trails=e.target.checked;
+function setLook(v){view.off=n180(v);$('look').value=Math.round(view.off);$('lookv').textContent=Math.round(view.off)+'°'}
+function setFov(v){view.fov=clamp(v,8,110);$('fov').value=view.fov;$('fovv').textContent=Math.round(view.fov)+'°'}
+$('tbody').onclick=e=>{const tr=e.target.closest('tr');if(tr)sel=targets.find(t=>t.id==tr.dataset.id)||null};
+rc.onclick=e=>{const r=rc.getBoundingClientRect(),x=(e.clientX-r.left)/rk,y=(e.clientY-r.top)/rk;let b=null,bd=18;for(const t of targets){if(t.rx==null)continue;const d=Math.hypot(t.rx-x,t.ry-y);if(d<bd){bd=d;b=t}}sel=b};
+// bridge drag / click / wheel
+let drag=null;
+bc.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,off:view.off,moved:false};bc.setPointerCapture(e.pointerId)};
+bc.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x;if(Math.abs(dx)>4)drag.moved=true;if(drag.moved)setLook(drag.off-dx/BW*view.fov)};
+bc.onpointerup=e=>{if(drag&&!drag.moved){const r=bc.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let b=null,bd=1e9;
+  for(const t of targets){if(t.sx==null)continue;const d=Math.abs(t.sx-x);if(d<Math.max(16,t.sw)&&Math.abs(y-HZ)<BH*.35&&d<bd){bd=d;b=t}}if(b)sel=b}drag=null};
+bc.onwheel=e=>{e.preventDefault();setFov(view.fov*(e.deltaY>0?1.12:.89))};
+const PANELS={radar:'pRadar',helm:'pHelm',sim:'pSim',tgt:'pTgt',list:'pList',log:'pLog',help:'pHelp',ecp:'pEcp',warn:'pWarn'};
+const PKEYS={r:'radar',h:'helm',s:'sim',t:'tgt',g:'list',l:'log','?':'help','/':'help',e:'ecp','3':'warn'};
+const PLAB={radar:'R',helm:'H',sim:'S',tgt:'T',list:'G',log:'L',help:'?',ecp:'E',warn:'3'};
+function togglePanel(n,show){
+ if(n==='warn'&&!almOn&&show!==false)return; // alarms disabled: the Warnings menu stays closed
+ const el=$(PANELS[n]);const on=show===undefined?el.classList.contains('hid'):show;
+ if(on&&isMob())for(const k in PANELS)if(k!==n&&!$(PANELS[k]).classList.contains('hid'))togglePanel(k,false); // one sheet at a time
+ el.classList.toggle('hid',!on);if(on)showWin(n);
+ const bt=document.querySelector(`#bar [data-p="${n}"]`);if(bt)bt.classList.toggle('on',on);
+ document.querySelectorAll(`#mbar [data-m="${n}"],#mMenu [data-m="${n}"]`).forEach(b=>b.classList.toggle('on',on));
+ document.documentElement.classList.toggle('sheet',Object.keys(PANELS).some(k=>!$(PANELS[k]).classList.contains('hid')));
+ resize();
+}
+function hideAll(){for(const n in PANELS)togglePanel(n,false)}
+for(const n in PANELS){const h=$(PANELS[n]).querySelector('h2');h.insertAdjacentHTML('beforeend',`<span class="sp"></span><kbd>${PLAB[n]}</kbd><button class="x" data-x="${n}" title="Hide">×</button>`)}
+document.addEventListener('click',e=>{
+ const x=e.target.closest('[data-x]');if(x)togglePanel(x.dataset.x,false);
+ const p=e.target.closest('#bar [data-p]');if(p)togglePanel(p.dataset.p);
+ if(e.target.closest('button'))e.target.closest('button').blur();
+});
+document.addEventListener('change',e=>{if(e.target.tagName==='SELECT')e.target.blur()});
+
+/* ---- floating, movable, resizable windows ---- */
+const WIN={radar:{w:340,m:'both'},helm:{w:290,m:'both'},sim:{w:300,m:'both'},tgt:{w:300,m:'width'},list:{w:470,m:'width'},log:{w:300,m:'width'},help:{w:540,m:'width'},ecp:{w:650,m:'both'},warn:{w:320,m:'width'}};
+let zTop=100;
+for(const n in PANELS){
+ const el=$(PANELS[n]),c=WIN[n],h=el.querySelector('h2');
+ document.body.appendChild(el);el.classList.add('win');el.dataset.n=n;
+ const wrap=document.createElement('div'),wc=document.createElement('div');wrap.className='wrap';wc.className='wc'+(c.m==='width'?' fl':'');wc.style.width=c.w+'px';
+ [...el.childNodes].forEach(x=>{if(x!==h)wc.appendChild(x)});
+ if(n==='list'){const t=wc.querySelector('table'),sc=document.createElement('div');sc.className='sc';t.replaceWith(sc);sc.appendChild(t)}
+ wrap.appendChild(wc);el.appendChild(wrap);c.el=el;c.wc=wc;c.h=h;
+ for(const k of['nw','ne','sw','se'])el.insertAdjacentHTML('beforeend',`<i class="rz" data-c="${k}"></i>`);
+}
+$('dockL').remove();$('dockR').remove();
+function fit(n){
+ const c=WIN[n],el=c.el,wc=c.wc;if(el.classList.contains('hid'))return;
+ const wrap=wc.parentNode,iw=el.clientWidth-20,k=clamp(iw/c.w,.35,3.5);c.k=k;
+ if(c.m==='both'){c.nh=wc.offsetHeight+4;el.style.height=Math.round(c.h.offsetHeight+8+12+c.nh*k)+'px'}
+ wc.style.transform=`scale(${k})`;
+ if(c.m==='width')wc.style.height=(wrap.clientHeight/k)+'px';
+ resize();
+}
+function showWin(n){
+ const c=WIN[n],el=c.el,W=innerWidth,H=innerHeight;
+ if(!c.nh){c.nh=c.wc.offsetHeight}
+ if(!el.dataset.placed){
+  el.dataset.placed=1;
+  const bw=Math.min(c.w+20,W-20);el.style.width=bw+'px';
+  const hh=c.h.offsetHeight+18,nat=Math.min(hh+c.nh*(bw-20)/c.w,H*.6);
+  if(c.m==='width')el.style.height=nat+'px';
+  const pos={radar:[W-bw-10,98],tgt:[W-370-bw-10,98],list:[W-bw-10,H-72-nat],helm:[10,98],sim:[bw>0?330:10,98],log:[10,H-72-nat],help:[(W-bw)/2,(H-nat)/2],ecp:[(W-bw)/2,90],warn:[(W-bw)/2,110]}[n];
+  el.style.left=Math.max(0,pos[0])+'px';el.style.top=Math.max(0,pos[1])+'px';
+ }
+ front(el);fit(n);
+}
+function front(el){el.style.zIndex=++zTop}
+function clampWin(el){const r=el.getBoundingClientRect();el.style.left=clamp(r.left,80-r.width,innerWidth-80)+'px';el.style.top=clamp(r.top,0,innerHeight-34)+'px'}
+let act=null;
+document.addEventListener('pointerdown',e=>{
+ const el=e.target.closest('.win');if(!el||isMob())return;front(el);
+ const rz=e.target.closest('.rz'),hd=e.target.closest('.win>h2'),r=el.getBoundingClientRect();
+ if(rz)act={t:'rz',el,c:rz.dataset.c,sx:e.clientX,sy:e.clientY,r};
+ else if(hd&&!e.target.closest('button'))act={t:'mv',el,sx:e.clientX,sy:e.clientY,r};
+ else return;
+ e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!act)return;const {el,r}=act,dx=e.clientX-act.sx,dy=e.clientY-act.sy;
+ if(act.t==='mv'){el.style.left=clamp(r.left+dx,80-r.width,innerWidth-80)+'px';el.style.top=clamp(r.top+dy,0,innerHeight-34)+'px';return}
+ const n=el.dataset.n,c=WIN[n],west=act.c.includes('w'),north=act.c.includes('n');
+ const w=clamp(west?r.width-dx:r.width+dx,170,Math.min(1000,innerWidth));
+ el.style.width=w+'px';
+ if(c.m==='width'){el.style.height=clamp(north?r.height-dy:r.height+dy,110,innerHeight)+'px'}
+ fit(n);
+ el.style.left=(west?r.right-w:r.left)+'px';
+ el.style.top=(north?r.bottom-el.offsetHeight:r.top)+'px';
+});
+const endAct=()=>{act=null};document.addEventListener('pointerup',endAct);document.addEventListener('pointercancel',endAct);
+addEventListener('resize',()=>{for(const n in WIN){const el=WIN[n].el;if(!el.classList.contains('hid'))clampWin(el)}});
+$('barPause').onclick=()=>$('pause').click();
+function toggleBar(show){const on=show===undefined?$('bar').classList.contains('hid'):show;$('bar').classList.toggle('hid',!on);$('barShow').classList.toggle('hid',on)}
+function toggleFs(){
+ const d=document,el=d.documentElement;
+ if(d.fullscreenElement||d.webkitFullscreenElement){(d.exitFullscreen||d.webkitExitFullscreen).call(d)}
+ else{const f=el.requestFullscreen||el.webkitRequestFullscreen;if(f)try{const r=f.call(el);if(r&&r.catch)r.catch(()=>{})}catch(_){}}
+}
+function fsLabel(){const on=document.fullscreenElement||document.webkitFullscreenElement;$('barFs').innerHTML=(on?'⛶ Exit full screen':'⛶ Full screen')+' <kbd>F</kbd>';resize()}
+$('barFs').onclick=toggleFs;document.addEventListener('fullscreenchange',fsLabel);document.addEventListener('webkitfullscreenchange',fsLabel);
+$('barMin').onclick=()=>toggleBar(false);$('barShow').onclick=()=>toggleBar(true);
+$('trans').oninput=e=>{const t=+e.target.value;document.documentElement.style.setProperty('--pa',(1-t/100).toFixed(2));$('transv').textContent=t+'%'};
+$('rng').onchange=e=>{cfg.allLights=!e.target.checked};
+$('deck').oninput=e=>{deckScale=+e.target.value;$('deckv').textContent=deckScale.toFixed(1)+'×'};
+// start with the bridge full-screen plus radar and helm
+['sim','tgt','list','log','help','ecp','warn'].forEach(n=>togglePanel(n,false));if(isMob()){togglePanel('radar',false);togglePanel('helm',false)}else{togglePanel('radar',true);togglePanel('helm',true)};
+window.onkeydown=e=>{
+ if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&e.target.type!=='checkbox'&&e.target.type!=='range')return;
+ if(e.ctrlKey||e.metaKey||e.altKey)return;
+ const pk=PKEYS[e.key.toLowerCase()];if(pk){togglePanel(pk);e.preventDefault();return}
+ if(e.key.toLowerCase()==='f'){toggleFs();e.preventDefault();return}
+ if(e.key.toLowerCase()==='b'){toggleBar();e.preventDefault();return}
+ if(e.key.toLowerCase()==='i'){interrogate();e.preventDefault();return}
+ if(e.key==='Escape'){hideAll();return}
+ const k=e.key;
+ const base=own.mode==='steer'?own.cmdHdg:own.hdg;
+ if(k==='ArrowLeft'){steerTo(base-(e.shiftKey?10:1))}else if(k==='ArrowRight'){steerTo(base+(e.shiftKey?10:1))}
+ else if(k===','){setRudder((own.mode==='manual'?own.rudCmd:own.rud)-5)}else if(k==='.'){setRudder((own.mode==='manual'?own.rudCmd:own.rud)+5)}else if(k==='m'||k==='M')setRudder(0)
+ else if(k==='ArrowUp')own.cmdSpd=clamp(own.cmdSpd+1,0,25);else if(k==='ArrowDown')own.cmdSpd=clamp(own.cmdSpd-1,0,25);
+ else if(k==='a'||k==='A')setLook(view.off-5);else if(k==='d'||k==='D')setLook(view.off+5);else if(k==='c'||k==='C')setLook(0);
+ else if(k===' '){paused=!paused;$('pause').textContent=paused?'Resume':'Pause'}else return;
+ e.preventDefault();$('course').value=Math.round(own.cmdHdg);
+};
+
+/* ================= phone / tablet controls ================= */
+function mobMenu(show){
+ const m=$('mMenu'),on=show===undefined?m.classList.contains('hid'):show;
+ m.classList.toggle('hid',!on);$('mMore').classList.toggle('on',on);
+ if(on)$('mPauseT').textContent=paused?'Resume':'Pause';
+}
+if(!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen))$('mFs').classList.add('hid');
+$('mbar').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.id==='mMore'){mobMenu();return}
+ mobMenu(false);if(b.dataset.m)togglePanel(b.dataset.m);
+});
+$('mMenu').addEventListener('click',e=>{
+ const b=e.target.closest('[data-m],[data-a]');if(!b)return;
+ mobMenu(false);
+ if(b.dataset.m){togglePanel(b.dataset.m,true);return}
+ const a=b.dataset.a;if(a==='pause')$('pause').click();else if(a==='look')setLook(0);else if(a==='fs')toggleFs();
+});
+document.addEventListener('pointerdown',e=>{if(!$('mMenu').classList.contains('hid')&&!e.target.closest('#mMenu,#mMore'))mobMenu(false)},true);
+$('qh').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.dc){steerTo((own.mode==='steer'?own.cmdHdg:own.hdg)+ +b.dataset.dc);$('course').value=Math.round(own.cmdHdg)}
+ else if(b.dataset.ds)own.cmdSpd=clamp(own.cmdSpd+ +b.dataset.ds,0,25);
+});
+$('selChip').onclick=()=>togglePanel('tgt',true);
+function mobUpdate(){
+ if(!isMob())return;
+ const dsp=Math.abs(own.cmdSpd-own.spd)>.4?` → ${Math.round(own.cmdSpd)}`:'';
+ setHtml($('qC'),`<b>${b3(own.hdg)}°</b><span>${f1(own.spd)}${dsp} kn</span>`);
+ const c=$('selChip');
+ if(sel&&targets.includes(sel)){
+  c.classList.remove('hid');c.classList.toggle('bad',ecDanger(sel)&&!sel.noAis);
+  c.textContent=`T${sel.id} · ${f1(sel.range)} nm · CPA ${f2(sel.cpa)} · TCPA ${sel.tcpa>0&&sel.tcpa!==Infinity?f1(sel.tcpa)+' min':'–'}`;
+ }else c.classList.add('hid');
+}
+// pinch to zoom: bridge view (field of view) and ECPINS (range)
+let pinchOn=false,pinchBase=null;
+function pinchSetup(el,get,set){
+ const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+ for(const ev of['pointerdown','pointermove','pointerup','pointercancel'])el.addEventListener(ev,e=>{if(pinchOn&&e.pointerType==='touch')e.stopImmediatePropagation()},true);
+ el.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchOn=true;pinchBase={d:dist(e.touches),v:get()}}},{passive:true});
+ el.addEventListener('touchmove',e=>{if(pinchOn&&pinchBase&&e.touches.length===2){e.preventDefault();set(pinchBase.v,pinchBase.d/dist(e.touches))}},{passive:false});
+ const end=e=>{if(e.touches.length===0)setTimeout(()=>{pinchOn=false;pinchBase=null},80)};
+ el.addEventListener('touchend',end);el.addEventListener('touchcancel',end);
+}
+pinchSetup(bc,()=>view.fov,(v,r)=>setFov(v*r));
+pinchSetup(ec,()=>ecp.range,(v,r)=>{ecp.range=clamp(v*r,.5,60);syncRange()});
+
+/* ================= main loop ================= */
+let last=performance.now(),acc=0,uiT=0;
+function frame(now){
+ const dt=Math.min(.1,(now-last)/1000);last=now;
+ if(!paused){acc+=dt*(+$('ts').value);let n=0;while(acc>=1&&n<400){stepSim(1);acc-=1;n++;if(paused)break}if(n>=400)acc=0}
+ ecpStep(now);alarmStep(now);drawBridge(now);drawRadar(now);drawEcp(now);drawRudder();
+ if(now-uiT>250){uiT=now;updateUI();updateEcp();mobUpdate()}
+ requestAnimationFrame(frame);
+}
+window.SIM={ecp,interrogate,own,get targets(){return targets},step:n=>{for(let i=0;i<n;i++)stepSim(1)},restart,view,cfg,ropt,setSel:id=>{sel=targets.find(t=>t.id===id)||null},spawn,setPaused:v=>{paused=v}};
+resize();restart();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
