@@ -78,7 +78,7 @@ td.role{text-align:left;font-size:.7rem}
 /* ECPINS */
 .ecp{display:grid;grid-template-columns:380px 1fr;gap:.7rem}
 .ecpL{min-width:0}
-#ecp{width:100%;height:auto;aspect-ratio:1;display:block;border-radius:6px;background:#071426;border:1px solid rgba(125,211,252,.25);cursor:crosshair}
+#ecp{width:100%;height:auto;aspect-ratio:1;display:block;border-radius:6px;background:#071426;border:1px solid rgba(125,211,252,.25);cursor:grab;touch-action:none}
 .ecpR{position:relative;min-width:0}
 .ecpR .in{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding-right:.3rem}
 #eOwn{margin-top:.5rem;min-height:2.6rem;display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem;font:600 .72rem Inter,sans-serif;font-variant-numeric:tabular-nums;color:#7dd3fc}
@@ -114,7 +114,7 @@ td.role{text-align:left;font-size:.7rem}
 <body>
 <canvas id="bridge" aria-label="Bridge view"></canvas>
 <div class="hint">Drag to look around · wheel to zoom (binoculars) · click a vessel to select</div>
-<div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem;display:block">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
+<div id="overlay"><div><h2 style="color:#fff;font-size:1.3rem;margin-bottom:.4rem;display:block" id="ovTitle">COLLISION</h2><p id="ovText" style="color:#fecaca"></p><button class="b" id="ovOk" style="margin-top:.7rem">Continue</button></div></div>
 
 <div class="dock" id="dockL">
   <section class="box" id="pHelm"><h2>Own ship</h2>
@@ -166,13 +166,15 @@ td.role{text-align:left;font-size:.7rem}
       <div class="ecpL">
         <canvas id="ecp" aria-label="ECPINS chart display"></canvas>
         <div class="ctl">
-          <label>Range nm<select id="eRange"><option>1.5</option><option>3</option><option selected>6</option><option>12</option><option>24</option></select></label>
+          <label>Range nm<select id="eRange"><option>1.5</option><option>3</option><option selected>6</option><option>12</option><option>24</option><option>48</option></select></label>
           <label>Orientation<select id="eOri"><option value="north">North-up</option><option value="head">Head-up</option></select></label>
           <label>Vector<select id="eVec"><option value="0">Off</option><option value="3">3 min</option><option value="6" selected>6 min</option><option value="12">12 min</option></select></label>
           <label>CPA limit nm<select id="eCpa"><option>0.5</option><option selected>1</option><option>2</option></select></label>
           <label>TCPA limit min<select id="eTcpa"><option>6</option><option>12</option><option selected>20</option></select></label>
           <label class="chk"><input type="checkbox" id="eTrk" checked> Past tracks</label>
         </div>
+        <div class="btns" style="margin-top:.4rem"><button class="b" id="eCen" title="Put the ship back in the middle of the chart">⌖ Re-centre</button><button class="b on" id="eFol" title="Chart moves with the ship, keeping the ship where it is on screen">⚓ Snap to ship: on</button></div>
+        <div style="font-size:.64rem;color:var(--muted);margin-top:.1rem">Drag to pan · wheel to zoom · click a target to select</div>
         <div id="eOwn"></div>
       </div>
       <div class="ecpR"><div class="in">
@@ -193,8 +195,8 @@ td.role{text-align:left;font-size:.7rem}
   <p>Panels: <kbd>R</kbd> radar · <kbd>E</kbd> ECPINS · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
   <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
   <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
-  <p><b>ECPINS:</b> a chart-style display of AIS targets (no real chart data, just a graticule and range rings). Small hollow triangles are sleeping targets; selecting one activates it, showing its vector, past track and the predicted closest point of approach. Press <b>Interrogate</b> (<kbd>I</kbd>) to request its AIS static and voyage data (name, MMSI, IMO, call sign, ship type, navigational status, size, draught, destination, ETA) alongside its CPA, TCPA, BCR/BCT and bearing at CPA. Flashing red targets break the CPA/TCPA limits.</p>
-  <p><b>Locations:</b> choose a Location in the Simulation panel (<kbd>S</kbd>). <b>Open sea</b> is the free-roaming sandbox. <b>English Channel</b> is a schematic Dover Strait TSS (SW-bound lane on the English side, NE-bound on the French side, ferries crossing). <b>Strait of Malacca</b> is a dense schematic TSS with deep-draught tankers, tugs with tows, anchored ships, unlit fishing boats and <b>dhows that may not follow the Rules</b> (no or dim lights, no AIS, weak radar echo, erratic courses, failing to give way). Lanes, separation zones and coasts show on the ECPINS display; with rule assessment on, your own Rule 10 status appears under Own ship.</p>
+  <p><b>ECPINS:</b> a chart-style display of AIS targets (open sea has no chart data; the Channel and Malacca show approximate coastlines, banks, ports and the TSS). <b>Drag</b> the chart to pan, use the <b>wheel</b> to zoom, <b>Re-centre</b> to put your ship in the middle again, and <b>Snap to ship</b> to make the chart move with the ship while keeping it wherever you have placed it on screen (turn it off to hold the chart still). Small hollow triangles are sleeping targets; selecting one activates it, showing its vector, past track and the predicted closest point of approach. Press <b>Interrogate</b> (<kbd>I</kbd>) to request its AIS static and voyage data (name, MMSI, IMO, call sign, ship type, navigational status, size, draught, destination, ETA) alongside its CPA, TCPA, BCR/BCT and bearing at CPA. Flashing red targets break the CPA/TCPA limits.</p>
+  <p><b>Locations:</b> choose a Location in the Simulation panel (<kbd>S</kbd>). <b>Open sea</b> is the free-roaming sandbox. <b>English Channel</b> is the Dover Strait TSS on an approximate real coastline (SW-bound lane on the English side, NE-bound on the French side, ferries crossing, Goodwin Sands, Dover, Calais…). <b>Strait of Malacca</b> is the strait off Port Dickson / Cape Rachado and Rupat Island, with a dense TSS and deep-draught tankers, tugs with tows, anchored ships, unlit fishing boats and <b>dhows that may not follow the Rules</b> (no or dim lights, no AIS, weak radar echo, erratic courses, failing to give way). Land shows on the bridge horizon, the radar and ECPINS (running aground stops the engine). With rule assessment on, your own Rule 10 status appears under Own ship. Coastlines are approximate, not for navigation.</p>
   <p>Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and the visibility setting; the radar always sees out to its range.</p>
 </section>
 
@@ -313,7 +315,7 @@ let targets=[],nextId=1,simT=0,paused=false,collisions=0,closeQ=0,sel=null,lastS
 const view={off:0,fov:70};
 const cfg={light:'night',vis:10,training:true};
 const RISK_CPA=1.0;
-let curLoc='sea',curS=null,tss=null,ownTssKey=null;
+let curLoc='sea',curS=null,tss=null,ownTssKey=null,LAND=null;
 
 const SCEN={
  mixed:{label:'Mixed traffic (continuous)',start:['cross_stbd','cross_port','overtaking_us','sail','trawl'],cont:true},
@@ -331,15 +333,31 @@ const SCEN={
 const KINDS=[['cross_stbd',3],['cross_port',3],['head_on',1.2],['overtaking_us',1],['overtake_them',1],['sail',1.6],['trawl',1],['fish',.6],['ram',.6],['nuc',.3],['cbd',.7],['anch',.6],['tow',1],['pilot',.7]];
 const LOCS={
  sea:{label:'Open sea',geo:{lat:50,lon:-1},tss:null},
- channel:{label:'English Channel – Dover Strait (TSS)',geo:{lat:51.0,lon:1.6},
-  tss:{name:'Dover Strait TSS (schematic)',ax:50,z:1.0,w:2.5,land:9.5,inshore:4,laneNames:{F:'NE-bound',R:'SW-bound'},landNames:['ENGLAND','FRANCE']},
+ channel:{label:'English Channel – Dover Strait (TSS)',geo:{lat:51.0,lon:1.47},
+  tss:{name:'Dover Strait TSS (approx.)',ax:50,z:1.0,w:2.5,len:45,along0:8,crossStart:4.5,inshore:4,laneNames:{F:'NE-bound',R:'SW-bound'}},
+  land:[
+   {name:'England',h:45,pts:[[50.77,-1.10],[50.72,-0.79],[50.78,-0.67],[50.80,-0.54],[50.81,-0.37],[50.82,-0.14],[50.78,0.06],[50.76,0.12],[50.735,0.25],[50.765,0.29],[50.84,0.47],[50.855,0.58],[50.87,0.66],[50.93,0.80],[50.91,0.98],[51.03,1.00],[51.06,1.09],[51.08,1.19],[51.10,1.25],[51.12,1.32],[51.14,1.37],[51.22,1.41],[51.29,1.41],[51.33,1.39],[51.33,1.43],[51.36,1.45],[51.375,1.445],[51.39,1.38],[51.38,1.30],[51.38,1.20],[51.375,1.12],[51.365,1.03],[51.45,0.85],[51.50,0.75],[52.30,0.75],[52.30,-1.10]]},
+   {name:'France / Belgium',h:40,pts:[[49.30,-1.00],[49.36,-0.20],[49.45,0.05],[49.51,0.07],[49.71,0.20],[49.77,0.36],[49.87,0.71],[49.93,1.08],[50.07,1.37],[50.11,1.45],[50.21,1.57],[50.23,1.62],[50.40,1.55],[50.52,1.58],[50.64,1.57],[50.73,1.59],[50.80,1.58],[50.87,1.58],[50.89,1.66],[50.93,1.71],[50.95,1.77],[50.97,1.85],[51.00,2.10],[51.05,2.37],[51.08,2.52],[51.10,2.58],[51.12,2.65],[51.15,2.73],[51.23,2.92],[51.31,3.13],[51.34,3.20],[51.37,3.30],[51.38,3.38],[51.40,3.55],[51.44,3.58],[51.70,3.70],[51.70,4.30],[49.20,4.30]]}
+  ],
+  banks:[
+   {name:'GOODWIN SANDS',pts:[[51.15,1.50],[51.18,1.57],[51.27,1.61],[51.32,1.58],[51.30,1.53],[51.22,1.50]]},
+   {name:'VARNE',pts:[[50.95,1.29],[50.99,1.37],[51.02,1.43],[51.01,1.45],[50.97,1.38],[50.93,1.30]]},
+   {name:'SANDETTIE BANK',pts:[[51.10,1.70],[51.20,1.88],[51.25,1.95],[51.22,1.97],[51.12,1.80]]}
+  ],
+  places:[['DOVER',51.12,1.32,'port'],['FOLKESTONE',51.08,1.19,'port'],['RAMSGATE',51.33,1.42,'port'],['CALAIS',50.97,1.85,'port'],['BOULOGNE',50.73,1.59,'port'],['DUNKERQUE',51.05,2.37,'port'],['OOSTENDE',51.23,2.92,'port'],['DIEPPE',49.93,1.08,'port'],['HASTINGS',50.855,0.58,'town'],['LE TOUQUET',50.52,1.59,'town'],['DUNGENESS',50.91,0.98,'light'],['S. FORELAND',51.14,1.37,'light'],['N. FORELAND',51.375,1.445,'light'],['CAP GRIS-NEZ',50.87,1.58,'light'],['ENGLAND',51.15,0.70,'region'],['FRANCE',50.35,1.95,'region'],['BELGIUM',51.00,3.20,'region']],
   lane:[['pdL',6],['pdS',3],['cbd',.6],['tow',.6]],
   kinds:[['ln_any',9],['ferry_x',2.6],['sail_x',1.2],['fish_lane',.7],['tow_lane',.6],['pilot',.4],['anch_out',.4],['ln_wrong',.12]],
   max:11,p:.6,
   ferryDest:['DOVER','CALAIS','DUNKERQUE'],ferryNames:['CHANNEL SPIRIT','SEAWAYS EXPRESS','COTE OPALE','WHITE CLIFFS','NORTHERN LINK'],
   lports:['DOVER','FOLKESTONE','CALAIS','RAMSGATE','BOULOGNE','DIEPPE','NEWHAVEN','DUNKERQUE']},
- malacca:{label:'Strait of Malacca (TSS)',geo:{lat:2.4,lon:101.35},
-  tss:{name:'Malacca Strait TSS (schematic)',ax:315,z:.5,w:2,land:16,inshore:6,laneNames:{F:'NW-bound',R:'SE-bound'},landNames:['SUMATRA','MALAYSIA']},
+ malacca:{label:'Strait of Malacca – off Cape Rachado (TSS)',geo:{lat:2.45,lon:101.50},
+  tss:{name:'Malacca Strait TSS (approx.)',ax:315,z:.5,w:2,len:45,along0:15,crossStart:4,inshore:6,laneNames:{F:'NW-bound',R:'SE-bound'}},
+  land:[
+   {name:'Malaysia',h:24,pts:[[4.30,100.60],[3.85,100.70],[3.70,100.88],[3.50,101.05],[3.33,101.24],[3.20,101.30],[3.00,101.35],[2.88,101.30],[2.80,101.38],[2.75,101.43],[2.62,101.58],[2.63,101.70],[2.52,101.80],[2.415,101.85],[2.37,101.97],[2.22,102.13],[2.19,102.25],[2.10,102.38],[2.05,102.55],[1.83,102.88],[1.50,103.30],[1.27,103.50],[1.30,104.60],[4.30,104.60]]},
+   {name:'Sumatra',h:9,pts:[[3.80,98.60],[3.45,99.20],[2.98,99.80],[2.60,100.30],[2.15,100.80],[2.10,100.95],[2.05,101.15],[2.07,101.43],[1.95,101.65],[1.80,101.90],[1.65,102.05],[1.60,102.25],[1.55,102.55],[1.40,102.85],[1.20,103.10],[1.05,103.35],[0.50,103.60],[0.50,98.00],[3.80,98.00]]}
+  ],
+  banks:[{name:'ONE FATHOM BANK',pts:[[2.90,100.85],[3.05,101.05],[3.12,101.15],[3.00,101.20],[2.88,101.00]]}],
+  places:[['PORT KLANG',3.00,101.35,'port'],['PORT DICKSON',2.52,101.80,'port'],['TG. TUAN (CAPE RACHADO)',2.415,101.85,'light'],['MELAKA',2.19,102.25,'port'],['MUAR',2.05,102.55,'town'],['PULAU RUPAT',1.93,101.58,'town'],['BAGANSIAPIAPI',2.15,100.80,'town'],['TG. BALAI',2.98,99.80,'town'],['MALAYSIA',2.75,102.15,'region'],['SUMATRA',2.40,100.05,'region']],
   lane:[['pdL',5],['cbd',2.2],['pdS',2.2],['tow',1]],
   kinds:[['ln_any',8],['dhow',1.7],['dhow_z',.6],['fish_my',2.2],['tow_lane',.9],['ferry_x',.6],['anch_out',.9],['ln_wrong',.15],['sail_x',.3]],
   max:12,p:.6,
@@ -411,16 +429,57 @@ const tpos=(al,la)=>({x:tss.ox+tss.ux*al+tss.sx*la,y:tss.oy+tss.uy*al+tss.sy*la}
 function setupLoc(S){
  const L=LOCS[curLoc],ol=S.own||{};
  GEO.lat=L.geo.lat;GEO.lon=L.geo.lon;COSL=Math.cos(GEO.lat*D2R);
- own.x=own.y=0;tss=null;
+ own.x=own.y=0;own.aground=false;tss=null;
  if(L.tss){
   const T=L.tss,c=T.z+T.w/2,ax=T.ax,lane=ol.lane||'R';
-  const lat0=lane==='F'?c:lane==='R'?-c:-(T.z+T.w+2);
+  const lat0=lane==='F'?c:lane==='R'?-c:-(T.z+T.w+(T.crossStart||2));
   tss=Object.assign({c,ux:Math.sin(ax*D2R),uy:Math.cos(ax*D2R),sx:Math.cos(ax*D2R),sy:-Math.sin(ax*D2R),ox:0,oy:0},T);
-  tss.ox=-tss.sx*lat0;tss.oy=-tss.sy*lat0;
+  const p=tpos(ol.along??(lane==='cross'?0:(T.along0||0)),lat0);own.x=p.x;own.y=p.y;
   own.hdg=own.cmdHdg=n360(lane==='F'?ax:lane==='R'?ax+180:ax+90);
  }else own.hdg=own.cmdHdg=0;
  own.spd=own.cmdSpd=ol.spd||12;
  $('course').value=Math.round(own.cmdHdg);
+ buildLand(L);
+ ecp.ox=ecp.oy=0;ecp.fx=own.x;ecp.fy=own.y;
+}
+/* ---- land: real-coordinate polygons -> world nm, raster mask for fast look-ups ---- */
+function inPoly(pts,x,y){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x)c=!c}return c}
+function buildLand(L){
+ LAND=null;if(!L.land)return;
+ const cv=p=>({x:(p[1]-GEO.lon)*60*COSL,y:(p[0]-GEO.lat)*60});
+ const polys=L.land.map(o=>({name:o.name,h:o.h,pts:o.pts.map(cv)}));
+ const banks=(L.banks||[]).map(b=>{const pts=b.pts.map(cv);return{name:b.name,pts,c:{x:pts.reduce((a,q)=>a+q.x,0)/pts.length,y:pts.reduce((a,q)=>a+q.y,0)/pts.length}}});
+ const places=(L.places||[]).map(p=>{const q=cv([p[1],p[2]]);return{n:p[0],x:q.x,y:q.y,t:p[3]}});
+ const R0=75,res=.25,N=Math.round(2*R0/res),cvs=document.createElement('canvas');cvs.width=cvs.height=N;
+ const g=cvs.getContext('2d',{willReadFrequently:true});g.fillStyle='#000';g.fillRect(0,0,N,N);g.fillStyle='#fff';
+ for(const p of polys){g.beginPath();p.pts.forEach((q,i)=>{const X=(q.x+R0)/res,Y=(R0-q.y)/res;i?g.lineTo(X,Y):g.moveTo(X,Y)});g.closePath();g.fill()}
+ const d=g.getImageData(0,0,N,N).data,mask=new Uint8Array(N*N);for(let i=0;i<N*N;i++)mask[i]=d[i*4]>127?1:0;
+ LAND={polys,banks,places,mask,N,R0,res};
+}
+function landAt(x,y){if(!LAND)return false;const i=Math.floor((x+LAND.R0)/LAND.res),j=Math.floor((LAND.R0-y)/LAND.res);return i>=0&&j>=0&&i<LAND.N&&j<LAND.N&&LAND.mask[j*LAND.N+i]===1}
+function landH(x,y){for(const p of LAND.polys)if(inPoly(p.pts,x,y))return p.h;return 20}
+function drawLandView(C,vis,day,dusk,night){
+ if(!LAND)return;
+ const W=BW,vc=own.hdg+view.off,fov=view.fov,fog=C.fog;
+ const maxR=Math.min(30,day?vis:dusk?Math.min(vis,15):Math.min(vis,8));
+ const cs=Math.max(2,Math.round(W/380));
+ const base=day?[104,126,92]:dusk?[40,38,50]:[5,8,13],hill=day?[120,138,104]:dusk?[52,50,64]:[7,10,17];
+ const yb=d=>HZ+EYE/(d*1852)*PXR*VEX,yt=(d,h)=>HZ+(EYE-h)/(d*1852)*PXR*VEX;
+ const fa=d=>clamp(Math.pow(d/Math.max(vis,.5),1.3)*.85,0,.9);
+ for(let x=0;x<W;x+=cs){
+  const brg=vc+(x+cs/2-W/2)/W*fov,sx=Math.sin(brg*D2R),sy=Math.cos(brg*D2R);
+  let d1=0;
+  for(let d=.25;d<=maxR;d+=.25){if(landAt(own.x+sx*d,own.y+sy*d)){d1=d;break}}
+  if(!d1)continue;
+  const h0=landH(own.x+sx*d1,own.y+sy*d1),n=1+.35*Math.sin(brg*1.7+1)+.2*Math.sin(brg*5.3)+.1*Math.sin(brg*13.1);
+  const dh=d1+3;
+  if(dh<=maxR*1.4&&landAt(own.x+sx*dh,own.y+sy*dh)){
+   let a=yt(dh,h0*2.8*n),b=yb(dh);if(b-a<2)a=b-2;
+   bx.fillStyle=mixc(hill,fog,fa(dh));bx.fillRect(x,a,cs+1,b-a);
+  }
+  let a=yt(d1,h0*n),b=yb(d1);if(b-a<1.5)a=b-1.5;
+  bx.fillStyle=mixc(base,fog,fa(d1));bx.fillRect(x,a,cs+1,b-a);
+ }
 }
 const ownFlow=()=>{const c=Math.cos(n180(own.hdg-tss.ax)*D2R);return c>.5?1:c<-.5?-1:0};
 const SPD={pdL:[12,17],pdS:[9,13],cbd:[9.5,13],tow:[4.5,6.5],ferry:[18,23],sail:[4,7],pilot:[12,18]};
@@ -501,6 +560,7 @@ function tssBuild(kind){
 // Rule 10 status of a vessel (target or own ship)
 function tssStat(o,isOwn){
  if(!tss)return null;
+ if(Math.abs(talong(o.x,o.y))>tss.len)return{key:'clear',ok:null,text:'Clear of the traffic separation scheme.'};
  const T=tss,lat=tlat(o.x,o.y),al=Math.abs(lat),edge=T.z+T.w,cat=isOwn?'power':catOf(o),L=isOwn?120:o.L;
  const ang0=Math.abs(n180(o.hdg-T.ax)),ang=Math.min(ang0,180-ang0),stat=o.spd<.5;
  let where,lk=null;
@@ -604,6 +664,8 @@ function stepSim(dt){
  own.hdg=turnTo(own.hdg,own.cmdHdg,.3*dt);own.rot=n180(own.hdg-oh)/dt*60;
  own.spd+=clamp(own.cmdSpd-own.spd,-.05*dt,.05*dt);
  const ov=vec(own.hdg,own.spd);own.x+=ov.x*dt/60;own.y+=ov.y*dt/60;
+ if(LAND&&!own.aground&&landAt(own.x,own.y)){own.aground=true;addLog('AGROUND – you have run onto the shore!','w');showOverlay('You have run aground. The engine has stopped – use Restart to try again.','AGROUND')}
+ if(own.aground){own.spd=0;own.cmdSpd=0}
  for(const t of targets)derive(t);
  for(const t of targets){ai(t);
   const sp=TYPES[t.type];
@@ -615,6 +677,7 @@ function stepSim(dt){
  // passes, collisions, housekeeping
  for(const t of [...targets]){
   t.minR=Math.min(t.minR,t.range);
+  if(LAND&&t.spd>.3&&landAt(t.x,t.y)){remove(t);continue}
   const cr=(t.L+own.L)/2/1852*.8+.01;
   if(t.range<cr){collisions++;addLog(`COLLISION with T${t.id}!`,'w');showOverlay(`Collision with T${t.id} (${nameOf(t)}).`);remove(t);continue}
   if(!t.passed&&t.tcpa<0&&t.minR<3&&t.range>t.minR+.05){
@@ -668,7 +731,7 @@ function restart(){
  for(const t of targets)derive(t);
  addLog('Scenario started: '+S.label);renderLog();paused=false;$('pause').textContent='Pause';$('overlay').classList.remove('show');
 }
-function showOverlay(msg){paused=true;$('pause').textContent='Resume';$('ovText').textContent=msg;$('overlay').classList.add('show')}
+function showOverlay(msg,title){paused=true;$('pause').textContent='Resume';$('ovTitle').textContent=title||'COLLISION';$('ovText').textContent=msg;$('overlay').classList.add('show')}
 
 /* ================= canvases ================= */
 const bc=$('bridge'),bx=bc.getContext('2d'),rc=$('radar'),rx=rc.getContext('2d'),ec=$('ecp'),ex=ec.getContext('2d');
@@ -712,6 +775,7 @@ function drawBridge(now){
  bx.strokeStyle=day?'rgba(255,255,255,.18)':dusk?'rgba(255,200,170,.1)':'rgba(120,150,200,.07)';bx.lineWidth=1;bx.beginPath();
  for(const w of waves){const v=(w.v+now*.00003)%1,y=HZ+v*v*(H-HZ),x=w.u*W,l=3+v*v*40;bx.moveTo(x,y);bx.lineTo(x+l,y)}bx.stroke();
  // vessels
+ drawLandView(C,vis,day,dusk,night);
  const vis_=[...targets].sort((a,b)=>b.range-a.range);
  for(const t of vis_){t.sx=null;drawVessel(t,C,vis,day,dusk,night)}
  // fog
@@ -881,6 +945,12 @@ function drawRadar(now){
  rx.textBaseline='alphabetic';
  // spokes
  rx.strokeStyle='rgba(52,211,153,.1)';for(let b=0;b<360;b+=30){const a=(b-orient)*D2R;rx.beginPath();rx.moveTo(cx,cy);rx.lineTo(cx+Math.sin(a)*R,cy-Math.cos(a)*R);rx.stroke()}
+ // land echoes
+ if(LAND){rx.save();rx.beginPath();rx.arc(cx,cy,R,0,7);rx.clip();
+  const oa=orient*D2R,co=Math.cos(oa),si=Math.sin(oa);
+  rx.fillStyle='rgba(52,211,153,.24)';rx.strokeStyle='rgba(134,239,172,.75)';rx.lineWidth=1.2;
+  for(const pl of LAND.polys){rx.beginPath();pl.pts.forEach((q,i)=>{const dx=q.x-own.x,dy=q.y-own.y,X=cx+(dx*co-dy*si)*ppn,Y=cy-(dx*si+dy*co)*ppn;i?rx.lineTo(X,Y):rx.moveTo(X,Y)});rx.closePath();rx.fill();rx.stroke()}
+  rx.restore()}
  // CPA limit
  rx.setLineDash([4,4]);rx.strokeStyle='rgba(251,191,36,.55)';rx.beginPath();rx.arc(cx,cy,ropt.cpaLim*ppn,0,7);rx.stroke();rx.setLineDash([]);
  // heading line
@@ -941,7 +1011,7 @@ function dm(deg,pl,hs){const a=Math.abs(deg),tot=Math.round(a*6000),d=Math.floor
 const fmtLat=v=>dm(v,2,'NS'),fmtLon=v=>dm(v,3,'EW');
 function gl(A,pl,hs,dec){const a=Math.abs(A),d=Math.floor(a/60+1e-9),m=a-d*60;return String(d).padStart(pl,'0')+'°'+m.toFixed(dec).padStart(dec?4:2,'0')+'′'+hs[A<0?1:0]}
 
-const ecp={range:6,north:true,vecT:6,cpaLim:1,tcpaLim:20,trk:true};
+const ecp={range:6,north:true,vecT:6,cpaLim:1,tcpaLim:20,trk:true,follow:true,ox:0,oy:0,fx:0,fy:0,vx:0,vy:0,ppn:1,co:1,si:0};
 const ecDanger=t=>!t.anch&&t.tcpa>0&&t.tcpa<ecp.tcpaLim&&t.cpa<ecp.cpaLim;
 
 /* ---- AIS data a vessel returns when interrogated ---- */
@@ -1009,63 +1079,71 @@ function bowCross(t){
 }
 
 /* ---- chart drawing ---- */
+function drawChartLand(ep,S,ppn){
+ if(!LAND)return;
+ const F='Inter,system-ui,sans-serif',pth=pts=>{ex.beginPath();pts.forEach((q,i)=>{const p=ep(q.x,q.y);i?ex.lineTo(p.x,p.y):ex.moveTo(p.x,p.y)});ex.closePath()};
+ for(const b of LAND.banks){pth(b.pts);ex.fillStyle='rgba(56,189,248,.16)';ex.fill();ex.setLineDash([3,3]);ex.strokeStyle='rgba(125,211,252,.55)';ex.lineWidth=1;ex.stroke();ex.setLineDash([])}
+ for(const pl of LAND.polys){pth(pl.pts);ex.fillStyle='rgba(150,134,86,.55)';ex.fill();ex.strokeStyle='rgba(232,218,156,.95)';ex.lineWidth=1.4;ex.stroke()}
+ ex.textBaseline='alphabetic';
+ if(ecp.range<=24)for(const b of LAND.banks){const p=ep(b.c.x,b.c.y);if(p.x<0||p.x>S||p.y<0||p.y>S)continue;ex.font='italic 600 9px '+F;ex.fillStyle='rgba(147,210,245,.9)';ex.textAlign='center';ex.fillText(b.name,p.x,p.y)}
+ for(const p of LAND.places){
+  const q=ep(p.x,p.y);if(q.x<4||q.x>S-4||q.y<14||q.y>S-4)continue;
+  if(p.t==='region'){if(ecp.range<6)continue;ex.font='italic 700 12px '+F;ex.fillStyle='rgba(240,230,185,.75)';ex.textAlign='center';ex.fillText(p.n,q.x,q.y);continue}
+  if(p.t==='town'&&ecp.range>24)continue;
+  if(p.t==='light'){ex.fillStyle='#e879f9';ex.beginPath();ex.arc(q.x,q.y,2.6,0,7);ex.fill();ex.strokeStyle='#e879f9';ex.lineWidth=1;ex.beginPath();ex.moveTo(q.x,q.y);ex.lineTo(q.x+5,q.y-5);ex.stroke()}
+  else if(p.t==='port'){ex.strokeStyle='#f4e9b8';ex.lineWidth=1.3;ex.beginPath();ex.arc(q.x,q.y,3.2,0,7);ex.stroke()}
+  else{ex.fillStyle='#f4e9b8';ex.fillRect(q.x-1.5,q.y-1.5,3,3)}
+  ex.font='600 10px '+F;ex.fillStyle='#f4e9b8';ex.textAlign='left';ex.fillText(p.n,q.x+6,q.y+3);
+ }
+}
 function drawTss(ep,S,ppn){
  if(!tss)return;
- const T=tss,a0=talong(own.x,own.y),Lh=S/ppn*.8+4,F='Inter,system-ui,sans-serif',stp=Math.max(.2,ecp.range/12);
+ const T=tss,F='Inter,system-ui,sans-serif',A0=-T.len,A1=T.len;
  const P=(al,la)=>{const p=tpos(al,la);return ep(p.x,p.y)};
- const coast=(sd,al)=>sd*(T.land+.9*Math.sin(al*.55)+.6*Math.sin(al*1.7+2));
- for(const sd of [-1,1]){
-  ex.beginPath();let q;
-  for(let al=a0-Lh;al<=a0+Lh;al+=stp){q=P(al,coast(sd,al));al===a0-Lh?ex.moveTo(q.x,q.y):ex.lineTo(q.x,q.y)}
-  q=P(a0+Lh,sd*(T.land+400));ex.lineTo(q.x,q.y);q=P(a0-Lh,sd*(T.land+400));ex.lineTo(q.x,q.y);ex.closePath();
-  ex.fillStyle='rgba(120,113,80,.38)';ex.fill();
-  ex.beginPath();
-  for(let al=a0-Lh;al<=a0+Lh;al+=stp){q=P(al,coast(sd,al));al===a0-Lh?ex.moveTo(q.x,q.y):ex.lineTo(q.x,q.y)}
-  ex.strokeStyle='rgba(214,200,140,.8)';ex.lineWidth=1.4;ex.stroke();
-  const lb=P(a0,sd*(T.land+5));ex.font='700 11px '+F;ex.fillStyle='rgba(235,225,170,.9)';ex.textAlign='center';
-  ex.fillText(T.landNames[sd<0?0:1],clamp(lb.x,60,S-60),clamp(lb.y,34,S-16));
- }
- const ln=la=>{ex.beginPath();let q=P(a0-Lh,la);ex.moveTo(q.x,q.y);q=P(a0+Lh,la);ex.lineTo(q.x,q.y);ex.stroke()};
- ex.beginPath();let q=P(a0-Lh,-T.z);ex.moveTo(q.x,q.y);q=P(a0+Lh,-T.z);ex.lineTo(q.x,q.y);q=P(a0+Lh,T.z);ex.lineTo(q.x,q.y);q=P(a0-Lh,T.z);ex.lineTo(q.x,q.y);ex.closePath();
+ const ln=la=>{ex.beginPath();let q=P(A0,la);ex.moveTo(q.x,q.y);q=P(A1,la);ex.lineTo(q.x,q.y);ex.stroke()};
+ ex.beginPath();let q=P(A0,-T.z);ex.moveTo(q.x,q.y);q=P(A1,-T.z);ex.lineTo(q.x,q.y);q=P(A1,T.z);ex.lineTo(q.x,q.y);q=P(A0,T.z);ex.lineTo(q.x,q.y);ex.closePath();
  ex.fillStyle='rgba(192,38,211,.26)';ex.fill();
  ex.lineWidth=1.3;ex.strokeStyle='rgba(217,70,239,.85)';ln(-T.z);ln(T.z);
  ex.setLineDash([6,5]);ex.lineWidth=1;ex.strokeStyle='rgba(217,70,239,.55)';ln(-(T.z+T.w));ln(T.z+T.w);ex.setLineDash([]);
- const sp=5,al0=Math.ceil((a0-Lh)/sp)*sp;
  ex.strokeStyle='rgba(217,70,239,.85)';ex.lineWidth=1.4;
- for(let al=al0;al<=a0+Lh;al+=sp)for(const sd of [1,-1]){
+ for(let al=Math.ceil(A0/5)*5;al<=A1;al+=5)for(const sd of [1,-1]){
   const la=sd*T.c,d=sd,tail=P(al-d*.7,la),tip=P(al+d*.7,la),h1=P(al+d*.35,la+.25),h2=P(al+d*.35,la-.25);
   ex.beginPath();ex.moveTo(tail.x,tail.y);ex.lineTo(tip.x,tip.y);ex.moveTo(h1.x,h1.y);ex.lineTo(tip.x,tip.y);ex.lineTo(h2.x,h2.y);ex.stroke();
  }
+ const va=clamp(talong(ecp.vx,ecp.vy),A0+4,A1-4);
  ex.font='600 9px '+F;ex.fillStyle='rgba(240,171,252,.9)';ex.textAlign='center';
- for(const sd of [1,-1]){const lb=P(a0+2,sd*(T.c+T.w*.38));ex.fillText(T.laneNames[sd>0?'F':'R'].toUpperCase(),clamp(lb.x,40,S-40),clamp(lb.y,22,S-8))}
+ for(const sd of [1,-1]){const lb=P(va+2,sd*(T.c+T.w*.38));if(lb.x>20&&lb.x<S-20&&lb.y>20&&lb.y<S-6)ex.fillText(T.laneNames[sd>0?'F':'R'].toUpperCase(),lb.x,lb.y)}
 }
 function drawEcp(now){
  const S=ES;if(!S||$('pEcp').classList.contains('hid'))return;
  const cx=S/2,cy=S/2,R=S/2-24,ppn=R/ecp.range,orient=ecp.north?0:own.hdg,oa=orient*D2R,co=Math.cos(oa),si=Math.sin(oa);
- const ep=(wx,wy)=>{const dx=wx-own.x,dy=wy-own.y;return{x:cx+(dx*co-dy*si)*ppn,y:cy-(dx*si+dy*co)*ppn}};
- const ov=vec(own.hdg,own.spd),F='Inter,system-ui,sans-serif';
+ const Cx=ecp.follow?own.x+ecp.ox:ecp.fx,Cy=ecp.follow?own.y+ecp.oy:ecp.fy;
+ ecp.vx=Cx;ecp.vy=Cy;ecp.ppn=ppn;ecp.co=co;ecp.si=si;
+ const ep=(wx,wy)=>{const dx=wx-Cx,dy=wy-Cy;return{x:cx+(dx*co-dy*si)*ppn,y:cy-(dx*si+dy*co)*ppn}};
+ const ov=vec(own.hdg,own.spd),F='Inter,system-ui,sans-serif',so=ep(own.x,own.y);
  ex.clearRect(0,0,S,S);ex.fillStyle='#071426';ex.fillRect(0,0,S,S);
+ drawChartLand(ep,S,ppn);
  // graticule
- const step=ecp.range<=1.5?.5:ecp.range<=3?1:ecp.range<=6?2:ecp.range<=12?5:10,L=S/ppn;
- const la0=GEO.lat*60+own.y,lo0=GEO.lon*60+own.x/COSL;
+ const step=ecp.range<=1.5?.5:ecp.range<=3?1:ecp.range<=6?2:ecp.range<=12?5:ecp.range<=24?10:20,L=S/ppn;
+ const la0=GEO.lat*60+Cy,lo0=GEO.lon*60+Cx/COSL;
  ex.lineWidth=1;ex.strokeStyle='rgba(120,160,210,.16)';ex.fillStyle='rgba(150,180,220,.6)';ex.font='9px '+F;ex.textBaseline='alphabetic';
  let lastY=-1e9,lastX=-1e9;
  for(let m=Math.ceil((la0-L)/step);m*step<=la0+L;m++){
-  const A=m*step,y=A-GEO.lat*60,a=ep(own.x-L,y),b=ep(own.x+L,y);
+  const A=m*step,y=A-GEO.lat*60,a=ep(Cx-L,y),b=ep(Cx+L,y);
   ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(b.x,b.y);ex.stroke();
   if(ecp.north&&a.y>22&&a.y<S-8&&Math.abs(a.y-lastY)>=24){lastY=a.y;ex.textAlign='left';ex.fillText(gl(A,2,'NS',step<1?1:0),4,a.y-3)}
  }
  for(let m=Math.ceil((lo0-L/COSL)/step);m*step<=lo0+L/COSL;m++){
-  const A=m*step,x=(A-GEO.lon*60)*COSL,a=ep(x,own.y-L),b=ep(x,own.y+L);
+  const A=m*step,x=(A-GEO.lon*60)*COSL,a=ep(x,Cy-L),b=ep(x,Cy+L);
   ex.beginPath();ex.moveTo(a.x,a.y);ex.lineTo(b.x,b.y);ex.stroke();
   if(ecp.north&&a.x>30&&a.x<S-30&&a.x-lastX>=52){lastX=a.x;ex.textAlign='center';ex.fillText(gl(A,3,'EW',step<1?1:0),a.x,S-5)}
  }
  drawTss(ep,S,ppn);
- // range rings, CPA limit, compass ring
- const nr={1.5:3,3:3,6:3,12:4,24:4}[ecp.range]||3,st=ecp.range/nr;
+ // range rings & CPA limit (around own ship), compass ring (around the chart)
+ const nr={1.5:3,3:3,6:3,12:4,24:4}[ecp.range]||4,st=ecp.range/nr;
  ex.strokeStyle='rgba(125,211,252,.30)';ex.fillStyle='rgba(125,211,252,.8)';ex.textAlign='left';
- for(let i=1;i<=nr;i++){ex.beginPath();ex.arc(cx,cy,st*i*ppn,0,7);ex.stroke();ex.fillText(String(+(st*i).toFixed(2))+' nm',cx+4,cy-st*i*ppn+10)}
- ex.setLineDash([4,4]);ex.strokeStyle='rgba(251,191,36,.55)';ex.beginPath();ex.arc(cx,cy,ecp.cpaLim*ppn,0,7);ex.stroke();ex.setLineDash([]);
+ for(let i=1;i<=nr;i++){ex.beginPath();ex.arc(so.x,so.y,st*i*ppn,0,7);ex.stroke();ex.fillText(String(+(st*i).toFixed(2))+' nm',so.x+4,so.y-st*i*ppn+10)}
+ ex.setLineDash([4,4]);ex.strokeStyle='rgba(251,191,36,.55)';ex.beginPath();ex.arc(so.x,so.y,ecp.cpaLim*ppn,0,7);ex.stroke();ex.setLineDash([]);
  ex.strokeStyle='rgba(125,211,252,.55)';ex.beginPath();ex.arc(cx,cy,R,0,7);ex.stroke();
  ex.textAlign='center';ex.textBaseline='middle';
  for(let b=0;b<360;b+=10){
@@ -1076,10 +1154,10 @@ function drawEcp(now){
  ex.textBaseline='alphabetic';
  // own ship: heading line, vector, symbol
  const ha=(own.hdg-orient)*D2R;
- ex.strokeStyle='rgba(248,250,252,.75)';ex.lineWidth=1;ex.beginPath();ex.moveTo(cx,cy);ex.lineTo(cx+Math.sin(ha)*R,cy-Math.cos(ha)*R);ex.stroke();
- if(ecp.vecT>0&&own.spd>.1){const e=ep(own.x+ov.x*ecp.vecT,own.y+ov.y*ecp.vecT);ex.strokeStyle='#f8fafc';ex.lineWidth=2;ex.beginPath();ex.moveTo(cx,cy);ex.lineTo(e.x,e.y);ex.stroke()}
- ex.strokeStyle='rgba(248,250,252,.5)';ex.lineWidth=1;ex.beginPath();ex.arc(cx,cy,10,0,7);ex.stroke();
- ex.save();ex.translate(cx,cy);ex.rotate(ha);ex.fillStyle='#f8fafc';ex.beginPath();ex.moveTo(0,-9);ex.lineTo(4.5,6);ex.lineTo(0,3);ex.lineTo(-4.5,6);ex.closePath();ex.fill();ex.restore();
+ ex.strokeStyle='rgba(248,250,252,.75)';ex.lineWidth=1;ex.beginPath();ex.moveTo(so.x,so.y);ex.lineTo(so.x+Math.sin(ha)*R,so.y-Math.cos(ha)*R);ex.stroke();
+ if(ecp.vecT>0&&own.spd>.1){const e=ep(own.x+ov.x*ecp.vecT,own.y+ov.y*ecp.vecT);ex.strokeStyle='#f8fafc';ex.lineWidth=2;ex.beginPath();ex.moveTo(so.x,so.y);ex.lineTo(e.x,e.y);ex.stroke()}
+ ex.strokeStyle='rgba(248,250,252,.5)';ex.lineWidth=1;ex.beginPath();ex.arc(so.x,so.y,10,0,7);ex.stroke();
+ ex.save();ex.translate(so.x,so.y);ex.rotate(ha);ex.fillStyle='#f8fafc';ex.beginPath();ex.moveTo(0,-9);ex.lineTo(4.5,6);ex.lineTo(0,3);ex.lineTo(-4.5,6);ex.closePath();ex.fill();ex.restore();
  // AIS targets (far first so near ones sit on top)
  for(const t of [...targets].sort((a,b)=>b.range-a.range)){
   if(t===sel)t.act=true;
@@ -1116,8 +1194,9 @@ function drawEcp(now){
   ex.font='600 10px '+F;ex.textAlign='left';ex.fillText(`CPA ${f2(sel.cpa)} nm · ${f1(tc)} min`,(a.x+b.x)/2+6,(a.y+b.y)/2-5);
  }
  // status text
- ex.font='600 10px '+F;ex.fillStyle='#9fb6d4';ex.textAlign='left';ex.fillText((ecp.north?'NORTH-UP':'HEAD-UP')+' · '+ecp.range+' NM',8,14);
+ ex.font='600 10px '+F;ex.fillStyle='#9fb6d4';ex.textAlign='left';ex.fillText((ecp.north?'NORTH-UP':'HEAD-UP')+' · '+(+ecp.range.toFixed(1))+' NM · '+(ecp.follow?'SNAPPED TO SHIP':'CHART FIXED'),8,14);
  ex.textAlign='right';ex.fillText(`CPA ${ecp.cpaLim} nm · TCPA ${ecp.tcpaLim} min`,S-8,14);
+ if(so.x<0||so.x>S||so.y<0||so.y>S){ex.fillStyle='#fbbf24';ex.textAlign='center';ex.fillText('OWN SHIP OFF SCREEN – press Re-centre',S/2,S-20)}
 }
 
 /* ---- data panel ---- */
@@ -1171,7 +1250,36 @@ $('eCpa').onchange=e=>ecp.cpaLim=+e.target.value;
 $('eTcpa').onchange=e=>ecp.tcpaLim=+e.target.value;
 $('eTrk').onchange=e=>ecp.trk=e.target.checked;
 $('eInt').onclick=interrogate;
-ec.onclick=e=>{const r=ec.getBoundingClientRect(),x=(e.clientX-r.left)/ek,y=(e.clientY-r.top)/ek;let b=null,bd=16;for(const t of targets){if(t.ex==null)continue;const d=Math.hypot(t.ex-x,t.ey-y);if(d<bd){bd=d;b=t}}sel=b;if(b)b.act=true};
+let ed=null;
+ec.onpointerdown=e=>{ed={px:e.clientX,py:e.clientY,moved:false,ox:ecp.ox,oy:ecp.oy,fx:ecp.fx,fy:ecp.fy,vx:ecp.vx,vy:ecp.vy};ec.setPointerCapture(e.pointerId)};
+ec.onpointermove=e=>{
+ if(!ed)return;const dx=e.clientX-ed.px,dy=e.clientY-ed.py;
+ if(!ed.moved&&Math.hypot(dx,dy)<5)return;
+ ed.moved=true;ec.style.cursor='grabbing';
+ const u=(dx/ek)/ecp.ppn,v=-(dy/ek)/ecp.ppn,co=ecp.co,si=ecp.si,wx=u*co+v*si,wy=-u*si+v*co;
+ if(ecp.follow){ecp.ox=ed.ox-wx;ecp.oy=ed.oy-wy}else{ecp.fx=ed.fx-wx;ecp.fy=ed.fy-wy}
+};
+ec.onpointerup=e=>{
+ if(!ed)return;const moved=ed.moved;ed=null;ec.style.cursor='';
+ if(moved)return;
+ const r=ec.getBoundingClientRect(),x=(e.clientX-r.left)/ek,y=(e.clientY-r.top)/ek;let b=null,bd=16;
+ for(const t of targets){if(t.ex==null)continue;const d=Math.hypot(t.ex-x,t.ey-y);if(d<bd){bd=d;b=t}}
+ sel=b;if(b)b.act=true;
+};
+ec.onpointercancel=()=>{ed=null;ec.style.cursor=''};
+function syncRange(){
+ const s=$('eRange');let o=[...s.options].find(o=>!o.dataset.c&&Math.abs(+o.value-ecp.range)<.001);
+ if(o){s.value=o.value;const c=s.querySelector('[data-c]');if(c)c.remove()}
+ else{let c=s.querySelector('[data-c]');if(!c){c=document.createElement('option');c.dataset.c=1;s.appendChild(c)}c.value=ecp.range;c.textContent=(+ecp.range.toFixed(1))+'';s.value=c.value}
+}
+ec.onwheel=e=>{e.preventDefault();ecp.range=clamp(ecp.range*(e.deltaY>0?1.2:1/1.2),.5,60);syncRange()};
+$('eCen').onclick=()=>{ecp.ox=ecp.oy=0;ecp.fx=own.x;ecp.fy=own.y};
+function folLabel(){const b=$('eFol');b.classList.toggle('on',ecp.follow);b.textContent='⚓ Snap to ship: '+(ecp.follow?'on':'off')}
+$('eFol').onclick=()=>{
+ if(ecp.follow){ecp.fx=ecp.vx;ecp.fy=ecp.vy;ecp.follow=false}
+ else{ecp.ox=ecp.vx-own.x;ecp.oy=ecp.vy-own.y;ecp.follow=true}
+ folLabel();
+};
 
 /* ================= UI ================= */
 function roleText(t){
