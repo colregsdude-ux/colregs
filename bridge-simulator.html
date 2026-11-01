@@ -182,6 +182,7 @@ td.role{text-align:left;font-size:.7rem}
       <label>Your ship's bow size <span id="deckv">1.0×</span><input type="range" id="deck" min="0.5" max="3" step="0.1" value="1"></label>
       <label>Panel transparency <span id="transv">14%</span><input type="range" id="trans" min="0" max="100" step="1" value="14"></label>
       <label class="chk" title="Off = every light in its arc is shown out to the visibility setting"><input type="checkbox" id="rng"> Realistic light ranges (Rule 22)</label>
+      <label class="chk" title="At night, show the dark shadowed outline of nearby vessels as well as their lights. Off = lights only"><input type="checkbox" id="nhull" checked> Night ship silhouettes</label>
       <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
       <label class="chk"><input type="checkbox" id="train" checked> Show rule assessment</label>
     </div>
@@ -245,7 +246,7 @@ td.role{text-align:left;font-size:.7rem}
   <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
   <p><b>ECPINS:</b> a chart-style display of AIS targets (open sea has no chart data; the Channel and Malacca show approximate coastlines, banks, ports and the TSS). <b>Drag</b> the chart to pan, use the <b>wheel</b> to zoom, <b>Re-centre</b> to put your ship in the middle again, and <b>Snap to ship</b> to make the chart move with the ship while keeping it wherever you have placed it on screen (turn it off to hold the chart still). Small hollow triangles are sleeping targets; selecting one activates it, showing its vector, past track and the predicted closest point of approach. Press <b>Interrogate</b> (<kbd>I</kbd>) to request its AIS static and voyage data (name, MMSI, IMO, call sign, ship type, navigational status, size, draught, destination, ETA) alongside its CPA, TCPA, BCR/BCT and bearing at CPA. Flashing red targets break the CPA/TCPA limits. When a target is predicted to pass inside the ECPINS CPA limit (within the TCPA limit) the <b>Warnings</b> panel (<kbd>3</kbd>) opens and an audible alarm beeps until you click <b>Acknowledge</b> for that vessel; each vessel must be acknowledged separately. The <b>Alarms</b> button in the Sim panel (<kbd>S</kbd>) turns the alarms and the Warnings menu on or off. Pausing or turning Sound off silences the beeping, but the warning stays until acknowledged.</p>
   <p><b>Locations:</b> choose a Location in the Simulation panel (<kbd>S</kbd>). <b>Open sea</b> is the free-roaming sandbox. <b>English Channel</b> is the Dover Strait TSS on an approximate real coastline (SW-bound lane on the English side, NE-bound on the French side, ferries crossing, Goodwin Sands, Dover, Calais…). <b>Strait of Malacca</b> is the strait off Port Dickson / Cape Rachado and Rupat Island, with a dense TSS and deep-draught tankers, tugs with tows, anchored ships, unlit fishing boats and <b>dhows that may not follow the Rules</b> (no or dim lights, no AIS, weak radar echo, erratic courses, failing to give way). Land shows on the bridge horizon, the radar and ECPINS (running aground stops the engine). With rule assessment on, your own Rule 10 status appears under Own ship. Coastlines are approximate, not for navigation.</p>
-  <p>Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and the visibility setting; the radar always sees out to its range.</p>
+  <p>Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and the visibility setting; the radar always sees out to its range. At night, <b>Night ship silhouettes</b> (Simulation panel) shows the dark outline of vessels as they close, clearer with a brighter moon and in good visibility; switch it off for lights only.</p>
 </section>
 
 <nav id="bar" aria-label="Panels">
@@ -385,7 +386,7 @@ function stepHelm(dt){
 const rudTxt=a=>{const r=Math.round(Math.abs(a));return r<1?'MIDSHIPS':(a<0?'PORT ':'STBD ')+r+'°'};
 let targets=[],nextId=1,simT=0,paused=false,collisions=0,closeQ=0,sel=null,lastSpawn=0,logLines=[];
 const view={off:0,fov:70};
-const cfg={light:'night',vis:10,training:true,moon:'wgib',allLights:true};
+const cfg={light:'night',vis:10,training:true,moon:'wgib',allLights:true,nightHulls:true};
 const MOON_PH={wcres:.12,fq:.25,wgib:.38,full:.5,ngib:.62,lq:.75,ncres:.88}; // 0 new, .5 full; <.5 waxing (lit on right)
 const RISK_CPA=1.0;
 let curLoc='sea',curS=null,tss=null,ownTssKey=null,LAND=null;
@@ -931,7 +932,12 @@ function compass(vc){
 function shade(rgb,f){return[rgb[0]*f,rgb[1]*f,rgb[2]*f].map(v=>clamp(Math.round(v),0,255))}
 function drawVessel(t,C,vis,day,dusk,night){
  const sp=TYPES[t.type],range=t.range;
- const hasHull=day||dusk,hasLights=dusk||night;
+ const nh=night&&cfg.nightHulls;
+ const hasHull=day||dusk||nh,hasLights=dusk||night;
+ // night silhouette: how well the hull can be made out against the sky and sea (better with moon, fades with range)
+ const mphh=MOON_PH[cfg.moon],mk=mphh===undefined?0:(1-Math.cos(mphh*2*Math.PI))/2;
+ const nhR=Math.min(Math.max(vis,.3),1.4+2.4*mk),nhA=nh?Math.pow(clamp(1-range/nhR,0,1),.7):0;
+ const rimA=nhA*(.3+.4*mk);
  const vlimit=day?vis:Math.max(vis,.3);
  if(day&&range>vis)return;
  const dl=n180(t.brg-(own.hdg+view.off)),half=Math.atan2(Math.max(sp.L,t.longTow?300:t.towLen+30)/2/1852,Math.max(range,.01))*R2D+4;
@@ -948,8 +954,15 @@ function drawVessel(t,C,vis,day,dusk,night){
   const v=[W(s0,-wsb,z0),W(s0,wsb,z0),W(s1,wbb,z0),W(s1,-wbb,z0),W(s0,-wst,z1),W(s0,wst,z1),W(s1,wbt,z1),W(s1,-wbt,z1)];
   const faces=[[4,5,6,7,1.18],[0,3,7,4,1],[1,2,6,5,1],[0,1,5,4,.8],[3,2,6,7,.9]].map(f=>({f,d:(v[f[0]].d+v[f[1]].d+v[f[2]].d+v[f[3]].d)/4}));
   faces.sort((a,b)=>b.d-a.d);
+  if(nh){ // pale rim under the dark faces so only the outer edge of the hull shows
+   bx.save();bx.globalAlpha=alpha*nhA;bx.lineJoin='round';bx.lineWidth=3;bx.strokeStyle=`rgba(125,152,205,${rimA.toFixed(2)})`;
+   for(const {f} of faces){if(f[4]>1.1&&z1>EYE)continue;bx.beginPath();bx.moveTo(v[f[0]].x,v[f[0]].y);for(let i=1;i<4;i++)bx.lineTo(v[f[i]].x,v[f[i]].y);bx.closePath();bx.stroke()}
+   bx.restore();
+  }
   for(const {f} of faces){
    if(f[4]>1.1&&z1>EYE)continue;
+   if(nh){bx.save();bx.globalAlpha=alpha*nhA;bx.lineJoin='round';bx.lineWidth=1;const c=mixc(shade([4,6,11],f[4]),fog,fogA*.5);bx.fillStyle=c;bx.strokeStyle=c;
+    bx.beginPath();bx.moveTo(v[f[0]].x,v[f[0]].y);for(let i=1;i<4;i++)bx.lineTo(v[f[i]].x,v[f[i]].y);bx.closePath();bx.fill();bx.stroke();bx.restore();continue}
    bx.fillStyle=night?'rgb(7,10,16)':mixc(shade(rgb,f[4]),fog,fogA);
    if(dusk)bx.fillStyle=mixc(shade(rgb,f[4]*.45),fog,fogA);
    bx.beginPath();bx.moveTo(v[f[0]].x,v[f[0]].y);for(let i=1;i<4;i++)bx.lineTo(v[f[i]].x,v[f[i]].y);bx.closePath();bx.fill();
@@ -965,12 +978,15 @@ function drawVessel(t,C,vis,day,dusk,night){
   for(const b of bxs)hexa((b.a0-.5)*L,(b.a1-.5)*L,B/2*b.w,B/2*b.w,B/2*b.w,B/2*b.w,sp.fb+(b.b||0),sp.fb+(b.b||0)+b.h,hex(b.c));
   // masts
   bx.strokeStyle=night?'#000':mixc([40,44,52],fog,fogA);bx.lineWidth=Math.max(1,PXR/(range*1852)*.5);
-  for(const m of sp.masts){const a=W((m.a-.5)*L,0,sp.fb),b=W((m.a-.5)*L,0,m.top);bx.beginPath();bx.moveTo(a.x,a.y);bx.lineTo(b.x,b.y);bx.stroke()}
+  if(nh)bx.globalAlpha=alpha*nhA;
+  for(const m of sp.masts){const a=W((m.a-.5)*L,0,sp.fb),b=W((m.a-.5)*L,0,m.top);
+   if(nh){const lw=bx.lineWidth,ss=bx.strokeStyle;bx.strokeStyle=`rgba(125,152,205,${rimA.toFixed(2)})`;bx.lineWidth=lw+1.6;bx.beginPath();bx.moveTo(a.x,a.y);bx.lineTo(b.x,b.y);bx.stroke();bx.strokeStyle=ss;bx.lineWidth=lw}
+   bx.beginPath();bx.moveTo(a.x,a.y);bx.lineTo(b.x,b.y);bx.stroke()}
   if(sp.kind==='sail'||(sp.kind==='dhow'&&t.sailUp)){
    const m=(sp.masts[0].a-.5)*L,top=sp.masts[0].top;
    const poly=(pts,col)=>{bx.fillStyle=col;bx.beginPath();pts.forEach((p,i)=>{const q=W(p[0],0,p[1]);i?bx.lineTo(q.x,q.y):bx.moveTo(q.x,q.y)});bx.closePath();bx.fill()};
-   const sc=dusk?mixc([120,100,110],fog,fogA):mixc([245,247,250],fog,fogA);
-   if(sp.kind==='dhow'){poly([[.42*L,sp.fb+.5],[-.04*L,top],[-.46*L,sp.fb+1.4]],dusk?mixc([110,95,80],fog,fogA):mixc([232,220,190],fog,fogA))}
+   const sc=nh?mixc([6,8,14],fog,fogA*.5):dusk?mixc([120,100,110],fog,fogA):mixc([245,247,250],fog,fogA);
+   if(sp.kind==='dhow'){poly([[.42*L,sp.fb+.5],[-.04*L,top],[-.46*L,sp.fb+1.4]],nh?mixc([6,8,14],fog,fogA*.5):dusk?mixc([110,95,80],fog,fogA):mixc([232,220,190],fog,fogA))}
    else{poly([[m,sp.fb+1.2],[m,top-1],[-L/2,sp.fb+1.3]],sc);poly([[m+.4,top-2],[L/2*.95,sp.fb+.8],[m+.4,sp.fb+1.2]],sc)}
   }
   // day shapes
@@ -991,6 +1007,7 @@ function drawVessel(t,C,vis,day,dusk,night){
   hexa(-L/2,L/2,B/2*.85,B*.05,B/2,B*.2,0,sp.fb,[18,22,30]);for(const b of sp.boxes)hexa((b.a0-.5)*L,(b.a1-.5)*L,B/2*b.w,B/2*b.w,B/2*b.w,B/2*b.w,sp.fb+(b.b||0),sp.fb+(b.b||0)+b.h,[26,30,40]);
  }
  // lights
+ if(nh)bx.globalAlpha=alpha;
  if(hasLights){
   const rel=n180(n360(t.brg+180)-t.hdg),big=L>=50;
   const R={mast:L>=50?6:L>=20?5:L>=12?3:2,sbd:L>=50?3:L>=20?2:1,prt:L>=50?3:L>=20?2:1,stern:2,all:L>=50?3:2};
@@ -1628,6 +1645,7 @@ $('barFs').onclick=toggleFs;document.addEventListener('fullscreenchange',fsLabel
 $('barMin').onclick=()=>toggleBar(false);$('barShow').onclick=()=>toggleBar(true);
 $('trans').oninput=e=>{const t=+e.target.value;document.documentElement.style.setProperty('--pa',(1-t/100).toFixed(2));$('transv').textContent=t+'%'};
 $('rng').onchange=e=>{cfg.allLights=!e.target.checked};
+$('nhull').onchange=e=>{cfg.nightHulls=e.target.checked};
 $('deck').oninput=e=>{deckScale=+e.target.value;$('deckv').textContent=deckScale.toFixed(1)+'×'};
 // start with the bridge full-screen plus radar and helm
 ['sim','tgt','list','log','help','ecp','warn'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
