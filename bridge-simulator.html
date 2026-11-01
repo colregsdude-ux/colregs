@@ -175,6 +175,7 @@ td.role{text-align:left;font-size:.7rem}
       <label style="grid-column:1/-1">Scenario<select id="scen"></select></label>
       <label>Time speed<select id="ts"><option>1</option><option>2</option><option>5</option><option selected>10</option><option>20</option><option>30</option><option>60</option></select></label>
       <label>Lighting<select id="light"><option value="night">Night</option><option value="dusk">Dusk</option><option value="day">Day</option></select></label>
+      <label>Moon<select id="moon"><option value="off">Off</option><option value="wcres">Waxing crescent</option><option value="fq">First quarter</option><option value="wgib" selected>Waxing gibbous</option><option value="full">Full moon</option><option value="ngib">Waning gibbous</option><option value="lq">Last quarter</option><option value="ncres">Waning crescent</option></select></label>
       <label>Visibility <span id="visv">10 nm</span><input type="range" id="vis" min="0.5" max="10" step="0.5" value="10"></label>
       <label>View zoom <span id="fovv">70°</span><input type="range" id="fov" min="8" max="110" step="1" value="70"></label>
       <label>Look <span id="lookv">0°</span><input type="range" id="look" min="-180" max="180" step="1" value="0"></label>
@@ -384,7 +385,8 @@ function stepHelm(dt){
 const rudTxt=a=>{const r=Math.round(Math.abs(a));return r<1?'MIDSHIPS':(a<0?'PORT ':'STBD ')+r+'°'};
 let targets=[],nextId=1,simT=0,paused=false,collisions=0,closeQ=0,sel=null,lastSpawn=0,logLines=[];
 const view={off:0,fov:70};
-const cfg={light:'night',vis:10,training:true};
+const cfg={light:'night',vis:10,training:true,moon:'wgib'};
+const MOON_PH={wcres:.12,fq:.25,wgib:.38,full:.5,ngib:.62,lq:.75,ncres:.88}; // 0 new, .5 full; <.5 waxing (lit on right)
 const RISK_CPA=1.0;
 let curLoc='sea',curS=null,tss=null,ownTssKey=null,LAND=null;
 
@@ -817,6 +819,7 @@ new ResizeObserver(resize).observe(bc);new ResizeObserver(resize).observe(rc);ne
 /* ---------- bridge ---------- */
 const EYE=18,VEX=3;
 const stars=Array.from({length:140},()=>({b:rnd(0,360),e:Math.random(),s:Math.random()*1.4+.4}));
+const MOON={b:128,e:.62}; // world-fixed bearing, height as fraction of sky above the horizon
 const clouds=Array.from({length:9},()=>({b:rnd(0,360),e:rnd(.15,.7),w:rnd(4,9)}));
 const waves=Array.from({length:110},()=>({u:Math.random(),v:Math.random()}));
 let HZ=0,PXR=0;
@@ -840,10 +843,42 @@ function drawBridge(now){
  g=bx.createLinearGradient(0,HZ,0,H);g.addColorStop(0,C.sea[0]);g.addColorStop(1,C.sea[1]);bx.fillStyle=g;bx.fillRect(0,HZ,W,H-HZ);
  const vc=own.hdg+view.off;
  if(night||dusk){bx.fillStyle=dusk?'rgba(255,255,255,.35)':'#fff';for(const s of stars){if(dusk&&s.e<.5)continue;const x=W/2+n180(s.b-vc)/view.fov*W;if(x<0||x>W)continue;bx.globalAlpha=night?.35+.5*s.e:.4;bx.fillRect(x,HZ*(1-s.e)*.95,s.s,s.s)}bx.globalAlpha=1}
+ let moonX=null,moonA=0;
+ const mph=MOON_PH[cfg.moon];
+ if((night||dusk)&&mph!==undefined){
+  const mx=W/2+n180(MOON.b-vc)/view.fov*W,my=HZ*(1-MOON.e),mr=Math.max(9,1.5/view.fov*W);
+  const k=(1-Math.cos(mph*2*Math.PI))/2; // illuminated fraction
+  moonA=(dusk?.45:1)*Math.min(1,vis/5);
+  if(mx>-mr*8&&mx<W+mr*8&&moonA>0){
+   moonX=mx;bx.save();bx.globalAlpha=moonA;
+   let mg=bx.createRadialGradient(mx,my,mr*.8,mx,my,mr*7);mg.addColorStop(0,`rgba(200,215,255,${.06+.26*k})`);mg.addColorStop(.35,`rgba(150,175,230,${.02+.08*k})`);mg.addColorStop(1,'rgba(120,150,220,0)');
+   bx.fillStyle=mg;bx.fillRect(mx-mr*7,my-mr*7,mr*14,mr*14);
+   bx.translate(mx,my);if(mph>.5)bx.scale(-1,1);
+   // faint unlit limb
+   bx.fillStyle='rgba(70,80,105,.28)';bx.beginPath();bx.arc(0,0,mr,0,7);bx.fill();
+   // lit part: right half-disc plus terminator ellipse
+   const rx=Math.abs(Math.cos(mph*2*Math.PI))*mr,ph=mph>.5?1-mph:mph;
+   bx.save();bx.beginPath();bx.arc(0,0,mr,-Math.PI/2,Math.PI/2,false);
+   if(ph<.25)bx.ellipse(0,0,Math.max(rx,.01),mr,0,Math.PI/2,-Math.PI/2,true);else bx.ellipse(0,0,Math.max(rx,.01),mr,0,Math.PI/2,Math.PI*1.5,false);
+   bx.closePath();bx.clip();
+   mg=bx.createRadialGradient(-mr*.3,-mr*.3,mr*.1,0,0,mr);mg.addColorStop(0,'#fffdf2');mg.addColorStop(1,'#d9dcc8');
+   bx.fillStyle=mg;bx.fillRect(-mr,-mr,mr*2,mr*2);
+   bx.fillStyle='rgba(120,125,115,.28)';
+   for(const m of [[-.35,-.25,.32],[.18,-.4,.22],[.25,.12,.3],[-.2,.35,.2],[-.5,.1,.16]]){bx.beginPath();bx.arc(m[0]*mr,m[1]*mr,m[2]*mr,0,7);bx.fill()}
+   bx.restore();bx.restore();
+  }
+  moonA*=k; // sea reflection scales with illumination
+ }
  if(day||dusk){bx.fillStyle=day?'rgba(255,255,255,.55)':'rgba(255,200,170,.25)';for(const c of clouds){const x=W/2+n180(c.b-vc)/view.fov*W,w=c.w/view.fov*W;if(x<-w||x>W+w)continue;bx.beginPath();bx.ellipse(x,HZ*(1-c.e),w,w*.1,0,0,7);bx.fill()}}
  // waves
  bx.strokeStyle=day?'rgba(255,255,255,.18)':dusk?'rgba(255,200,170,.1)':'rgba(120,150,200,.07)';bx.lineWidth=1;bx.beginPath();
  for(const w of waves){const v=(w.v+now*.00003)%1,y=HZ+v*v*(H-HZ),x=w.u*W,l=3+v*v*40;bx.moveTo(x,y);bx.lineTo(x+l,y)}bx.stroke();
+ if(moonX!==null&&moonA>0){bx.save();bx.globalAlpha=moonA;
+  const gw=Math.max(18,W*.035),gg=bx.createLinearGradient(0,HZ,0,H);gg.addColorStop(0,'rgba(210,225,255,.5)');gg.addColorStop(1,'rgba(210,225,255,0)');
+  bx.fillStyle=gg;bx.beginPath();bx.moveTo(moonX-gw*.3,HZ);bx.lineTo(moonX+gw*.3,HZ);bx.lineTo(moonX+gw*2.2,H);bx.lineTo(moonX-gw*2.2,H);bx.closePath();bx.fill();
+  bx.fillStyle='rgba(235,242,255,.55)';
+  for(let i=0;i<46;i++){const v=((i*0.6180339)%1),vy=v*v,y=HZ+vy*(H-HZ),sp=(.3+vy*2)*gw,x=moonX+Math.sin(i*12.9898+now*.0006*(1+v))*sp,l=(2+vy*26)*(.5+((i*7)%5)/5);bx.fillRect(x-l/2,y,l,Math.max(1,1+vy*1.5))}
+  bx.restore()}
  // vessels
  drawLandView(C,vis,day,dusk,night);
  const vis_=[...targets].sort((a,b)=>b.range-a.range);
@@ -1481,6 +1516,7 @@ $('eng').onclick=e=>{const d=e.target.dataset.ds;if(d)own.cmdSpd=clamp(own.cmdSp
 $('horn').onclick=e=>{const k=e.target.dataset.h;if(k)ownSignal(k)};
 $('ts').onchange=()=>{};
 $('light').onchange=e=>cfg.light=e.target.value;
+$('moon').onchange=e=>cfg.moon=e.target.value;
 $('vis').oninput=e=>{cfg.vis=+e.target.value;$('visv').textContent=cfg.vis+' nm'};
 $('fov').oninput=e=>{view.fov=+e.target.value;$('fovv').textContent=Math.round(view.fov)+'°'};
 $('look').oninput=e=>setLook(+e.target.value);
