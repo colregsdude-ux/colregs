@@ -181,7 +181,7 @@ td.role{text-align:left;font-size:.7rem}
       <label>Look <span id="lookv">0°</span><input type="range" id="look" min="-180" max="180" step="1" value="0"></label>
       <label>Your ship's bow size <span id="deckv">1.0×</span><input type="range" id="deck" min="0.5" max="3" step="0.1" value="1"></label>
       <label>Panel transparency <span id="transv">14%</span><input type="range" id="trans" min="0" max="100" step="1" value="14"></label>
-      <label class="chk" title="Off = every light in its arc is shown out to the visibility setting"><input type="checkbox" id="rng" checked> Realistic light ranges (Rule 22)</label>
+      <label class="chk" title="Off = every light in its arc is shown out to the visibility setting"><input type="checkbox" id="rng"> Realistic light ranges (Rule 22)</label>
       <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
       <label class="chk"><input type="checkbox" id="train" checked> Show rule assessment</label>
     </div>
@@ -385,7 +385,7 @@ function stepHelm(dt){
 const rudTxt=a=>{const r=Math.round(Math.abs(a));return r<1?'MIDSHIPS':(a<0?'PORT ':'STBD ')+r+'°'};
 let targets=[],nextId=1,simT=0,paused=false,collisions=0,closeQ=0,sel=null,lastSpawn=0,logLines=[];
 const view={off:0,fov:70};
-const cfg={light:'night',vis:10,training:true,moon:'wgib'};
+const cfg={light:'night',vis:10,training:true,moon:'wgib',allLights:true};
 const MOON_PH={wcres:.12,fq:.25,wgib:.38,full:.5,ngib:.62,lq:.75,ncres:.88}; // 0 new, .5 full; <.5 waxing (lit on right)
 const RISK_CPA=1.0;
 let curLoc='sea',curS=null,tss=null,ownTssKey=null,LAND=null;
