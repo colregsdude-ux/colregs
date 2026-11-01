@@ -126,6 +126,22 @@ td.role{text-align:left;font-size:.7rem}
 .rz[data-c=nw]{left:0;top:0;cursor:nwse-resize}.rz[data-c=se]{right:0;bottom:0;cursor:nwse-resize;width:16px;height:16px}
 .rz[data-c=ne]{right:0;top:0;cursor:nesw-resize}.rz[data-c=sw]{left:0;bottom:0;cursor:nesw-resize}
 .rz[data-c=se]::after{content:'';position:absolute;right:3px;bottom:3px;width:7px;height:7px;border-right:2px solid rgba(255,255,255,.4);border-bottom:2px solid rgba(255,255,255,.4)}
+/* ECPINS CPA warnings */
+@keyframes almFlash{0%,49%{background:#b91c1c;border-color:#fca5a5}50%,100%{background:#1e293b;border-color:rgba(255,255,255,.12)}}
+.b.alarm{animation:almFlash .9s infinite;color:#fff}
+.b .cnt{display:inline-block;min-width:1.1rem;text-align:center;background:#fca5a5;color:#450a0a;border-radius:9px;padding:0 .3rem;font-size:.68rem}
+#wLim{font-size:.68rem;color:var(--muted);margin-bottom:.4rem}
+#wList{min-height:170px}
+.wc.fl #wList{flex:1;min-height:170px;overflow:auto}
+.wrow{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem .5rem;margin-bottom:.35rem;border-radius:8px;background:#0b1327;border-left:3px solid #f87171;font-size:.74rem;cursor:pointer}
+.wrow.ack{border-left-color:#fbbf24}
+.wrow .t{font-weight:700;color:#f8fafc;font-size:.85rem}
+.wrow .d{color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.4}
+.wrow .st{color:#fbbf24}
+.wrow .b{flex:none}
+.wrow .b.red{background:#b91c1c;border-color:#fca5a5;color:#fff;animation:almFlash .9s infinite}
+.wrow .okk{flex:none;color:#86efac;font-weight:600;font-size:.72rem}
+#wEmpty{color:var(--muted);font-size:.76rem;padding:.3rem .1rem}
 </style>
 </head>
 <body>
@@ -168,7 +184,7 @@ td.role{text-align:left;font-size:.7rem}
       <label class="chk"><input type="checkbox" id="cont" checked> Continuous traffic</label>
       <label class="chk"><input type="checkbox" id="train" checked> Show rule assessment</label>
     </div>
-    <div class="btns" style="margin-top:.5rem"><button class="b" id="pause">Pause</button><button class="b" id="restart">Restart</button><button class="b" id="mute">Sound: on</button></div>
+    <div class="btns" style="margin-top:.5rem"><button class="b" id="pause">Pause</button><button class="b" id="restart">Restart</button><button class="b" id="mute">Sound: on</button><button class="b" id="almBtn" title="Enable or disable the ECPINS CPA alarms and the Warnings menu (3)">Alarms: on</button></div>
     <div class="row2" style="margin-top:.3rem">Close-quarters: <b id="cq">0</b> · Collisions: <b id="col">0</b> · Time <b id="clock">00:00:00</b></div>
   </section>
   <section class="box" id="pLog"><h2>Event log</h2><div id="log"></div></section>
@@ -210,6 +226,10 @@ td.role{text-align:left;font-size:.7rem}
       </div></div>
     </div>
   </section>
+  <section class="box" id="pWarn"><h2>Warnings</h2>
+    <div id="wLim"></div>
+    <div id="wList"></div>
+  </section>
   <section class="box" id="pTgt"><h2>Selected target</h2><div id="tinfo">Click a vessel on the radar, bridge or in the list.</div></section>
   <section class="box" id="pList"><h2>Tracked targets</h2>
     <table><thead><tr><th>ID</th><th>Brg °T</th><th>Rel</th><th>Rng nm</th><th>Crs °</th><th>Spd kn</th><th>CPA nm</th><th>TCPA min</th><th id="roleH" style="text-align:left">Your role</th></tr></thead><tbody id="tbody"></tbody></table>
@@ -219,10 +239,10 @@ td.role{text-align:left;font-size:.7rem}
 <section class="box help" id="pHelp"><h2>Controls</h2>
   <p><b>Steering:</b> the ship has a real rudder and a turn that builds and decays. Ordering a <b>course</b> (Set, ◀ ▶ buttons or arrow keys) makes the helmsman put rudder on, ease it, then apply <b>counter rudder</b> to stop the swing on the course. Or give <b>rudder orders</b> yourself (P35…S35, <kbd>,</kbd> <kbd>.</kbd> for 5° port/starboard, <kbd>M</kbd> midships): the rate of turn builds slowly and the ship keeps swinging after you go midships, so you must meet the swing with counter rudder, or press <b>Steady as she goes</b>. The bar shows rudder angle: red to the left is port, green to the right is starboard, and the yellow marker is the ordered angle while the rudder is still moving. Rudder is less effective at low speed.</p>
   <p><kbd>←</kbd><kbd>→</kbd> steer 1° (<kbd>Shift</kbd> for 10°) · <kbd>↑</kbd><kbd>↓</kbd> speed · <kbd>A</kbd><kbd>D</kbd> look left/right · <kbd>C</kbd> look ahead · <kbd>Space</kbd> pause · <kbd>Esc</kbd> hide all panels · drag a panel's title bar to move it, drag any corner to resize (contents scale) · <kbd>B</kbd> minimise / show the menu bar · <kbd>F</kbd> full screen</p>
-  <p>Panels: <kbd>R</kbd> radar · <kbd>E</kbd> ECPINS · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
+  <p>Panels: <kbd>R</kbd> radar · <kbd>E</kbd> ECPINS · <kbd>3</kbd> warnings · <kbd>H</kbd> helm / own ship · <kbd>S</kbd> simulation settings · <kbd>T</kbd> selected target · <kbd>G</kbd> tracked targets · <kbd>L</kbd> event log · <kbd>?</kbd> this help</p>
   <p><b>Bridge scales:</b> the top strip is true bearing. Below it, the relative bearing scale counts 0–180° either side of your bow: <span class="pt">red = port</span>, <span class="sb">green = starboard</span>. Target tags show their relative bearing (P = port, S = starboard).</p>
   <p><b>Radar:</b> the bold white line and arrow show your heading. The blue wedge shows where the bridge view is looking, and its width is the current zoom. The inner ring of red/green numbers is relative bearing.</p>
-  <p><b>ECPINS:</b> a chart-style display of AIS targets (open sea has no chart data; the Channel and Malacca show approximate coastlines, banks, ports and the TSS). <b>Drag</b> the chart to pan, use the <b>wheel</b> to zoom, <b>Re-centre</b> to put your ship in the middle again, and <b>Snap to ship</b> to make the chart move with the ship while keeping it wherever you have placed it on screen (turn it off to hold the chart still). Small hollow triangles are sleeping targets; selecting one activates it, showing its vector, past track and the predicted closest point of approach. Press <b>Interrogate</b> (<kbd>I</kbd>) to request its AIS static and voyage data (name, MMSI, IMO, call sign, ship type, navigational status, size, draught, destination, ETA) alongside its CPA, TCPA, BCR/BCT and bearing at CPA. Flashing red targets break the CPA/TCPA limits.</p>
+  <p><b>ECPINS:</b> a chart-style display of AIS targets (open sea has no chart data; the Channel and Malacca show approximate coastlines, banks, ports and the TSS). <b>Drag</b> the chart to pan, use the <b>wheel</b> to zoom, <b>Re-centre</b> to put your ship in the middle again, and <b>Snap to ship</b> to make the chart move with the ship while keeping it wherever you have placed it on screen (turn it off to hold the chart still). Small hollow triangles are sleeping targets; selecting one activates it, showing its vector, past track and the predicted closest point of approach. Press <b>Interrogate</b> (<kbd>I</kbd>) to request its AIS static and voyage data (name, MMSI, IMO, call sign, ship type, navigational status, size, draught, destination, ETA) alongside its CPA, TCPA, BCR/BCT and bearing at CPA. Flashing red targets break the CPA/TCPA limits. When a target is predicted to pass inside the ECPINS CPA limit (within the TCPA limit) the <b>Warnings</b> panel (<kbd>3</kbd>) opens and an audible alarm beeps until you click <b>Acknowledge</b> for that vessel; each vessel must be acknowledged separately. The <b>Alarms</b> button in the Sim panel (<kbd>S</kbd>) turns the alarms and the Warnings menu on or off. Pausing or turning Sound off silences the beeping, but the warning stays until acknowledged.</p>
   <p><b>Locations:</b> choose a Location in the Simulation panel (<kbd>S</kbd>). <b>Open sea</b> is the free-roaming sandbox. <b>English Channel</b> is the Dover Strait TSS on an approximate real coastline (SW-bound lane on the English side, NE-bound on the French side, ferries crossing, Goodwin Sands, Dover, Calais…). <b>Strait of Malacca</b> is the strait off Port Dickson / Cape Rachado and Rupat Island, with a dense TSS and deep-draught tankers, tugs with tows, anchored ships, unlit fishing boats and <b>dhows that may not follow the Rules</b> (no or dim lights, no AIS, weak radar echo, erratic courses, failing to give way). Land shows on the bridge horizon, the radar and ECPINS (running aground stops the engine). With rule assessment on, your own Rule 10 status appears under Own ship. Coastlines are approximate, not for navigation.</p>
   <p>Vertical scale on the bridge view is exaggerated so lights and shapes are readable. Lights are limited by their COLREGS range and the visibility setting; the radar always sees out to its range.</p>
 </section>
@@ -234,6 +254,7 @@ td.role{text-align:left;font-size:.7rem}
   <span class="sep"></span>
   <button class="b" data-p="radar">Radar <kbd>R</kbd></button>
   <button class="b" data-p="ecp">ECPINS <kbd>E</kbd></button>
+  <button class="b" data-p="warn" id="barWarn">⚠ Warnings <kbd>3</kbd></button>
   <button class="b" data-p="helm">Helm <kbd>H</kbd></button>
   <button class="b" data-p="sim">Sim <kbd>S</kbd></button>
   <button class="b" data-p="tgt">Target <kbd>T</kbd></button>
@@ -1330,6 +1351,79 @@ $('eFol').onclick=()=>{
  folLabel();
 };
 
+/* ================= ECPINS CPA warnings (audible, acknowledged per vessel) ================= */
+// A vessel raises a warning when ECPINS predicts it will pass inside the ECPINS CPA limit within the TCPA limit
+// (the same test that makes its symbol flash red). It beeps until that vessel's warning is clicked/acknowledged.
+let almLast=0,almKey='',almUi=0,almOn=true;
+function setAlarms(on){
+ almOn=on;$('almBtn').textContent='Alarms: '+(on?'on':'off');$('almBtn').classList.toggle('red',!on);
+ if(!on){for(const t of targets)t.alm=null;togglePanel('warn',false);almRender(true)}
+ $('barWarn').classList.toggle('hid',!on);
+}
+function alarmBeep(){
+ if(muted)return;
+ try{
+  audio=audio||new (window.AudioContext||window.webkitAudioContext)();
+  if(audio.state==='suspended')audio.resume();
+  let t0=audio.currentTime+.02;
+  for(let i=0;i<2;i++){
+   const o=audio.createOscillator(),g=audio.createGain();
+   o.type='square';o.frequency.value=1250;o.connect(g);g.connect(audio.destination);
+   g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.12,t0+.01);
+   g.gain.setValueAtTime(.12,t0+.11);g.gain.exponentialRampToValueAtTime(.0001,t0+.13);
+   o.start(t0);o.stop(t0+.14);t0+=.2;
+  }
+ }catch(e){}
+}
+function alarmAck(t){
+ if(!t||!t.alm)return;
+ if(t.alm.live)t.alm.state='ack';else t.alm=null; // already clear: just remove it
+ sel=t;almRender(true);
+}
+const almVals=t=>`Rng ${f2(t.range)} nm · Brg ${b3(t.brg)}° · CPA <b>${f2(t.cpa)} nm</b> · TCPA ${t.tcpa>0&&t.tcpa!==Infinity?'<b>'+f1(t.tcpa)+' min</b>':'–'}`;
+function almRender(force){
+ const now=performance.now(),list=targets.filter(t=>t.alm).sort((a,b)=>(a.alm.state==='active'?0:1)-(b.alm.state==='active'?0:1)||a.range-b.range);
+ const nAct=list.filter(t=>t.alm.state==='active').length;
+ const key=list.map(t=>t.id+t.alm.state+(t.alm.live?1:0)+(t.ais?1:0)).join(',');
+ if(key!==almKey||force){
+  almKey=key;
+  for(const id of['barWarn','barShow'])$(id).classList.toggle('alarm',nAct>0);
+  $('barWarn').innerHTML='⚠ Warnings <kbd>3</kbd>'+(list.length?` <span class="cnt">${list.length}</span>`:'');
+  $('wList').innerHTML=list.length?list.map(t=>{const a=t.alm,A=t.ais;
+   return`<div class="wrow ${a.state}" data-id="${t.id}"><div><span class="t">T${t.id}</span>${A?` <span class="d">${A.name}</span>`:''}${a.live?'':' <span class="st">· limits no longer breached</span>'}<div class="d" data-v="${t.id}"></div></div>${a.state==='active'?`<button class="b red" data-ack="${t.id}">Acknowledge</button>`:'<span class="okk">✓ Acknowledged</span>'}</div>`}).join('')
+   :'<div id="wEmpty">No vessels predicted inside the CPA limit.</div>';
+  almUi=0;
+ }
+ if(now-almUi>250){
+  almUi=now;
+  $('wLim').textContent=`ECPINS limits: CPA < ${ecp.cpaLim} nm · TCPA < ${ecp.tcpaLim} min`;
+  for(const t of list){const el=$('wList').querySelector(`[data-v="${t.id}"]`);if(el){const h=almVals(t);if(el._h!==h){el._h=h;el.innerHTML=h}}}
+ }
+}
+function alarmStep(now){
+ if(!almOn)return;
+ let fresh=false;
+ for(const t of targets){
+  const live=!t.noAis&&ecDanger(t),a=t.alm;
+  if(live){
+   if(!a){t.alm={state:'active',live:true,lostT:null};fresh=true;addLog(`ECPINS WARNING: T${t.id} predicted to pass within ${ecp.cpaLim} nm – CPA ${f2(t.cpa)} nm in ${f1(t.tcpa)} min`,'w')}
+   else{a.live=true;a.lostT=null}
+  }else if(a){
+   a.live=false;if(a.lostT==null)a.lostT=simT;
+   if(a.state==='ack'&&simT-a.lostT>=20)t.alm=null; // re-arms once clear for 20 s, so a vessel hovering at the limit doesn't re-trigger
+  }
+ }
+ if(fresh){almLast=0;if($('pWarn').classList.contains('hid'))togglePanel('warn',true)}
+ almRender(fresh);
+ if(!paused&&targets.some(t=>t.alm&&t.alm.state==='active')&&now-almLast>=1200){almLast=now;alarmBeep()}
+}
+$('almBtn').onclick=()=>setAlarms(!almOn);
+$('wList').addEventListener('click',e=>{
+ const b=e.target.closest('[data-ack]');
+ if(b){alarmAck(targets.find(t=>t.id==b.dataset.ack));return}
+ const r=e.target.closest('[data-id]');if(r){const t=targets.find(t=>t.id==r.dataset.id);if(t)sel=t}
+});
+
 /* ================= UI ================= */
 function roleText(t){
  if(!cfg.training)return'';
@@ -1409,10 +1503,11 @@ bc.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x;if(Math.abs(dx)>4
 bc.onpointerup=e=>{if(drag&&!drag.moved){const r=bc.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let b=null,bd=1e9;
   for(const t of targets){if(t.sx==null)continue;const d=Math.abs(t.sx-x);if(d<Math.max(16,t.sw)&&Math.abs(y-HZ)<BH*.35&&d<bd){bd=d;b=t}}if(b)sel=b}drag=null};
 bc.onwheel=e=>{e.preventDefault();setFov(view.fov*(e.deltaY>0?1.12:.89))};
-const PANELS={radar:'pRadar',helm:'pHelm',sim:'pSim',tgt:'pTgt',list:'pList',log:'pLog',help:'pHelp',ecp:'pEcp'};
-const PKEYS={r:'radar',h:'helm',s:'sim',t:'tgt',g:'list',l:'log','?':'help','/':'help',e:'ecp'};
-const PLAB={radar:'R',helm:'H',sim:'S',tgt:'T',list:'G',log:'L',help:'?',ecp:'E'};
+const PANELS={radar:'pRadar',helm:'pHelm',sim:'pSim',tgt:'pTgt',list:'pList',log:'pLog',help:'pHelp',ecp:'pEcp',warn:'pWarn'};
+const PKEYS={r:'radar',h:'helm',s:'sim',t:'tgt',g:'list',l:'log','?':'help','/':'help',e:'ecp','3':'warn'};
+const PLAB={radar:'R',helm:'H',sim:'S',tgt:'T',list:'G',log:'L',help:'?',ecp:'E',warn:'3'};
 function togglePanel(n,show){
+ if(n==='warn'&&!almOn&&show!==false)return; // alarms disabled: the Warnings menu stays closed
  const el=$(PANELS[n]);const on=show===undefined?el.classList.contains('hid'):show;
  el.classList.toggle('hid',!on);if(on)showWin(n);
  const bt=document.querySelector(`#bar [data-p="${n}"]`);if(bt)bt.classList.toggle('on',on);
@@ -1428,7 +1523,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.tagName==='SELECT')e.target.blur()});
 
 /* ---- floating, movable, resizable windows ---- */
-const WIN={radar:{w:340,m:'both'},helm:{w:290,m:'both'},sim:{w:300,m:'both'},tgt:{w:300,m:'width'},list:{w:470,m:'width'},log:{w:300,m:'width'},help:{w:540,m:'width'},ecp:{w:650,m:'both'}};
+const WIN={radar:{w:340,m:'both'},helm:{w:290,m:'both'},sim:{w:300,m:'both'},tgt:{w:300,m:'width'},list:{w:470,m:'width'},log:{w:300,m:'width'},help:{w:540,m:'width'},ecp:{w:650,m:'both'},warn:{w:320,m:'width'}};
 let zTop=100;
 for(const n in PANELS){
  const el=$(PANELS[n]),c=WIN[n],h=el.querySelector('h2');
@@ -1456,7 +1551,7 @@ function showWin(n){
   const bw=Math.min(c.w+20,W-20);el.style.width=bw+'px';
   const hh=c.h.offsetHeight+18,nat=Math.min(hh+c.nh*(bw-20)/c.w,H*.6);
   if(c.m==='width')el.style.height=nat+'px';
-  const pos={radar:[W-bw-10,98],tgt:[W-370-bw-10,98],list:[W-bw-10,H-72-nat],helm:[10,98],sim:[bw>0?330:10,98],log:[10,H-72-nat],help:[(W-bw)/2,(H-nat)/2],ecp:[(W-bw)/2,90]}[n];
+  const pos={radar:[W-bw-10,98],tgt:[W-370-bw-10,98],list:[W-bw-10,H-72-nat],helm:[10,98],sim:[bw>0?330:10,98],log:[10,H-72-nat],help:[(W-bw)/2,(H-nat)/2],ecp:[(W-bw)/2,90],warn:[(W-bw)/2,110]}[n];
   el.style.left=Math.max(0,pos[0])+'px';el.style.top=Math.max(0,pos[1])+'px';
  }
  front(el);fit(n);
@@ -1499,7 +1594,7 @@ $('trans').oninput=e=>{const t=+e.target.value;document.documentElement.style.se
 $('rng').onchange=e=>{cfg.allLights=!e.target.checked};
 $('deck').oninput=e=>{deckScale=+e.target.value;$('deckv').textContent=deckScale.toFixed(1)+'×'};
 // start with the bridge full-screen plus radar and helm
-['sim','tgt','list','log','help','ecp'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
+['sim','tgt','list','log','help','ecp','warn'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
 window.onkeydown=e=>{
  if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&e.target.type!=='checkbox'&&e.target.type!=='range')return;
  if(e.ctrlKey||e.metaKey||e.altKey)return;
@@ -1523,7 +1618,7 @@ let last=performance.now(),acc=0,uiT=0;
 function frame(now){
  const dt=Math.min(.1,(now-last)/1000);last=now;
  if(!paused){acc+=dt*(+$('ts').value);let n=0;while(acc>=1&&n<400){stepSim(1);acc-=1;n++;if(paused)break}if(n>=400)acc=0}
- ecpStep(now);drawBridge(now);drawRadar(now);drawEcp(now);drawRudder();
+ ecpStep(now);alarmStep(now);drawBridge(now);drawRadar(now);drawEcp(now);drawRudder();
  if(now-uiT>250){uiT=now;updateUI();updateEcp()}
  requestAnimationFrame(frame);
 }
