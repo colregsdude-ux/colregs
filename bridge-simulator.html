@@ -1631,6 +1631,7 @@ $('rng').onchange=e=>{cfg.allLights=!e.target.checked};
 $('deck').oninput=e=>{deckScale=+e.target.value;$('deckv').textContent=deckScale.toFixed(1)+'×'};
 // start with the bridge full-screen plus radar and helm
 ['sim','tgt','list','log','help','ecp','warn'].forEach(n=>togglePanel(n,false));togglePanel('radar',true);togglePanel('helm',true);
+setAlarms(false); // alarms start off by default
 window.onkeydown=e=>{
  if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)&&e.target.type!=='checkbox'&&e.target.type!=='range')return;
  if(e.ctrlKey||e.metaKey||e.altKey)return;
