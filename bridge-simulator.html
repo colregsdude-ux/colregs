@@ -392,7 +392,7 @@ const RISK_CPA=1.0;
 let curLoc='sea',curS=null,tss=null,ownTssKey=null,LAND=null;
 
 const SCEN={
- mixed:{label:'Mixed traffic (continuous)',start:['cross_stbd','cross_port','overtaking_us','sail','trawl'],cont:true},
+ mixed:{label:'Mixed traffic (continuous)',start:[],dyn:true,cont:true},
  xgive:{label:'Crossing – you are give-way (target on your starboard)',start:['cross_stbd'],cont:false},
  xstand:{label:'Crossing – you are stand-on (target on your port)',start:['cross_port'],cont:false},
  xfail:{label:'Crossing – give-way vessel fails to act',start:['cross_port_fail'],cont:false},
@@ -682,6 +682,54 @@ function spawn(kind){
  }
 }
 
+/* ---- random continuous traffic: quiet / moderate / busy spells, realistic mixes of vessels and encounters ---- */
+const DPH={quiet:{max:[2,3],gap:[80,180],dur:[1500,2700],n:[1,3]},moderate:{max:[4,6],gap:[45,100],dur:[1500,2700],n:[3,5]},busy:{max:[8,11],gap:[14,38],dur:[1200,2400],n:[6,9]}};
+const DYNK=[['pdL',34],['pdS',16],['cbd',4],['tow',5],['sail',7],['trawl',4],['fish',3],['pilot',3],['ram',1.5],['nuc',.5],['anch',3],['over_us',3],['over_them',2.5]];
+const STILLK=['anch','ram','nuc','trawl','fish'];
+let dyn={ph:'moderate',until:0,max:6,gap:60};
+function dynPhase(first){
+ const names=['quiet','moderate','busy'],w=[.34,.4,.26];let r=Math.random(),ph=names[2];
+ for(let i=0;i<3;i++){if(r<w[i]){ph=names[i];break}r-=w[i]}
+ if(!first&&ph===dyn.ph&&Math.random()<.6)ph=pick(names.filter(n=>n!==dyn.ph));
+ const P=DPH[ph];dyn={ph,until:simT+rnd(P.dur[0],P.dur[1]),max:Math.round(rnd(P.max[0],P.max[1])),gap:rnd(P.gap[0],P.gap[1])};
+}
+function buildDyn(D){
+ const oc=own.hdg;let k=wpick(DYNK);
+ const still=targets.filter(o=>o.anch||STILLK.includes(o.type)).length;
+ if(still>=3&&STILLK.includes(k))k='pdL';
+ if(STILLK.includes(k))return build(k);
+ if(k==='over_us')return build('overtaking_us');
+ if(k==='over_them')return build('overtake_them');
+ const q=Math.random();
+ const rc=q<.32?180+rnd(-45,45):q<.62?-rnd(40,140):q<.92?rnd(40,140):pick([-1,1])*rnd(140,170); // head-on-ish, from stbd, from port, other
+ const s={pdL:rnd(10,19),pdS:rnd(8,16),cbd:rnd(8,11),tow:rnd(4,6.5),sail:rnd(3.5,7.5),pilot:rnd(12,18)}[k];
+ const h=n360(oc+rc),c=Math.random();
+ const lat=(Math.random()<.5?-1:1)*(c<.4?rnd(0,.35):c<.7?rnd(.35,1.2):rnd(1.5,5)); // 40% real collision courses, 30% close, 30% passing clear
+ const pt=intercept(h,s,D,lat);
+ const t=mk(k,{x:pt.x,y:pt.y,hdg:h,spd:s,complies:!(k==='pdL'||k==='pdS')||Math.random()>.06});
+ if(k==='tow'){t.towLen=rnd(70,150);if(Math.random()<.15){t.longTow=true;t.towLen=250}}
+ if(k==='sail'&&Math.random()<.5)t.tack={d:pick([-1,1])*rnd(70,90),n:rnd(500,900)};
+ return t;
+}
+function companionOf(t){ // a second ship in the same stream, so ships overtake and meet each other
+ const h=n360(t.hdg+rnd(-6,6)),s=clamp(t.spd*rnd(.75,1.3),8,20),back=rnd(1.5,3.2),side=pick([-1,1])*rnd(.25,.7);
+ const fx=Math.sin(t.hdg*D2R),fy=Math.cos(t.hdg*D2R),rx=Math.cos(t.hdg*D2R),ry=-Math.sin(t.hdg*D2R);
+ return mk(pick(['pdS','pdL','pdL']),{x:t.x-fx*back+rx*side,y:t.y-fy*back+ry*side,hdg:h,spd:s});
+}
+function spawnDyn(D,sep,convoy){
+ for(let i=0;i<14;i++){
+  const t=buildDyn(D);nextId--;
+  const r=Math.hypot(t.x-own.x,t.y-own.y);
+  if(r>13.8||r<3||!targets.every(o=>Math.hypot(o.x-t.x,o.y-t.y)>sep))continue;
+  t.id=nextId++;targets.push(t);
+  if(convoy&&(t.type==='pdL'||t.type==='pdS')&&!t.anch&&Math.random()<.3){
+   const c=companionOf(t);nextId--;
+   if(Math.hypot(c.x-own.x,c.y-own.y)<14.3&&targets.every(o=>Math.hypot(o.x-c.x,o.y-c.y)>.8)){c.id=nextId++;targets.push(c)}
+  }
+  return t;
+ }
+}
+
 /* ================= COLREGS assessment ================= */
 function derive(t){
  const rx=t.x-own.x,ry=t.y-own.y,tv=vec(t.hdg,t.spd),ov=vec(own.hdg,own.spd),vx=tv.x-ov.x,vy=tv.y-ov.y,vv=vx*vx+vy*vy;
@@ -725,8 +773,20 @@ function horn(seq,freq){
 }
 const SIG={1:['1 short blast – "I am altering my course to starboard"',[1]],2:['2 short blasts – "I am altering my course to port"',[1,1]],3:['3 short blasts – "I am operating astern propulsion"',[1,1,1]],5:['5 short blasts – danger / doubt: "I do not understand your intentions"',[1,1,1,1,1]],p:['1 prolonged blast – restricted-visibility signal (power-driven, making way)',[5]]};
 function ownSignal(k){const s=SIG[k];addLog('You: '+s[0],'s');horn(s[1].map(x=>x===1?.9:5),130)}
+let lastAnySig=-1e9,lastHornAt=0;
+// Rule 34: ships do not sound off all the time. A manoeuvring signal is occasional, sounded as the ship alters, never in a stream; danger signals only when a ship is really in trouble.
 function targetSignal(t,k){
- const s=SIG[k];t.sigN=(t.sigN||0)+(k==5?1:0);if(k==5&&t.sigN>3)return;if(t.range<4.5){addLog(`T${t.id}: ${s[0]}`,k==5?'w':'s');horn(s[1].map(x=>.9),170)}
+ const s=SIG[k];
+ if(k===5){ // doubt / danger: close range only, at most twice per ship
+  if(t.range>1.2||(t.sigN||0)>=2||simT-lastAnySig<20)return;
+  t.sigN=(t.sigN||0)+1;
+ }else{ // manoeuvring signal: close range, only some ships sound it, never in a stream of blasts
+  if(t.range>5.5||simT-lastAnySig<45||simT-(t.lastManSig||-1e9)<600||Math.random()>.55)return;
+  t.lastManSig=simT;
+ }
+ lastAnySig=simT;
+ addLog(`T${t.id}: ${s[0]}`,k==5?'w':'s');
+ const now=performance.now();if(now-lastHornAt>8000){lastHornAt=now;horn(s[1].map(x=>.9),170)} // never more than one horn every few seconds of real time, whatever the time speed
 }
 function addLog(msg,cls){logLines.push({t:simT,msg,cls});if(logLines.length>60)logLines.shift();renderLog()}
 function renderLog(){const el=$('log');el.innerHTML=logLines.slice(-30).reverse().map(l=>`<div class="${l.cls||''}">[${hms(l.t)}] ${l.msg}</div>`).join('')}
@@ -757,9 +817,15 @@ function stepSim(dt){
    t.passed=true;const q=t.minR<.25;if(q)closeQ++;
    addLog(`T${t.id} passed at ${f2(t.minR)} nm${t.minR<.25?' – CLOSE QUARTERS':t.minR<.5?' – close':''}`,q?'w':'');
   }
-  if((t.range>14.5&&t.rrate>0)||(t.spd<.3&&t.range>16))remove(t);
+  if((t.range>((curS&&curS.dyn)?({quiet:9.5,moderate:11,busy:12.5})[dyn.ph]:14.5)&&t.rrate>0)||(t.spd<.3&&t.range>16))remove(t);
  }
- if($('cont').checked&&simT-lastSpawn>45){
+ if($('cont').checked&&curS&&curS.dyn){
+  if(simT>=dyn.until)dynPhase();
+  if(simT-lastSpawn>=dyn.gap){
+   lastSpawn=simT;const P=DPH[dyn.ph];dyn.gap=rnd(P.gap[0],P.gap[1]);
+   if(targets.filter(o=>o.range<12).length<dyn.max)spawnDyn(rnd(9.5,12.5),dyn.ph==='busy'?1.2:2.2,dyn.ph==='busy');
+  }
+ }else if($('cont').checked&&simT-lastSpawn>45){
   lastSpawn=simT;
   const M=LOCS[curLoc],KL=(curS&&curS.kinds)||M.kinds||KINDS;
   if(targets.length<((curS&&curS.max)||M.max||7)&&Math.random()<(M.p||.4))spawn(wpick(KL));
@@ -767,6 +833,24 @@ function stepSim(dt){
 }
 function remove(t){targets=targets.filter(o=>o!==t);if(sel===t)sel=null}
 
+// closest point of approach of vessel o relative to vessel a, if a steers hdg
+function pairGeom(a,o,hdg){
+ const rx=o.x-a.x,ry=o.y-a.y,av=vec(hdg,a.spd),ov=vec(o.hdg,o.spd),vx=ov.x-av.x,vy=ov.y-av.y,vv=vx*vx+vy*vy,range=Math.hypot(rx,ry);
+ if(vv<1e-9)return{range,tcpa:Infinity,cpa:range,closing:false};
+ const tc=-(rx*vx+ry*vy)/vv;
+ return{range,tcpa:tc,cpa:tc>0?Math.hypot(rx+vx*tc,ry+vy*tc):range,closing:(rx*vx+ry*vy)<0};
+}
+// role of vessel a with respect to vessel o (both are traffic): Rules 13, 14, 15, 18
+function roleAB(a,o){
+ const rx=o.x-a.x,ry=o.y-a.y,brg=n360(Math.atan2(rx,ry)*R2D),aT=n180(brg-a.hdg),aO=n180(n360(brg+180)-o.hdg),g=pairGeom(a,o,a.hdg),ca=catOf(a),cb=catOf(o);
+ if(cb==='anch')return'give-way';
+ if(Math.abs(aT)>=112.5&&g.closing)return'stand-on';
+ if(Math.abs(aO)>=112.5&&g.closing)return'give-way';
+ if(RANK[cb]<RANK[ca])return'give-way';
+ if(RANK[cb]>RANK[ca])return'stand-on';
+ if(Math.abs(aT)<=12&&Math.abs(aO)<=12)return'both';
+ return aT>0?'give-way':'stand-on';
+}
 function ai(t){
  const c=catOf(t),sp=TYPES[t.type],A=assess(t);t.A=A;
  if(t.anch){t.cmdSpd=0;return}
@@ -775,32 +859,63 @@ function ai(t){
  if(t.tack&&simT>=(t.nextT||0)){t.ts=!t.ts;t.base=n360((t.b0=t.b0??t.hdg)+(t.ts?t.tack.d:0));t.cmd=t.base;t.nextT=simT+t.tack.n+rnd(0,300)}
  if(t.erratic&&!t.acting&&!t.emerg&&simT>=(t.nextE||0)){t.base=n360((t.b0??t.hdg)+rnd(-50,50));t.cmd=t.base;t.nextE=simT+rnd(60,200)}
  if(!mans)return;
+ // 1. an avoiding action already under way: widen it if needed, return to course once clear
+ if(t.acting||t.emerg){
+  const o=t.avoidO?(targets.includes(t.avoidO)?t.avoidO:null):own;
+  if(!o){t.acting=t.emerg=false;t.avoidO=null;t.cmd=t.base}
+  else{
+   const g=pairGeom(t,o,t.hdg),gb=pairGeom(t,o,t.base);
+   if(t.acting&&g.cpa<1.0&&Math.abs(n180(t.hdg-t.cmd))<3&&Math.abs(n180(t.cmd-t.base))<80)t.cmd=n360(t.cmd+t.dir*8);
+   if(o!==own&&g.cpa<.12&&g.range<.5&&Math.abs(n180(t.cmd-t.base))<75)t.cmd=n360(t.base+t.dir*75); // collision imminent between two vessels: hard over
+   if((g.tcpa<0&&g.range>.5)||gb.cpa>=1.1){t.acting=t.emerg=false;t.avoidO=null;t.cmd=t.base}
+  }
+ }
+ // 2. the user's ship
  const tRole=A.role==='give-way'?'stand-on':A.role==='stand-on'?'give-way':A.role==='both'?'give-way':'none';
- if(tRole==='give-way'&&t.risk){
-  if(!t.acting&&t.complies&&t.range<=t.actRange){
+ if(tRole==='give-way'&&t.risk&&!t.acting&&!t.emerg){
+  if(t.complies&&t.range<=t.actRange){
    let dir=1;
    if(A.rule==='13'){const rx=own.x-t.x,ry=own.y-t.y,lat=rx*Math.cos(t.hdg*D2R)-ry*Math.sin(t.hdg*D2R);dir=lat>.05?-1:1}
-   t.acting=true;t.dir=dir;t.cmd=n360(t.base+dir*30);
+   t.acting=true;t.avoidO=own;t.dir=dir;t.cmd=n360(t.base+dir*30);
    targetSignal(t,dir>0?1:2);
-  }else if(!t.acting&&!t.complies&&t.range<.38&&cpaFor(t,t.hdg)<.15){
-   t.acting=true;t.dir=1;t.cmd=n360(t.base+60);targetSignal(t,5);
+  }else if(!t.complies&&t.range<.38&&cpaFor(t,t.hdg)<.15){
+   t.acting=true;t.avoidO=own;t.dir=1;t.cmd=n360(t.base+60);targetSignal(t,5);
   }
  }
  if(tRole==='stand-on'&&t.risk){
   if(t.cpa<.25&&t.range<1&&simT-t.lastSig>90){t.lastSig=simT;targetSignal(t,5)}
-  if(!t.emerg&&t.cpa<.2&&t.range<.45){t.emerg=true;t.cmd=n360(t.base+55);addLog(`T${t.id} (stand-on) takes avoiding action – Rule 17(a)(ii)`,'w')}
+  if(!t.acting&&!t.emerg&&t.cpa<.2&&t.range<.45){t.emerg=true;t.avoidO=own;t.cmd=n360(t.base+55);addLog(`T${t.id} (stand-on) takes avoiding action – Rule 17(a)(ii)`,'w')}
  }
- if(t.acting){
-  if(cpaFor(t,t.hdg)<1.0&&Math.abs(n180(t.hdg-t.cmd))<3&&Math.abs(n180(t.cmd-t.base))<80)t.cmd=n360(t.cmd+t.dir*8);
+ // 3. other traffic: every vessel keeps the Rules with the others too (give-way acts early and boldly, stand-on holds on)
+ if(!t.acting&&!t.emerg){
+  let best=null,bt=1e9,bg=null;
+  for(const o of targets){
+   if(o===t||(o.anch&&t.anch))continue;
+   const g=pairGeom(t,o,t.hdg),lim=(o.anch||o.spd<.5)?.6:.9;
+   if(!(g.tcpa>0&&g.cpa<lim&&g.range<8))continue;
+   const r=roleAB(t,o);
+   if(r==='stand-on'){
+    if(g.cpa<.2&&g.range<.45&&!o.acting&&!o.emerg){t.emerg=true;t.avoidO=o;t.cmd=n360(t.base+55);return}
+    continue;
+   }
+   if(!t.complies||g.range>t.actRange)continue;
+   if(g.tcpa<bt){bt=g.tcpa;best=o;bg=g}
+  }
+  if(best){
+   const rx=best.x-t.x,ry=best.y-t.y,brg=n360(Math.atan2(rx,ry)*R2D),aO=n180(n360(brg+180)-best.hdg);
+   let dir=1;
+   if((Math.abs(aO)>=112.5&&bg.closing)||best.spd<1){const lat=rx*Math.cos(t.hdg*D2R)-ry*Math.sin(t.hdg*D2R);dir=lat>.05?-1:1} // overtaking / passing a stopped vessel: pass on the side with room
+   t.acting=true;t.avoidO=best;t.dir=dir;t.cmd=n360(t.base+dir*30);
+  }
  }
- if((t.acting||t.emerg)&&((t.tcpa<0&&t.range>.5)||cpaFor(t,t.base)>=1.1)){t.acting=false;t.emerg=false;t.cmd=t.base}
 }
 
 /* ================= scenario control ================= */
 function restart(){
  targets=[];nextId=1;simT=0;lastSpawn=0;collisions=0;closeQ=0;sel=null;logLines=[];
  const S=SCEN[$('scen').value];curS=S;curLoc=S.loc||'sea';ownTssKey=null;own.rot=0;setupLoc(S);$('cont').checked=S.cont;
- S.start.forEach(k=>spawn(k));
+ if(S.dyn){dynPhase(true);const n=Math.round(rnd(DPH[dyn.ph].n[0],DPH[dyn.ph].n[1]));for(let i=0;i<n;i++)spawnDyn(rnd(5.5,11.5),dyn.ph==='busy'?1.2:2.2,false)}
+ else S.start.forEach(k=>spawn(k));
  for(const t of targets)derive(t);
  addLog('Scenario started: '+S.label);renderLog();paused=false;$('pause').textContent='Pause';$('overlay').classList.remove('show');
 }
